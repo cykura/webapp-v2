@@ -93,15 +93,7 @@ export const CUSTOM_BASES: { [chainId: number]: { [tokenAddress: string]: Token[
  * Shows up in the currency select for swap and add liquidity
  */
 export const COMMON_BASES: ChainCurrencyList = {
-  [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT, WBTC, WETH9_EXTENDED[1]],
-  [3]: [ExtendedEther.onChain(3), WETH9_EXTENDED[3]],
-  [4]: [ExtendedEther.onChain(4), WETH9_EXTENDED[4]],
-  [5]: [ExtendedEther.onChain(5), WETH9_EXTENDED[5]],
-  [42]: [ExtendedEther.onChain(42), WETH9_EXTENDED[42]],
-  [SupportedChainId.ARBITRUM_ONE]: [
-    ExtendedEther.onChain(SupportedChainId.ARBITRUM_ONE),
-    WETH9_EXTENDED[SupportedChainId.ARBITRUM_ONE],
-  ],
+  [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
 }
 
 // used to construct the list of all pairs we consider by default in the frontend
