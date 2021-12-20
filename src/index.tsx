@@ -1,6 +1,7 @@
 import 'inter-ui'
 import '@reach/dialog/styles.css'
 import { createWeb3ReactRoot, Web3ReactProvider } from '@web3-react/core'
+import { WalletKitProvider } from '@gokiprotocol/walletkit'
 import { StrictMode } from 'react'
 import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
@@ -66,21 +67,41 @@ function Updaters() {
 ReactDOM.render(
   <StrictMode>
     <Provider store={store}>
-      <HashRouter>
-        <LanguageProvider>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <Web3ProviderNetwork getLibrary={getLibrary}>
-              <Blocklist>
-                <Updaters />
-                <ThemeProvider>
-                  <ThemedGlobalStyle />
-                  <App />
-                </ThemeProvider>
-              </Blocklist>
-            </Web3ProviderNetwork>
-          </Web3ReactProvider>
-        </LanguageProvider>
-      </HashRouter>
+      <WalletKitProvider
+        app={{ name: 'cyclos-swap' }}
+        networkConfigs={{
+          'mainnet-beta': {
+            name: 'Custom RPC',
+            endpoint: 'https://dawn-red-log.solana-mainnet.quiknode.pro/ff88020a7deb8e7d855ad7c5125f489ef1e9db71/',
+          },
+        }}
+        commitment="processed"
+        onConnect={() => {
+          console.log('Connected')
+        }}
+        onDisconnect={() => {
+          console.log('Disconnected')
+        }}
+        onError={() => {
+          console.log('Error')
+        }}
+      >
+        <HashRouter>
+          <LanguageProvider>
+            <Web3ReactProvider getLibrary={getLibrary}>
+              <Web3ProviderNetwork getLibrary={getLibrary}>
+                <Blocklist>
+                  <Updaters />
+                  <ThemeProvider>
+                    <ThemedGlobalStyle />
+                    <App />
+                  </ThemeProvider>
+                </Blocklist>
+              </Web3ProviderNetwork>
+            </Web3ReactProvider>
+          </LanguageProvider>
+        </HashRouter>
+      </WalletKitProvider>
     </Provider>
   </StrictMode>,
   document.getElementById('root')

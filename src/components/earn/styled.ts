@@ -57,7 +57,7 @@ export const CardNoise = styled.span`
 
 export const CardSection = styled(AutoColumn)<{ disabled?: boolean }>`
   padding: 1rem;
-  z-index: 1;
+  z-index: 0;
   opacity: ${({ disabled }) => disabled && '0.4'};
 `
 

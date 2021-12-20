@@ -2,10 +2,8 @@ import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useMemo } from 'react'
-import { createTokenFilterFunction } from '../components/SearchModal/filtering'
 import { ExtendedEther, WETH9_EXTENDED } from '../constants/tokens'
-import { useAllLists, useCombinedActiveList, useInactiveListUrls } from '../state/lists/hooks'
-import { WrappedTokenInfo } from '../state/lists/wrappedTokenInfo'
+import { useCombinedActiveList } from '../state/lists/hooks'
 import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { isAddress } from '../utils'
@@ -59,34 +57,6 @@ export function useAllTokens(): { [address: string]: Token } {
 export function useUnsupportedTokens(): { [address: string]: Token } {
   const unsupportedTokensMap = useUnsupportedTokenList()
   return useTokensFromMap(unsupportedTokensMap, false)
-}
-
-export function useSearchInactiveTokenLists(search: string | undefined, minResults = 10): WrappedTokenInfo[] {
-  const lists = useAllLists()
-  const inactiveUrls = useInactiveListUrls()
-  const { chainId } = useActiveWeb3React()
-  const activeTokens = useAllTokens()
-  return useMemo(() => {
-    if (!search || search.trim().length === 0) return []
-    const tokenFilter = createTokenFilterFunction(search)
-    const result: WrappedTokenInfo[] = []
-    const addressSet: { [address: string]: true } = {}
-    for (const url of inactiveUrls) {
-      const list = lists[url].current
-      if (!list) continue
-      for (const tokenInfo of list.tokens) {
-        if (tokenInfo.chainId === chainId && tokenFilter(tokenInfo)) {
-          const wrapped = new WrappedTokenInfo(tokenInfo, list)
-          if (!(wrapped.address in activeTokens) && !addressSet[wrapped.address]) {
-            addressSet[wrapped.address] = true
-            result.push(wrapped)
-            if (result.length >= minResults) return result
-          }
-        }
-      }
-    }
-    return result
-  }, [activeTokens, chainId, inactiveUrls, lists, minResults, search])
 }
 
 export function useIsTokenActive(token: Token | undefined | null): boolean {
