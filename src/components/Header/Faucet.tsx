@@ -16,6 +16,38 @@ const Text = styled.p`
   width: fit-content;
   font-weight: 500;
 `
+const StyledMenuButton = styled.button`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  height: 35px;
+  background-color: ${({ theme }) => theme.bg2};
+  color: ${({ theme }) => theme.text1};
+  margin-left: 8px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
+
+  :hover {
+    cursor: pointer;
+    outline: none;
+    background-color: ${({ theme }) => theme.bg4};
+  }
+
+  :active {
+    background-color: ${({ theme }) => theme.bg2};
+  }
+
+  svg {
+    margin-top: 2px;
+  }
+  > * {
+    stroke: ${({ theme }) => theme.text1};
+  }
+`
 
 const airdropAdmin = Keypair.fromSecretKey(
   Uint8Array.from([
@@ -121,11 +153,11 @@ function Faucet() {
   }, [wallet, connection])
 
   return (
-    <ButtonGray padding="6px 8px" $borderRadius="12px" onClick={() => requestAirdrop()}>
+    <StyledMenuButton onClick={() => requestAirdrop()}>
       <Text>
         <Trans>Faucet</Trans>
       </Text>
-    </ButtonGray>
+    </StyledMenuButton>
   )
 }
 

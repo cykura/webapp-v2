@@ -5,6 +5,16 @@ import { Trans } from '@lingui/macro'
 import styled, { css } from 'styled-components/macro'
 import { ButtonSecondary } from '../Button'
 import { RowBetween } from '../Row'
+import { useModalOpen, useToggleModal } from '../../state/application/hooks'
+import { useRef } from 'react'
+import { ApplicationModal } from 'state/application/actions'
+import { useOnClickOutside } from '../../hooks/useOnClickOutside'
+import { LogOut, Clipboard } from 'react-feather'
+
+export enum FlyoutAlignment {
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+}
 
 const Web3StatusGeneric = styled(ButtonSecondary)`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -20,28 +30,28 @@ const Web3StatusGeneric = styled(ButtonSecondary)`
 `
 
 const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
-  background-color: ${({ theme }) => theme.primary4};
-  border: none;
-  color: ${({ theme }) => theme.primaryText1};
+  background-color: ${({ theme }) => theme.primary2};
+  border: 2px solid ${({ theme }) => theme.primary2};
+  color: ${({ theme }) => theme.text1};
   font-weight: 500;
 
   :hover,
   :focus {
-    border: 1px solid ${({ theme }) => darken(0.05, theme.primary4)};
-    color: ${({ theme }) => theme.primaryText1};
+    border: 2px solid ${({ theme }) => darken(0.05, theme.primary1)};
+    color: ${({ theme }) => theme.text1};
   }
 
   ${({ faded }) =>
     faded &&
     css`
-      background-color: ${({ theme }) => theme.primary5};
-      border: 1px solid ${({ theme }) => theme.primary5};
-      color: ${({ theme }) => theme.primaryText1};
+      background-color: ${({ theme }) => theme.primary2};
+      border: 2px solid ${({ theme }) => theme.primary2};
+      color: ${({ theme }) => theme.text1};
 
       :hover,
       :focus {
-        border: 1px solid ${({ theme }) => darken(0.05, theme.primary4)};
-        color: ${({ theme }) => darken(0.05, theme.primaryText1)};
+        border: 2px solid ${({ theme }) => darken(0.05, theme.primary1)};
+        color: ${({ theme }) => darken(0.05, theme.text1)};
       }
     `}
 `
@@ -67,11 +77,77 @@ const Text = styled.p`
   font-weight: 500;
 `
 
+const StyledMenu = styled.div`
+  margin-left: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  border: none;
+  text-align: left;
+`
+
+const MenuFlyout = styled.span<{ flyoutAlignment?: FlyoutAlignment }>`
+  min-width: 8.125rem;
+  background-color: ${({ theme }) => theme.bg2};
+  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.01), 0px 4px 8px rgba(0, 0, 0, 0.04), 0px 16px 24px rgba(0, 0, 0, 0.04),
+    0px 24px 32px rgba(0, 0, 0, 0.01);
+  border-radius: 12px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  position: absolute;
+  top: 3rem;
+  z-index: 100;
+  ${({ flyoutAlignment = FlyoutAlignment.RIGHT }) =>
+    flyoutAlignment === FlyoutAlignment.RIGHT
+      ? css`
+          right: 0rem;
+        `
+      : css`
+          left: 0rem;
+        `};
+  ${({ theme }) => theme.mediaWidth.upToMedium`
+    top: unset;
+    bottom: 3em
+  `};
+`
+
+const MenuItem = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 0.5rem;
+  color: ${({ theme }) => theme.text2};
+  :hover {
+    color: ${({ theme }) => theme.text1};
+    cursor: pointer;
+    text-decoration: none;
+  }
+  > svg {
+    margin-right: 8px;
+  }
+`
+
 function Web3StatusInner() {
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo } = useSolana()
   const wallet = useConnectedWallet()
   const ICON = walletProviderInfo?.icon
+
+  const node = useRef<HTMLDivElement>()
+  const open = useModalOpen(ApplicationModal.MENU)
+  const toggle = useToggleModal(ApplicationModal.MENU)
+  useOnClickOutside(node, open ? toggle : undefined)
+
+  const copyToClipboard = (txt: string) => {
+    navigator.clipboard.writeText(txt)
+    // enqueueSnackbar('Address Copied', {
+    //   variant: 'success',
+    // })
+  }
 
   return !connected ? (
     <Web3StatusConnect id="connect-wallet" onClick={connect} faded={false}>
@@ -90,13 +166,32 @@ function Web3StatusInner() {
           </IconWrapper>
         </Text>
       )}
-      <Web3StatusConnect id="connect-wallet" onClick={disconnect} faded={true}>
-        <Text>
-          <Trans>
-            {wallet?.publicKey?.toString().slice(0, 4) ?? ''}...{wallet?.publicKey?.toString().slice(-4) ?? ''}
-          </Trans>
-        </Text>
-      </Web3StatusConnect>
+      <StyledMenu ref={node as any}>
+        <Web3StatusConnect id="connect-wallet" onClick={toggle} faded={true}>
+          <Text>
+            <Trans>
+              {wallet?.publicKey?.toString().slice(0, 4) ?? ''}...{wallet?.publicKey?.toString().slice(-4) ?? ''}
+            </Trans>
+          </Text>
+        </Web3StatusConnect>
+
+        {open && (
+          <MenuFlyout>
+            <MenuItem onClick={disconnect}>
+              <LogOut size={14} />
+              <div>
+                <Trans>Disconnect</Trans>
+              </div>
+            </MenuItem>
+            <MenuItem onClick={() => copyToClipboard(wallet?.publicKey.toString() ?? '')}>
+              <Clipboard size={14} />
+              <div>
+                <Trans>Copy Address</Trans>
+              </div>
+            </MenuItem>
+          </MenuFlyout>
+        )}
+      </StyledMenu>
     </RowBetween>
   )
 }
