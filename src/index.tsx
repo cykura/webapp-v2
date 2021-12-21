@@ -69,10 +69,15 @@ ReactDOM.render(
     <Provider store={store}>
       <WalletKitProvider
         app={{ name: 'cyclos-swap' }}
+        defaultNetwork="devnet"
         networkConfigs={{
           'mainnet-beta': {
             name: 'Custom RPC',
             endpoint: 'https://dawn-red-log.solana-mainnet.quiknode.pro/ff88020a7deb8e7d855ad7c5125f489ef1e9db71/',
+          },
+          devnet: {
+            name: 'devnet',
+            endpoint: 'https://api.devnet.solana.com',
           },
         }}
         commitment="processed"

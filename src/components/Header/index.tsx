@@ -1,18 +1,23 @@
 import { Trans } from '@lingui/macro'
 import useScrollPosition from '@react-hook/window-scroll'
+import { useConnectedWallet, useSolana } from '@saberhq/use-solana'
 import { darken } from 'polished'
+import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'react-feather'
 import { NavLink } from 'react-router-dom'
 import { Text } from 'rebass'
 import { useDarkModeManager } from 'state/user/hooks'
 import { useETHBalances } from 'state/wallet/hooks'
 import styled from 'styled-components/macro'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import Logo from '../../assets/svg/logo.svg'
 import LogoDark from '../../assets/svg/logo_white.svg'
 import { useActiveWeb3React } from '../../hooks/web3'
 import Menu from '../Menu'
 import Row, { RowFixed } from '../Row'
 import Web3Status from '../Web3Status'
+import { HideSmall } from 'theme'
+import Faucet from './Faucet'
 
 const HeaderFrame = styled.div<{ showBackground: boolean }>`
   display: grid;
@@ -213,20 +218,31 @@ const StyledMenuButton = styled.button`
 `
 
 export default function Header() {
-  const { account } = useActiveWeb3React()
+  const { connection } = useSolana()
+  const wallet = useConnectedWallet()
+  const [solBalance, setSolBalance] = useState(0)
+  const [reload, setReload] = useState(false)
 
-  const userEthBalance = useETHBalances(account ? [account] : [])?.[account ?? '']
   // const [isDark] = useDarkModeManager()
   const [darkMode, toggleDarkMode] = useDarkModeManager()
 
   const scrollY = useScrollPosition()
+
+  useEffect(() => {
+    if (wallet?.publicKey) {
+      ;(async () => {
+        const balance = await connection.getBalance(wallet.publicKey)
+        setSolBalance(balance / LAMPORTS_PER_SOL)
+      })()
+    }
+  }, [wallet, connection, reload])
 
   return (
     <HeaderFrame showBackground={scrollY > 45}>
       <HeaderRow>
         <Title href=".">
           <UniIcon>
-            <img width={'24px'} src={darkMode ? LogoDark : Logo} alt="logo" />
+            <img width={'32px'} src={darkMode ? LogoDark : Logo} alt="logo" />
           </UniIcon>
         </Title>
       </HeaderRow>
@@ -250,10 +266,15 @@ export default function Header() {
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>
-          <AccountElement active={!!account} style={{ pointerEvents: 'auto' }}>
-            {account && userEthBalance ? (
+          {wallet?.connected && <Faucet />}
+          <AccountElement
+            active={!!wallet?.connected}
+            style={{ pointerEvents: 'auto' }}
+            onClick={() => setReload((p) => !p)}
+          >
+            {wallet?.connected ? (
               <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
-                <Trans>{userEthBalance?.toSignificant(4)} ETH</Trans>
+                <Trans>{solBalance.toFixed(3) ?? 0} SOL</Trans>
               </BalanceText>
             ) : null}
             <Web3Status />
@@ -263,7 +284,7 @@ export default function Header() {
           <StyledMenuButton onClick={() => toggleDarkMode()}>
             {darkMode ? <Moon size={20} /> : <Sun size={20} />}
           </StyledMenuButton>
-          <Menu />
+          {/* <Menu /> */}
         </HeaderElementWrap>
       </HeaderControls>
     </HeaderFrame>
