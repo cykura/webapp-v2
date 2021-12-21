@@ -159,7 +159,7 @@
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@gokiprotocol/walletkit": "^1.5.1",
-    "@saberhq/use-solana": "^1.11.2",
+    "@saberhq/use-solana": "^1.11.3",
     "@solana/web3.js": "^1.31.0"
   }
 }

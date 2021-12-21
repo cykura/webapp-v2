@@ -3093,10 +3093,10 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@saberhq/solana-contrib@^1.11.2":
-  version "1.11.2"
-  resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.11.2.tgz#455981fc62c4b93c93919f6e9fe5184f2c235f70"
-  integrity sha512-mfAL7P5qPdXcQcPTV1scAKmcs54+OMiC8/7iuDDWe0NIycj0PZ2gZ8bTTpxmSoIiZoJSmr79+UGVDfT/VGkmsA==
+"@saberhq/solana-contrib@^1.11.3":
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.11.3.tgz#40d4fc64e728dc3135e1df555e78881b6f6428a2"
+  integrity sha512-crh3GdPk9yY3ieWQfFOGh1SIoW6mGvCcyKu4XDGT3hfSXKpYY+1XNVIKVgpHc+gIoscZZKOeHIw8elDCm9qkeg==
   dependencies:
     "@types/promise-retry" "^1.1.3"
     "@types/retry" "^0.12.1"
@@ -3105,17 +3105,17 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@saberhq/use-solana@^1.11.2":
-  version "1.11.2"
-  resolved "https://registry.yarnpkg.com/@saberhq/use-solana/-/use-solana-1.11.2.tgz#a1f9d2f2488131b3963017d52a5ab9ff99d7cf64"
-  integrity sha512-wHsmMbs1941FYPX08DEpo1rQtyTmzT1P/+Cy5ZIe51B6O/1ff3Z1UL22NwFGkHHNVudKfa7JQhMzcQNxhBzVTw==
+"@saberhq/use-solana@^1.11.3":
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/@saberhq/use-solana/-/use-solana-1.11.3.tgz#95748423a19067c4045dc2925294923035ae8205"
+  integrity sha512-AbpzOCHV4BfP5r0IGD5J65a2/MhqoBSdmnIONgw9VyObE7TjPWZPJ8inyEI0ocj2vcDR+XRTtpjVqY7DPqRA8Q==
   dependencies:
     "@ledgerhq/hw-transport" "^6.20.0"
     "@ledgerhq/hw-transport-webusb" "^6.20.0"
-    "@saberhq/solana-contrib" "^1.11.2"
+    "@saberhq/solana-contrib" "^1.11.3"
     "@solana/wallet-adapter-base" "^0.8.1"
     "@solana/wallet-adapter-coin98" "^0.4.0"
-    "@solana/wallet-adapter-phantom" "^0.8.0"
+    "@solana/wallet-adapter-phantom" "^0.8.1"
     "@solana/wallet-adapter-slope" "^0.4.0"
     "@solana/wallet-adapter-solflare" "^0.5.0"
     "@solana/wallet-adapter-sollet" "^0.9.2"
@@ -3191,10 +3191,10 @@
     "@types/bs58" "^4.0.1"
     bs58 "^4.0.1"
 
-"@solana/wallet-adapter-phantom@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-phantom/-/wallet-adapter-phantom-0.8.0.tgz#c73f91d43f52d946a9dc6702130890902502642d"
-  integrity sha512-+fXzl0LBtjs9cS6RjbNkoXafvxxlTKp5NdeKmpYm+ZrIXZkxXC4wfdwIdMlRtsznGcBKv5+yqfUATD9MvKkPNw==
+"@solana/wallet-adapter-phantom@^0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-phantom/-/wallet-adapter-phantom-0.8.1.tgz#64689cf7a97b70ee66cc0349127e220b0de47104"
+  integrity sha512-O1AzwI3yOoEdscT1AHkG/hV1ud6pJL6RAMXxtn1N0pRV2GhjTb+1gCLA9AGU6mvl/GnikG1BHCy+Ttk+1Lq6QA==
 
 "@solana/wallet-adapter-slope@^0.4.0":
   version "0.4.0"
