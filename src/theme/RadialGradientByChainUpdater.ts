@@ -4,9 +4,9 @@ import { useDarkModeManager } from 'state/user/hooks'
 import { SupportedChainId } from '../constants/chains'
 
 const initialStyles = {
-  width: '200vw',
-  height: '200vh',
-  transform: 'translate(-50vw, -100vh)',
+  // width: '200vw',
+  // height: '200vh',
+  // transform: 'translate(-50vw, -100vh)',
 }
 const backgroundResetStyles = {
   width: '100vw',

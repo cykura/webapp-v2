@@ -26,6 +26,7 @@ const pulse = (color: string) => keyframes`
 
 const SmallButton = styled(ButtonPrimary)`
   /* background-color: ${({ theme }) => theme.bg2}; */
+  color: ${({ theme }) => theme.text5};
   border-radius: 8px;
   padding: 4px 6px;
   width: 48%;
@@ -147,15 +148,11 @@ const StepCounter = ({
       </AutoColumn>
       {!locked ? (
         <RowBetween>
-          <SmallButton onClick={handleDecrement}>
-            <TYPE.white fontSize="12px">
-              <Trans>-{feeAmountFormatted}%</Trans>
-            </TYPE.white>
+          <SmallButton fontSize="12px" onClick={handleDecrement}>
+            <Trans>-{feeAmountFormatted}%</Trans>
           </SmallButton>
-          <SmallButton onClick={handleIncrement}>
-            <TYPE.white fontSize="12px">
-              <Trans>+{feeAmountFormatted}%</Trans>
-            </TYPE.white>
+          <SmallButton fontSize="12px" onClick={handleIncrement}>
+            <Trans>+{feeAmountFormatted}%</Trans>
           </SmallButton>
         </RowBetween>
       ) : null}

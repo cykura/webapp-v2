@@ -32,13 +32,13 @@ const Web3StatusGeneric = styled(ButtonSecondary)`
 const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
   background-color: ${({ theme }) => theme.primary2};
   border: 2px solid ${({ theme }) => theme.primary2};
-  color: ${({ theme }) => theme.text1};
+  color: ${({ theme }) => theme.text5};
   font-weight: 500;
 
   :hover,
   :focus {
     border: 2px solid ${({ theme }) => darken(0.05, theme.primary1)};
-    color: ${({ theme }) => theme.text1};
+    background-color: ${({ theme }) => theme.primary1};
   }
 
   ${({ faded }) =>
@@ -46,12 +46,13 @@ const Web3StatusConnect = styled(Web3StatusGeneric)<{ faded?: boolean }>`
     css`
       background-color: ${({ theme }) => theme.primary2};
       border: 2px solid ${({ theme }) => theme.primary2};
-      color: ${({ theme }) => theme.text1};
+      color: ${({ theme }) => theme.text5};
 
       :hover,
       :focus {
         border: 2px solid ${({ theme }) => darken(0.05, theme.primary1)};
-        color: ${({ theme }) => darken(0.05, theme.text1)};
+        background-color: ${({ theme }) => theme.primary1};
+        color: ${({ theme }) => darken(0.05, theme.text5)};
       }
     `}
 `

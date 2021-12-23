@@ -56,23 +56,24 @@
 
       #background-radial-gradient {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
+        inset: 0;
         pointer-events: none;
-        width: 200vw;
-        height: 200vh;
-        background: radial-gradient(50% 50% at 50% 50%, #8e5dbf2f 0%, rgba(255, 255, 255, 0) 100%);
-        transform: translate(-50vw, -100vh);
-        z-index: -1;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(50% 50% at 50% 10%, #8e5dbf2f 0%, rgba(255, 255, 255, 0) 100%);
+        /* transform: translate(-50vw, -100vh); */
+        z-index: -999;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-image: url('%PUBLIC_URL%/bg.jpg');
+        opacity: 0.94;
       }
 
       html {
         min-height: 100%;
-        background-repeat: no-repeat;
-        background-size: cover;
+        /* background-repeat: no-repeat;
+        background-size: cover; */
         /* background-image: linear-gradient(to left top, rgba(192, 132, 252, 0.75), rgba(110, 231, 183, 0.75)); */
-        background-image: url('%PUBLIC_URL%/bg.jpg');
       }
 
       /* Scrollbar */
@@ -96,7 +97,7 @@
       }
       @media (prefers-color-scheme: light) {
         html {
-          background-color: #f7f8fa;
+          background-color: #d1d1d1;
         }
       }
     </style>

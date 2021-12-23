@@ -63,7 +63,7 @@ const CTA2 = styled(ExternalLink)`
   border: 1px solid ${({ theme }) => theme.bg4};
 
   * {
-    color: ${({ theme }) => theme.text1};
+    color: white;
     text-decoration: none !important;
   }
 
