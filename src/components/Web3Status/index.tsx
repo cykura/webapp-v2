@@ -62,7 +62,7 @@ const IconWrapper = styled.div<{ size?: number }>`
   justify-content: center;
   & > * {
     height: ${({ size }) => (size ? size + 'px' : '32px')};
-    width: ${({ size }) => (size ? size + 12 + 'px' : '32px')};
+    width: ${({ size }) => (size ? size + 'px' : '32px')};
   }
 `
 
