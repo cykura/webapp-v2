@@ -1,4 +1,6 @@
 import { Trans } from '@lingui/macro'
+import { useWalletKit } from '@gokiprotocol/walletkit'
+import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
 import { Currency, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 import { Trade as V2Trade } from '@uniswap/v2-sdk'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
@@ -70,6 +72,8 @@ const StyledInfo = styled(Info)`
 
 export default function Swap({ history }: RouteComponentProps) {
   const { account } = useActiveWeb3React()
+  const { connect } = useWalletKit()
+  const { disconnect, connected, walletProviderInfo } = useSolana()
   const loadedUrlParams = useDefaultsFromURLSearch()
 
   // token warning stuff
@@ -207,7 +211,7 @@ export default function Swap({ history }: RouteComponentProps) {
     if (signatureState === UseERC20PermitState.NOT_SIGNED && gatherPermitSignature) {
       try {
         await gatherPermitSignature()
-      } catch (error) {
+      } catch (error: any) {
         // try to approve if gatherPermitSignature failed for any reason other than the user rejecting it
         if (error?.code !== 4001) {
           await approveCallback()
@@ -511,8 +515,8 @@ export default function Swap({ history }: RouteComponentProps) {
                     <Trans>Unsupported Asset</Trans>
                   </TYPE.main>
                 </ButtonPrimary>
-              ) : !account ? (
-                <ButtonLight onClick={toggleWalletModal}>
+              ) : !connected ? (
+                <ButtonLight onClick={connect}>
                   <Trans>Connect Wallet</Trans>
                 </ButtonLight>
               ) : showWrap ? (

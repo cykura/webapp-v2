@@ -174,7 +174,7 @@ export function useDerivedSwapInfo(toggledVersion: Version): {
 
   let inputError: string | undefined
   if (!account) {
-    inputError = t`Connect Wallet`
+    inputError = t`Connect Ethereum Wallet`
   }
 
   if (!parsedAmount) {

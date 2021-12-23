@@ -1,4 +1,6 @@
 import { useCallback, useContext, useMemo, useState } from 'react'
+import { useWalletKit } from '@gokiprotocol/walletkit'
+import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
 import { TransactionResponse } from '@ethersproject/providers'
 import { Currency, CurrencyAmount, Percent } from '@uniswap/sdk-core'
 import { AlertTriangle, AlertCircle } from 'react-feather'
@@ -66,6 +68,8 @@ export default function AddLiquidity({
   history,
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
   const { account, chainId, library } = useActiveWeb3React()
+  const { connect } = useWalletKit()
+  const { disconnect, connected, walletProviderInfo } = useSolana()
   const theme = useContext(ThemeContext)
   const toggleWalletModal = useWalletModalToggle() // toggle wallet when disconnected
   const expertMode = useIsExpertMode()
@@ -709,8 +713,8 @@ export default function AddLiquidity({
                       <Trans>Unsupported Asset</Trans>
                     </TYPE.main>
                   </ButtonPrimary>
-                ) : !account ? (
-                  <ButtonLight onClick={toggleWalletModal} $borderRadius="12px" padding={'12px'}>
+                ) : !connected ? (
+                  <ButtonLight onClick={connect} $borderRadius="12px" padding={'12px'}>
                     <Trans>Connect wallet</Trans>
                   </ButtonLight>
                 ) : (

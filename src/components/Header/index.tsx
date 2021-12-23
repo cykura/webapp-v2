@@ -231,8 +231,12 @@ export default function Header() {
   useEffect(() => {
     if (wallet?.publicKey) {
       ;(async () => {
-        const balance = await connection.getBalance(wallet.publicKey)
-        setSolBalance(balance / LAMPORTS_PER_SOL)
+        try {
+          const balance = await connection.getBalance(wallet.publicKey)
+          setSolBalance(balance / LAMPORTS_PER_SOL)
+        } catch (err) {
+          console.log(err)
+        }
       })()
     }
   }, [wallet, connection, reload])
@@ -273,10 +277,12 @@ export default function Header() {
             onClick={() => setReload((p) => !p)}
           >
             {wallet?.connected ? (
+              // <Tooltip text="Refresh Balance" show={true}>
               <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
                 <Trans>{solBalance.toFixed(3) ?? 0} SOL</Trans>
               </BalanceText>
-            ) : null}
+            ) : // </Tooltip>
+            null}
             <Web3Status />
           </AccountElement>
         </HeaderElement>

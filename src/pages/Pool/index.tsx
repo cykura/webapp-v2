@@ -1,4 +1,6 @@
 import { Trans } from '@lingui/macro'
+import { useWalletKit } from '@gokiprotocol/walletkit'
+import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
 import { ButtonGray, ButtonPrimary } from 'components/Button'
 import { AutoColumn } from 'components/Column'
 import { FlyoutAlignment, NewMenu } from 'components/Menu'
@@ -90,6 +92,7 @@ const ResponsiveButtonPrimary = styled(ButtonPrimary)`
 
 const MainContentWrapper = styled.main`
   background-color: ${({ theme }) => theme.bg0};
+  min-height: 50vh;
   padding: 8px;
   border-radius: 20px;
   display: flex;
@@ -108,6 +111,8 @@ const ShowInactiveToggle = styled.div`
 
 export default function Pool() {
   const { account } = useActiveWeb3React()
+  const { connect } = useWalletKit()
+  const { disconnect, connected, walletProviderInfo } = useSolana()
   const toggleWalletModal = useWalletModalToggle()
 
   const theme = useContext(ThemeContext)
@@ -124,7 +129,6 @@ export default function Pool() {
   ) ?? [[], []]
 
   const filteredPositions = [...openPositions, ...(userHideClosedPositions ? [] : closedPositions)]
-  const showConnectAWallet = Boolean(!account)
 
   const menuItems = [
     {
@@ -157,9 +161,9 @@ export default function Pool() {
           <AutoColumn gap="lg" style={{ width: '100%' }}>
             <TitleRow style={{ marginTop: '1rem' }} padding={'0'}>
               <HideSmall>
-                <TYPE.mediumHeader>
+                <TYPE.largeHeader>
                   <Trans>Pools Overview</Trans>
-                </TYPE.mediumHeader>
+                </TYPE.largeHeader>
               </HideSmall>
               <ButtonRow>
                 <Menu
@@ -180,7 +184,7 @@ export default function Pool() {
               </ButtonRow>
             </TitleRow>
 
-            <CTACards />
+            {/* <CTACards /> */}
 
             {closedPositions.length > 0 ? (
               <ShowInactiveToggle>
@@ -219,11 +223,11 @@ export default function Pool() {
                   <TYPE.mediumHeader color={theme.text3} textAlign="center">
                     <Inbox size={48} strokeWidth={1} style={{ marginBottom: '.5rem' }} />
                     <div>
-                      <Trans>Your V3 liquidity positions will appear here.</Trans>
+                      <Trans>Your liquidity positions will appear here.</Trans>
                     </div>
                   </TYPE.mediumHeader>
-                  {showConnectAWallet && (
-                    <ButtonPrimary style={{ marginTop: '2em', padding: '8px 16px' }} onClick={toggleWalletModal}>
+                  {!connected && (
+                    <ButtonPrimary style={{ marginTop: '2em', padding: '8px 16px' }} onClick={connect}>
                       <Trans>Connect a wallet</Trans>
                     </ButtonPrimary>
                   )}

@@ -379,7 +379,7 @@ export function useV3DerivedMintInfo(
 
   let errorMessage: string | undefined
   if (!account) {
-    errorMessage = t`Connect Wallet`
+    errorMessage = t`Connect Eth Wallet`
   }
 
   if (poolState === PoolState.INVALID) {
