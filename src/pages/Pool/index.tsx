@@ -3,7 +3,7 @@ import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
 import { ButtonGray, ButtonPrimary } from 'components/Button'
 import { AutoColumn } from 'components/Column'
-import { FlyoutAlignment, NewMenu } from 'components/Menu'
+import { FlyoutAlignment, NewMenu, PopupMenu } from 'components/Menu'
 import { SwapPoolTabs } from 'components/NavigationTabs'
 import PositionList from 'components/PositionList'
 import { RowBetween, RowFixed } from 'components/Row'
@@ -12,7 +12,7 @@ import Toggle from 'components/Toggle'
 import { useV3Positions } from 'hooks/useV3Positions'
 import { useActiveWeb3React } from 'hooks/web3'
 import { useContext } from 'react'
-import { BookOpen, ChevronDown, Inbox, PlusCircle } from 'react-feather'
+import { BookOpen, ChevronDown, Inbox, PlusCircle, MoreVertical } from 'react-feather'
 import { Link } from 'react-router-dom'
 import { useWalletModalToggle } from 'state/application/hooks'
 import { useUserHideClosedPositions } from 'state/user/hooks'
@@ -53,12 +53,8 @@ const ButtonRow = styled(RowFixed)`
     justify-content: space-between;
   `};
 `
-const Menu = styled(NewMenu)`
+const Menu = styled(PopupMenu)`
   margin-left: 0;
-  ${({ theme }) => theme.mediaWidth.upToSmall`
-    flex: 1 1 auto;
-    width: 49%;
-  `};
 `
 const MenuItem = styled.div`
   align-items: center;
@@ -68,7 +64,7 @@ const MenuItem = styled.div`
 const MoreOptionsButton = styled(ButtonGray)`
   border-radius: 12px;
   flex: 1 1 auto;
-  padding: 6px 8px;
+  padding: 8px 10px;
 `
 const NoLiquidity = styled.div`
   align-items: center;
@@ -100,13 +96,12 @@ const MainContentWrapper = styled.main`
 `
 
 const ShowInactiveToggle = styled.div`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-items: end;
-
-  grid-template-columns: 1fr auto;
-  grid-column-gap: 8px;
-  padding: 0 8px;
+  gap: 0.6em;
+  width: max-content;
+  padding: 8px;
 `
 
 export default function Pool() {
@@ -159,46 +154,44 @@ export default function Pool() {
         <SwapPoolTabs active={'pool'} />
         <AutoColumn gap="lg" justify="center">
           <AutoColumn gap="lg" style={{ width: '100%' }}>
-            <TitleRow style={{ marginTop: '1rem' }} padding={'0'}>
+            <TitleRow style={{ padding: '0 0.5em', marginTop: '1rem' }}>
               <HideSmall>
                 <TYPE.largeHeader>
                   <Trans>Pools Overview</Trans>
                 </TYPE.largeHeader>
               </HideSmall>
               <ButtonRow>
+                <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/ETH">
+                  + <Trans>New Position</Trans>
+                </ResponsiveButtonPrimary>
                 <Menu
-                  menuItems={menuItems}
-                  flyoutAlignment={FlyoutAlignment.LEFT}
+                  content={
+                    <ShowInactiveToggle>
+                      <TYPE.small>
+                        <Trans>Closed positions</Trans>
+                      </TYPE.small>
+                      <Toggle
+                        id="small"
+                        isActive={!userHideClosedPositions}
+                        toggle={() => setUserHideClosedPositions(!userHideClosedPositions)}
+                        checked={<Trans>Show</Trans>}
+                        unchecked={<Trans>Hide</Trans>}
+                      />
+                    </ShowInactiveToggle>
+                  }
+                  flyoutAlignment={FlyoutAlignment.RIGHT}
                   ToggleUI={(props: any) => (
                     <MoreOptionsButton {...props}>
                       <TYPE.body style={{ alignItems: 'center', display: 'flex' }}>
-                        <Trans>More</Trans>
-                        <ChevronDown size={15} />
+                        <MoreVertical size={15} />
                       </TYPE.body>
                     </MoreOptionsButton>
                   )}
                 />
-                <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/ETH">
-                  + <Trans>New Position</Trans>
-                </ResponsiveButtonPrimary>
               </ButtonRow>
             </TitleRow>
 
             {/* <CTACards /> */}
-
-            {closedPositions.length > 0 ? (
-              <ShowInactiveToggle>
-                <TYPE.darkGray>
-                  <Trans>Closed positions</Trans>
-                </TYPE.darkGray>
-                <Toggle
-                  isActive={!userHideClosedPositions}
-                  toggle={() => setUserHideClosedPositions(!userHideClosedPositions)}
-                  checked={<Trans>Show</Trans>}
-                  unchecked={<Trans>Hide</Trans>}
-                />
-              </ShowInactiveToggle>
-            ) : null}
 
             <MainContentWrapper>
               {positionsLoading ? (

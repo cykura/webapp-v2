@@ -76,10 +76,6 @@ const MenuFlyout = styled.span<{ flyoutAlignment?: FlyoutAlignment }>`
       : css`
           left: 0rem;
         `};
-  ${({ theme }) => theme.mediaWidth.upToMedium`
-    top: unset;
-    bottom: 3em
-  `};
 `
 
 const MenuItem = styled(ExternalLink)`
@@ -176,6 +172,12 @@ interface NewMenuProps {
   }[]
 }
 
+interface PopupMenuProps {
+  flyoutAlignment?: FlyoutAlignment
+  ToggleUI?: React.FunctionComponent
+  content: any
+}
+
 const NewMenuFlyout = styled(MenuFlyout)`
   top: 3rem !important;
 `
@@ -213,6 +215,20 @@ export const NewMenu = ({ flyoutAlignment = FlyoutAlignment.RIGHT, ToggleUI, men
           )}
         </NewMenuFlyout>
       )}
+    </StyledMenu>
+  )
+}
+
+export const PopupMenu = ({ flyoutAlignment = FlyoutAlignment.RIGHT, ToggleUI, content, ...rest }: PopupMenuProps) => {
+  const node = useRef<HTMLDivElement>()
+  const open = useModalOpen(ApplicationModal.POOL_OVERVIEW_OPTIONS)
+  const toggle = useToggleModal(ApplicationModal.POOL_OVERVIEW_OPTIONS)
+  useOnClickOutside(node, open ? toggle : undefined)
+  const ToggleElement = ToggleUI || StyledMenuIcon
+  return (
+    <StyledMenu ref={node as any} {...rest}>
+      <ToggleElement onClick={toggle} />
+      {open && <NewMenuFlyout flyoutAlignment={flyoutAlignment}>{content}</NewMenuFlyout>}
     </StyledMenu>
   )
 }
