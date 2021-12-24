@@ -30,7 +30,7 @@ export default function CurrencyLogo({
   style,
   ...rest
 }: {
-  currency?: Currency
+  currency?: any
   size?: string
   style?: React.CSSProperties
 }) {

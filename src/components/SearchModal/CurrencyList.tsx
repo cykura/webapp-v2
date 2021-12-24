@@ -18,7 +18,9 @@ import { MenuItem } from './styleds'
 import Loader from '../Loader'
 import { isTokenOnList } from '../../utils'
 
-function currencyKey(currency: Currency): string {
+import { Token } from '../../hooks/Tokens'
+
+function currencyKey(currency: Token): string {
   return currency.isToken ? currency.address : 'ETHER'
 }
 
@@ -89,7 +91,7 @@ function CurrencyRow({
   style,
   showCurrencyAmount,
 }: {
-  currency: Currency
+  currency: any
   onSelect: () => void
   isSelected: boolean
   otherSelected: boolean
@@ -98,10 +100,8 @@ function CurrencyRow({
 }) {
   const { account } = useActiveWeb3React()
   const key = currencyKey(currency)
-  const selectedTokenList = useCombinedActiveList()
-  const isOnSelectedList = isTokenOnList(selectedTokenList, currency.isToken ? currency : undefined)
-  const customAdded = useIsUserAddedToken(currency)
-  const balance = useCurrencyBalance(account ?? undefined, currency)
+  // calculate balance later
+  // const balance = useCurrencyBalance(account ?? undefined, currency)
 
   // only show add or remove buttons if not on selected list
   return (
@@ -118,17 +118,14 @@ function CurrencyRow({
           {currency.symbol}
         </Text>
         <TYPE.darkGray ml="0px" fontSize={'12px'} fontWeight={300}>
-          {!currency.isNative && !isOnSelectedList && customAdded ? (
-            <Trans>{currency.name} • Added by user</Trans>
-          ) : (
-            currency.name
-          )}
+          currency.name
         </TYPE.darkGray>
       </Column>
-      <TokenTags currency={currency} />
+      {/* <TokenTags currency={currency} /> */}
       {showCurrencyAmount && (
         <RowFixed style={{ justifySelf: 'flex-end' }}>
-          {balance ? <Balance balance={balance} /> : account ? <Loader /> : null}
+          {/* {balance ? <Balance balance={balance} /> : account ? <Loader /> : null} */}
+          00
         </RowFixed>
       )}
     </MenuItem>
@@ -145,14 +142,14 @@ export default function CurrencyList({
   showCurrencyAmount,
 }: {
   height: number
-  currencies: Currency[]
+  currencies: Token[]
   selectedCurrency?: Currency | null
   onCurrencySelect: (currency: Currency) => void
   otherCurrency?: Currency | null
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
   showCurrencyAmount?: boolean
 }) {
-  const itemData: Currency[] = useMemo(() => {
+  const itemData: Token[] = useMemo(() => {
     return currencies
   }, [currencies])
 

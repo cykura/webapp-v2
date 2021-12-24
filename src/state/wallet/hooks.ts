@@ -142,8 +142,9 @@ export function useAllTokenBalances(): { [tokenAddress: string]: CurrencyAmount<
   const { account } = useActiveWeb3React()
   const allTokens = useAllTokens()
   const allTokensArray = useMemo(() => Object.values(allTokens ?? {}), [allTokens])
-  const balances = useTokenBalances(account ?? undefined, allTokensArray)
-  return balances ?? {}
+  // const balances = useTokenBalances(account ?? undefined, allTokensArray)
+  // return balances ?? {}
+  return {}
 }
 
 // get the total owned, unclaimed, and unharvested UNI for account
