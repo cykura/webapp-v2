@@ -121,7 +121,7 @@ function Faucet() {
                 collateral,
                 ata,
                 wallet.publicKey,
-                airdropAdmin.publicKey
+                wallet.publicKey
               )
             )
           }
