@@ -23,6 +23,7 @@ import UserUpdater from './state/user/updater'
 import ThemeProvider, { ThemedGlobalStyle } from './theme'
 import RadialGradientByChainUpdater from './theme/RadialGradientByChainUpdater'
 import getLibrary from './utils/getLibrary'
+import { SnackbarProvider } from 'notistack'
 
 const Web3ProviderNetwork = createWeb3ReactRoot(NetworkContextName)
 
@@ -98,8 +99,10 @@ ReactDOM.render(
                 <Blocklist>
                   <Updaters />
                   <ThemeProvider>
-                    <ThemedGlobalStyle />
-                    <App />
+                    <SnackbarProvider>
+                      <ThemedGlobalStyle />
+                      <App />
+                    </SnackbarProvider>
                   </ThemeProvider>
                 </Blocklist>
               </Web3ProviderNetwork>

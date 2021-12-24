@@ -159,8 +159,10 @@
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@gokiprotocol/walletkit": "^1.5.1",
+    "@mui/material": "^5.2.5",
     "@saberhq/use-solana": "^1.11.3",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.31.0"
+    "@solana/web3.js": "^1.31.0",
+    "notistack": "^2.0.3"
   }
 }

@@ -1,10 +1,12 @@
 import { Trans } from '@lingui/macro'
-import { ButtonGray } from 'components/Button'
+import { ButtonGray, ButtonOutlined } from 'components/Button'
 import styled from 'styled-components/macro'
 import { useConnectedWallet, useSolana } from '@saberhq/use-solana'
 import { Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js'
 import { Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { useCallback } from 'react'
+import { useSnackbar } from 'notistack'
+import { ExternalLink, TYPE } from 'theme'
 
 const Text = styled.p`
   flex: 1 1 auto;
@@ -82,6 +84,7 @@ const SOL = {
 }
 
 function Faucet() {
+  const { enqueueSnackbar } = useSnackbar()
   const { connection } = useSolana()
   const wallet = useConnectedWallet()
 
@@ -92,12 +95,16 @@ function Faucet() {
         .then((b) => {
           if (b < 0.05 * 1e9) {
             connection.requestAirdrop(wallet.publicKey, 0.1 * 1e9).then((d) => {
-              console.log(d)
+              enqueueSnackbar('Airdroped 0.1 SOL', {
+                variant: 'success',
+              })
             })
           }
         })
         .catch((err) => {
-          console.log(err)
+          enqueueSnackbar(err, {
+            variant: 'error',
+          })
         })
 
       const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, SOL.address]
@@ -144,9 +151,18 @@ function Faucet() {
         tx.sign(airdropAdmin)
         const signedTx = await wallet.signTransaction(tx)
         const txHash = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: true })
-        console.log(txHash)
-      } catch (err) {
-        console.log(err)
+        enqueueSnackbar('Transaction Sent', {
+          variant: 'info',
+          action: (
+            <ExternalLink href={`https://solscan.io/tx/${txHash}?cluster=devnet`}>
+              <TYPE.link color="white">View on Explorer</TYPE.link>
+            </ExternalLink>
+          ),
+        })
+      } catch (err: any) {
+        enqueueSnackbar(err?.message, {
+          variant: 'error',
+        })
       }
     }
   }, [wallet, connection])

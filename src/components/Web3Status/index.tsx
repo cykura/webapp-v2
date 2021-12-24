@@ -6,10 +6,11 @@ import styled, { css } from 'styled-components/macro'
 import { ButtonSecondary } from '../Button'
 import { RowBetween } from '../Row'
 import { useModalOpen, useToggleModal } from '../../state/application/hooks'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { ApplicationModal } from 'state/application/actions'
 import { useOnClickOutside } from '../../hooks/useOnClickOutside'
 import { LogOut, Clipboard } from 'react-feather'
+import { useSnackbar } from 'notistack'
 
 export enum FlyoutAlignment {
   LEFT = 'LEFT',
@@ -133,6 +134,7 @@ const MenuItem = styled.div`
 `
 
 function Web3StatusInner() {
+  const { enqueueSnackbar } = useSnackbar()
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo } = useSolana()
   const wallet = useConnectedWallet()
@@ -149,6 +151,21 @@ function Web3StatusInner() {
     //   variant: 'success',
     // })
   }
+
+  useEffect(() => {
+    if (connected) {
+      enqueueSnackbar('Wallet connected', {
+        variant: 'success',
+        preventDuplicate: true,
+      })
+    }
+    wallet?.on('disconnect', () => {
+      enqueueSnackbar('Wallet disconnected', {
+        variant: 'info',
+        preventDuplicate: true,
+      })
+    })
+  }, [connected])
 
   return !connected ? (
     <Web3StatusConnect id="connect-wallet" onClick={connect} faded={false}>
