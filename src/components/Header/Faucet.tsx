@@ -48,18 +48,17 @@ const StyledMenuButton = styled.button`
     stroke: ${({ theme }) => theme.text1};
   }
 `
-
 const airdropAdmin = Keypair.fromSecretKey(
   Uint8Array.from([
-    85, 51, 81, 126, 224, 250, 233, 174, 133, 40, 112, 237, 109, 244, 6, 62, 193, 121, 239, 246, 11, 77, 215, 9, 0, 18,
-    83, 91, 115, 65, 112, 238, 60, 148, 118, 6, 224, 47, 54, 140, 167, 188, 182, 74, 237, 183, 242, 77, 129, 107, 155,
-    20, 229, 130, 251, 93, 168, 162, 156, 15, 152, 163, 229, 119,
+    166, 35, 198, 106, 198, 244, 143, 224, 64, 125, 232, 144, 28, 45, 178, 146, 56, 92, 99, 244, 25, 75, 104, 247, 215,
+    33, 62, 30, 186, 249, 163, 48, 185, 210, 115, 123, 192, 235, 130, 28, 35, 27, 9, 65, 38, 210, 100, 190, 62, 225, 55,
+    90, 209, 0, 227, 160, 141, 54, 132, 242, 98, 240, 212, 95,
   ])
 )
 
 const USDC = {
   symbol: 'USDC',
-  address: new PublicKey('5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW'),
+  address: new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'),
   decimal: 6,
   name: 'USD Coin',
   logoURI:
@@ -67,7 +66,7 @@ const USDC = {
 }
 const USDT = {
   symbol: 'USDT',
-  address: new PublicKey('4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm'),
+  address: new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'),
   decimal: 6,
   name: 'Theter USD',
   logoURI:
@@ -75,7 +74,7 @@ const USDT = {
 }
 const SOL = {
   symbol: 'wSOL',
-  address: new PublicKey('BJVjNqQzM1fywLWzzKbQEZ2Jsx9AVyhSLWzko3yF68PH'),
+  address: new PublicKey('EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP'),
   decimal: 9,
   name: 'Wrapped Solana',
   logoURI:
