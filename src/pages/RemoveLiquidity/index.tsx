@@ -115,9 +115,10 @@ export default function RemoveLiquidity({
         await gatherPermitSignature()
       } catch (error) {
         // try to approve if gatherPermitSignature failed for any reason other than the user rejecting it
-        if (error?.code !== 4001) {
-          await approveCallback()
-        }
+        // if (error?.code !== 4001) {
+        //   await approveCallback()
+        // }
+        console.log(error)
       }
     } else {
       await approveCallback()

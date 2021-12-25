@@ -13,17 +13,19 @@ export function RedirectDuplicateTokenIds(
   } = props
 
   const { chainId } = useActiveWeb3React()
+  // const chainId = 103;
 
   // prevent weth + eth
   const isETHOrWETHA =
-    currencyIdA === 'ETH' || (chainId !== undefined && currencyIdA === WETH9_EXTENDED[chainId]?.address)
+    currencyIdA === 'SOL' || (chainId !== undefined && currencyIdA === WETH9_EXTENDED[chainId]?.address)
   const isETHOrWETHB =
-    currencyIdB === 'ETH' || (chainId !== undefined && currencyIdB === WETH9_EXTENDED[chainId]?.address)
+    currencyIdB === 'SOL' || (chainId !== undefined && currencyIdB === WETH9_EXTENDED[chainId]?.address)
 
   if (
     currencyIdA &&
     currencyIdB &&
     (currencyIdA.toLowerCase() === currencyIdB.toLowerCase() || (isETHOrWETHA && isETHOrWETHB))
+    // (currencyIdA.toLowerCase() === currencyIdB.toLowerCase())
   ) {
     return <Redirect to={`/add/${currencyIdA}`} />
   }

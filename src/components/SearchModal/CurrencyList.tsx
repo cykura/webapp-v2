@@ -18,9 +18,7 @@ import { MenuItem } from './styleds'
 import Loader from '../Loader'
 import { isTokenOnList } from '../../utils'
 
-import { Token } from '../../hooks/Tokens'
-
-function currencyKey(currency: Token): string {
+function currencyKey(currency: Currency): string {
   return currency.isToken ? currency.address : 'ETHER'
 }
 
@@ -91,7 +89,7 @@ function CurrencyRow({
   style,
   showCurrencyAmount,
 }: {
-  currency: any
+  currency: Currency
   onSelect: () => void
   isSelected: boolean
   otherSelected: boolean
@@ -100,8 +98,10 @@ function CurrencyRow({
 }) {
   const { account } = useActiveWeb3React()
   const key = currencyKey(currency)
-  // calculate balance later
-  // const balance = useCurrencyBalance(account ?? undefined, currency)
+  const selectedTokenList = useCombinedActiveList()
+  const isOnSelectedList = isTokenOnList(selectedTokenList, currency.isToken ? currency : undefined)
+  const customAdded = useIsUserAddedToken(currency)
+  const balance = useCurrencyBalance(account ?? undefined, currency)
 
   // only show add or remove buttons if not on selected list
   return (
@@ -118,7 +118,7 @@ function CurrencyRow({
           {currency.symbol}
         </Text>
         <TYPE.darkGray ml="0px" fontSize={'12px'} fontWeight={300}>
-          currency.name
+          {currency.name}
         </TYPE.darkGray>
       </Column>
       {/* <TokenTags currency={currency} /> */}
@@ -142,14 +142,14 @@ export default function CurrencyList({
   showCurrencyAmount,
 }: {
   height: number
-  currencies: Token[]
+  currencies: Currency[]
   selectedCurrency?: Currency | null
   onCurrencySelect: (currency: Currency) => void
   otherCurrency?: Currency | null
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
   showCurrencyAmount?: boolean
 }) {
-  const itemData: Token[] = useMemo(() => {
+  const itemData: Currency[] = useMemo(() => {
     return currencies
   }, [currencies])
 

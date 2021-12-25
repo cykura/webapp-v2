@@ -160,3 +160,8 @@ export class ExtendedEther extends Ether {
     return this._cachedEther[chainId] ?? (this._cachedEther[chainId] = new ExtendedEther(chainId))
   }
 }
+
+// SOLANA TOKENS
+
+export const SOLUSDC = new Token(103, '5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW', 6, 'USDC', 'USDC Coin')
+export const SOLUSDT = new Token(103, '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm', 6, 'USDT', 'USDT Coin')

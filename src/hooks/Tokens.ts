@@ -1,5 +1,5 @@
 import { parseBytes32String } from '@ethersproject/strings'
-import { Currency, Token as UniToken } from '@uniswap/sdk-core'
+import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useMemo } from 'react'
 import { ExtendedEther, WETH9_EXTENDED } from '../constants/tokens'
@@ -13,8 +13,10 @@ import { useActiveWeb3React } from './web3'
 import { useBytes32TokenContract, useTokenContract } from './useContract'
 import { PublicKey } from '@solana/web3.js'
 
-// reduce token map into standard address <-> UniToken mapping, optionally include user added tokens
-function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: UniToken } {
+import { SOLUSDC, SOLUSDT } from '../constants/tokens'
+
+// reduce token map into standard address <-> Token mapping, optionally include user added tokens
+function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
   const { chainId } = useActiveWeb3React()
   const userAddedTokens = useUserAddedTokens()
 
@@ -22,7 +24,7 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
     if (!chainId) return {}
 
     // reduce to just tokens
-    const mapWithoutUrls = Object.keys(tokenMap[chainId] ?? {}).reduce<{ [address: string]: UniToken }>(
+    const mapWithoutUrls = Object.keys(tokenMap[chainId] ?? {}).reduce<{ [address: string]: Token }>(
       (newMap, address) => {
         newMap[address] = tokenMap[chainId][address].token
         return newMap
@@ -34,7 +36,7 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
       return (
         userAddedTokens
           // reduce into all ALL_TOKENS filtered by the current chain
-          .reduce<{ [address: string]: UniToken }>(
+          .reduce<{ [address: string]: Token }>(
             (tokenMap, token) => {
               tokenMap[token.address] = token
               return tokenMap
@@ -50,74 +52,25 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
   }, [chainId, userAddedTokens, tokenMap, includeUserAdded])
 }
 
-// Swap out with sdk from uniswap
-export class Token {
-  readonly isNative: false
-  readonly isToken: true
-  /**
-   * The contract address on the chain on which this token lives
-   */
-  readonly address: string
-  readonly symbol: string | undefined
-  readonly name: string | undefined
-  readonly chainId: number
-  readonly decimals: number = 0
-  constructor(chainId: number, address: string, decimals: number, symbol?: string, name?: string) {
-    this.isNative = false
-    this.isToken = true
-    this.address = address
-    this.chainId = chainId
-    this.decimals = decimals
-    this.symbol = symbol
-    this.name = name
-  }
-}
-
 export function useAllTokens(): { [address: string]: Token } {
   // DEV TOKENS
-  const USDC = {
-    symbol: 'USDC',
-    address: new PublicKey('5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW'),
-    decimal: 6,
-    name: 'USD Coin',
-    logoURI:
-      'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
-  }
-  const USDT = {
-    symbol: 'USDT',
-    address: new PublicKey('4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm'),
-    decimal: 6,
-    name: 'Theter USD',
-    logoURI:
-      'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg',
-  }
-  const SOL = {
-    symbol: 'wSOL',
-    address: new PublicKey('BJVjNqQzM1fywLWzzKbQEZ2Jsx9AVyhSLWzko3yF68PH'),
-    decimal: 9,
-    name: 'Wrapped Solana',
-    logoURI:
-      'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
-  }
-  const usdc = new Token(102, USDC.address.toString(), USDC.decimal, USDC.symbol, USDC.name)
-  const usdt = new Token(102, USDT.address.toString(), USDT.decimal, USDT.symbol, USDT.name)
-  const sol = new Token(102, SOL.address.toString(), SOL.decimal, SOL.symbol, SOL.name)
+  const SOL = WSOL[102]
   // const allTokens = useCombinedActiveList()
   // return useTokensFromMap(allTokens, true)
   const map = {
-    [USDC.address.toString()]: usdc,
-    [USDT.address.toString()]: usdt,
-    [SOL.address.toString()]: sol,
+    [SOLUSDC.address]: SOLUSDC,
+    [SOLUSDT.address]: SOLUSDT,
+    [SOL.address]: SOL,
   }
   return map
 }
 
-export function useUnsupportedTokens(): { [address: string]: UniToken } {
+export function useUnsupportedTokens(): { [address: string]: Token } {
   const unsupportedTokensMap = useUnsupportedTokenList()
   return useTokensFromMap(unsupportedTokensMap, false)
 }
 
-export function useIsTokenActive(token: UniToken | undefined | null): boolean {
+export function useIsTokenActive(token: Token | undefined | null): boolean {
   const activeTokens = useAllTokens()
 
   if (!activeTokens || !token) {
@@ -153,15 +106,15 @@ function parseStringOrBytes32(str: string | undefined, bytes32: string | undefin
 // undefined if invalid or does not exist
 // null if loading
 // otherwise returns the token
-export function useToken(tokenAddress?: string): UniToken | undefined | null {
+export function useToken(tokenAddress?: string): Token | undefined | null {
   const { chainId } = useActiveWeb3React()
   const tokens = useAllTokens()
 
-  const address = isAddress(tokenAddress)
+  const address = tokenAddress
 
   const tokenContract = useTokenContract(address ? address : undefined, false)
   const tokenContractBytes32 = useBytes32TokenContract(address ? address : undefined, false)
-  const token: UniToken | undefined | any = address ? tokens[address] : undefined
+  const token: Token | undefined | any = address ? tokens[address] : undefined
 
   const tokenName = useSingleCallResult(token ? undefined : tokenContract, 'name', undefined, NEVER_RELOAD)
   const tokenNameBytes32 = useSingleCallResult(
@@ -179,12 +132,12 @@ export function useToken(tokenAddress?: string): UniToken | undefined | null {
     if (!chainId || !address) return undefined
     if (decimals.loading || symbol.loading || tokenName.loading) return null
     if (decimals.result) {
-      return new UniToken(
+      return new Token(
         chainId,
         address,
         decimals.result[0],
         parseStringOrBytes32(symbol.result?.[0], symbolBytes32.result?.[0], 'UNKNOWN'),
-        parseStringOrBytes32(tokenName.result?.[0], tokenNameBytes32.result?.[0], 'Unknown UniToken')
+        parseStringOrBytes32(tokenName.result?.[0], tokenNameBytes32.result?.[0], 'Unknown Token')
       )
     }
     return undefined

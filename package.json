@@ -51,10 +51,10 @@
     "@uniswap/token-lists": "^1.0.0-beta.19",
     "@uniswap/v2-core": "1.0.0",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "@uniswap/v2-sdk": "^3.0.0-alpha.2",
+    "@uniswap/v2-sdk": "cyclos-io/v2-sdk",
     "@uniswap/v3-core": "1.0.0",
     "@uniswap/v3-periphery": "^1.1.1",
-    "@uniswap/v3-sdk": "^3.0.0-alpha.9",
+    "@uniswap/v3-sdk": "cyclos-io/sdk",
     "@web3-react/core": "^6.0.9",
     "@web3-react/fortmatic-connector": "^6.0.9",
     "@web3-react/injected-connector": "^6.0.7",
@@ -163,6 +163,7 @@
     "@saberhq/use-solana": "^1.11.3",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.31.0",
+    "@uniswap/sdk-core": "cyclos-io/sdk-core",
     "notistack": "^2.0.3"
   }
 }

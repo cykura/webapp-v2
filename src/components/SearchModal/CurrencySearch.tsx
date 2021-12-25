@@ -1,4 +1,4 @@
-import { Currency, Token as UniToken } from '@uniswap/sdk-core'
+import { Currency, Token } from '@uniswap/sdk-core'
 import { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactGA from 'react-ga'
 import { t, Trans } from '@lingui/macro'
@@ -23,8 +23,6 @@ import { useOnClickOutside } from 'hooks/useOnClickOutside'
 import useTheme from 'hooks/useTheme'
 import ImportRow from './ImportRow'
 import useDebounce from 'hooks/useDebounce'
-
-import { Token } from '../../hooks/Tokens'
 
 const ContentWrapper = styled(Column)`
   width: 100%;
@@ -64,7 +62,7 @@ export function CurrencySearch({
   const [invertSearchOrder] = useState<boolean>(false)
 
   const allTokens = useAllTokens()
-  // console.log(allTokens)
+  console.log(allTokens)
   const list: Token[] = []
   Object.keys(allTokens).map((key) => list.push(allTokens[key]))
 
@@ -87,15 +85,15 @@ export function CurrencySearch({
 
   const tokenComparator = useTokenComparator(invertSearchOrder)
 
-  // const filteredTokens: Token[] = useMemo(() => {
-  //   return filterTokens(Object.values(allTokens), debouncedQuery)
-  // }, [allTokens, debouncedQuery])
+  const filteredTokens: Token[] = useMemo(() => {
+    return filterTokens(Object.values(allTokens), debouncedQuery)
+  }, [allTokens, debouncedQuery])
 
-  // const sortedTokens: Token[] = useMemo(() => {
-  //   return filteredTokens.sort(tokenComparator)
-  // }, [filteredTokens, tokenComparator])
+  const sortedTokens: Token[] = useMemo(() => {
+    return filteredTokens.sort(tokenComparator)
+  }, [filteredTokens, tokenComparator])
 
-  // const filteredSortedTokens = useSortedTokensByQuery(sortedTokens, debouncedQuery)
+  const filteredSortedTokens = useSortedTokensByQuery(sortedTokens, debouncedQuery)
 
   const ether = useMemo(() => chainId && ExtendedEther.onChain(chainId), [chainId])
 
