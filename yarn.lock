@@ -1719,9 +1719,9 @@
   integrity sha512-82cpyJyKRoQoRi+14ibCeGPu0CwypgtBAdBhq1WfvagpCZNKqwXbKwXllYSMG91DhmG4jt9gN8eP6lGOtozuaw==
 
 "@gokiprotocol/walletkit@^1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@gokiprotocol/walletkit/-/walletkit-1.5.1.tgz#fe9284d4f4adec203880338d1d958d01392b5362"
-  integrity sha512-6T0+wE+lsbt4r1kt0We2x5b6DWpFXSm+2CaRPiMrIeeaFveFLVQRGrJ8qPvcfGHSVDc/Ic2tZNokkMjwNpEHkA==
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@gokiprotocol/walletkit/-/walletkit-1.6.1.tgz#ceed74a522ab7f6bb72696f4ca375db156554a13"
+  integrity sha512-ghGl3rPewV5co3/SKtMH/OyJksDejrMqPzdc9tXGAe5z4NTLbWRtTlH4WLHymFViTrjNRTvfDKmuWmnw5ilUhg==
   dependencies:
     "@reach/dialog" "^0.16.2"
     "@react-spring/web" "^9.3.0"
@@ -3090,10 +3090,10 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@saberhq/solana-contrib@^1.11.3":
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.11.3.tgz#40d4fc64e728dc3135e1df555e78881b6f6428a2"
-  integrity sha512-crh3GdPk9yY3ieWQfFOGh1SIoW6mGvCcyKu4XDGT3hfSXKpYY+1XNVIKVgpHc+gIoscZZKOeHIw8elDCm9qkeg==
+"@saberhq/solana-contrib@^1.12.4":
+  version "1.12.4"
+  resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.12.4.tgz#eb1381a4f3de5a0584b083a1eae90e6e2c2a8f30"
+  integrity sha512-0i61JKu+7SGYfdmzKTSYrPxlp/+eDBNXRyGKVFovGCo0Jw6RzUmVA2cX5QWbMP6aq0oOPYCMKWkn1TWkR+qzLg==
   dependencies:
     "@types/promise-retry" "^1.1.3"
     "@types/retry" "^0.12.1"
@@ -3103,19 +3103,21 @@
     tslib "^2.3.1"
 
 "@saberhq/use-solana@^1.11.3":
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/@saberhq/use-solana/-/use-solana-1.11.3.tgz#95748423a19067c4045dc2925294923035ae8205"
-  integrity sha512-AbpzOCHV4BfP5r0IGD5J65a2/MhqoBSdmnIONgw9VyObE7TjPWZPJ8inyEI0ocj2vcDR+XRTtpjVqY7DPqRA8Q==
+  version "1.12.4"
+  resolved "https://registry.yarnpkg.com/@saberhq/use-solana/-/use-solana-1.12.4.tgz#10cb542dfbbb1589c8f0b4fe8a1bc6f15c5f84a8"
+  integrity sha512-SKc/RWFL9kHMr59/U6xwfrdhkjgluxpGRRlHnlzKCyA5u6fl//qUuDe1Vz0bXLxfcJXKvErM9VOkz6NkipgacQ==
   dependencies:
     "@ledgerhq/hw-transport" "^6.20.0"
     "@ledgerhq/hw-transport-webusb" "^6.20.0"
-    "@saberhq/solana-contrib" "^1.11.3"
+    "@saberhq/solana-contrib" "^1.12.4"
     "@solana/wallet-adapter-base" "^0.8.1"
     "@solana/wallet-adapter-coin98" "^0.4.0"
+    "@solana/wallet-adapter-mathwallet" "^0.8.0"
     "@solana/wallet-adapter-phantom" "^0.8.1"
     "@solana/wallet-adapter-slope" "^0.4.0"
     "@solana/wallet-adapter-solflare" "^0.5.0"
     "@solana/wallet-adapter-sollet" "^0.9.2"
+    "@solana/wallet-adapter-solong" "^0.8.0"
     bs58 "^4.0.1"
     eventemitter3 "^4.0.7"
     fast-json-stable-stringify "^2.1.0"
@@ -3200,6 +3202,11 @@
     "@types/bs58" "^4.0.1"
     bs58 "^4.0.1"
 
+"@solana/wallet-adapter-mathwallet@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-mathwallet/-/wallet-adapter-mathwallet-0.8.0.tgz#f1b356997e606fd2c335e0628ee18f3209d89f99"
+  integrity sha512-KrGoxpA+vSYc0FOdLzPXv6aJ23XsJcRQwdxyrvQkQViQqGENhJMGsW21QSmRSZo6gnDW4zeR/yUxhDo+eg96dA==
+
 "@solana/wallet-adapter-phantom@^0.8.1":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-phantom/-/wallet-adapter-phantom-0.8.1.tgz#64689cf7a97b70ee66cc0349127e220b0de47104"
@@ -3224,6 +3231,11 @@
   integrity sha512-Z3sqAS0rLOs4GXOiJseRcNZ3/cTJjroMr0242RDhrUI41d/cKTUIvGIZopSHPsn2tHTe40iNJaYu3vU90EHabA==
   dependencies:
     "@project-serum/sol-wallet-adapter" "^0.2.6"
+
+"@solana/wallet-adapter-solong@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-solong/-/wallet-adapter-solong-0.8.0.tgz#2124cd95e7e55f13fdd9bfcbf39dde41e6084fee"
+  integrity sha512-kHR5KuENPfDBJhHM/DLJksvIvz6WCnFEAfeQRrmBhLiKJ2JmxItQ55OldxDSx68FOR4UzqWWxkRCP5+PRucFUA==
 
 "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.31.0":
   version "1.31.0"
@@ -3740,9 +3752,9 @@
     "@types/node" "*"
 
 "@types/node@*":
-  version "17.0.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.4.tgz#fec0ce0526abb6062fd206d72a642811b887a111"
-  integrity sha512-6xwbrW4JJiJLgF+zNypN5wr2ykM9/jHcL7rQ8fZe2vuftggjzZeRSM4OwRc6Xk8qWjwJ99qVHo/JgOGmomWRog==
+  version "17.0.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.5.tgz#57ca67ec4e57ad9e4ef5a6bab48a15387a1c83e0"
+  integrity sha512-w3mrvNXLeDYV1GKTZorGJQivK6XLCoGwpnyJFbJVK/aTBQUxOCaa/GlFAAN3OTDFcb7h5tiFG+YXCO2By+riZw==
 
 "@types/node@^10.11.7":
   version "10.17.60"
@@ -3750,9 +3762,9 @@
   integrity sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==
 
 "@types/node@^12.12.54":
-  version "12.20.38"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.38.tgz#74801983c0558a7a31a4ead18bce2edded2b0e2f"
-  integrity sha512-NxmtBRGipjx1B225OeMdI+CQmLbYqvvmYbukDTJGDgzIDgPQ1EcjGmYxGhOk5hTBqeB558S6RgHSpq2iiqifAQ==
+  version "12.20.39"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.39.tgz#ef3cb119eaba80e9f1012c78b9384a7489a18bf6"
+  integrity sha512-U7PMwkDmc3bnL0e4U8oA0POpi1vfsYDc+DEUS2+rPxm9NlLcW1dBa5JcRhO633PoPUcCSWMNXrMsqhmAVEo+IQ==
 
 "@types/node@^13.13.5":
   version "13.13.52"
@@ -3760,9 +3772,9 @@
   integrity sha512-s3nugnZumCC//n4moGGe6tkNMyYEdaDBitVjwPxXmR5lnMG5dHePinH2EdxkG3Rh1ghFHHixAG4NJhpJW1rthQ==
 
 "@types/node@^14.14.31":
-  version "14.18.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.2.tgz#00fe4d1686d5f6cf3a2f2e9a0eef42594d06abfc"
-  integrity sha512-fqtSN5xn/bBzDxMT77C1rJg6CsH/R49E7qsGuvdPJa20HtV5zSTuLJPNfnlyVH3wauKnkHdLggTVkOW/xP9oQg==
+  version "14.18.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.3.tgz#b3682cfd9d5542b025df13233d073cb4347f63f3"
+  integrity sha512-GtTH2crF4MtOIrrAa+jgTV9JX/PfoUCYr6MiZw7O/dkZu5b6gm5dc1nAL0jwGo4ortSBBtGyeVaxdC8X6V+pLg==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
@@ -4205,7 +4217,7 @@
 
 "@uniswap/sdk-core@cyclos-io/sdk-core":
   version "3.0.1"
-  resolved "git+ssh://git@github.com/cyclos-io/sdk-core.git#59dbbd9e16bf7f8590a69133104bef1d7c6cb58b"
+  resolved "git+ssh://git@github.com/cyclos-io/sdk-core.git#61fb80cc64bbb2d0884eb6dde9af550dd78bef02"
   dependencies:
     "@ethersproject/address" "^5.0.2"
     big.js "^5.2.2"
@@ -4266,7 +4278,7 @@
 
 "@uniswap/v3-sdk@cyclos-io/sdk":
   version "3.7.1"
-  resolved "git+ssh://git@github.com/cyclos-io/sdk.git#ca98a4ff5f32797d5fca4b14a30a2216c2ac521a"
+  resolved "git+ssh://git@github.com/cyclos-io/sdk.git#3fb88cbdc1e0ce38600c4b3bd65aee1a6088f6b7"
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"
@@ -7724,9 +7736,9 @@ css-select@^2.0.0:
     nth-check "^1.0.2"
 
 css-select@^4.1.3:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/css-select/-/css-select-4.2.0.tgz#ab28276d3afb00cc05e818bd33eb030f14f57895"
-  integrity sha512-6YVG6hsH9yIb/si3Th/is8Pex7qnVHO6t7q7U6TIUnkQASGbS8tnUDBftnPynLNnuUl/r2+PTd0ekiiq7R0zJw==
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/css-select/-/css-select-4.2.1.tgz#9e665d6ae4c7f9d65dbe69d0316e3221fb274cdd"
+  integrity sha512-/aUslKhzkTNCQUB2qTX84lVmfia9NyjP3WpDGtj/WxhwBzWBYUV3DgUpurHTme8UTPcPlAD1DJ+b0nN/t50zDQ==
   dependencies:
     boolbase "^1.0.0"
     css-what "^5.1.0"

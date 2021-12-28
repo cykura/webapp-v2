@@ -11,9 +11,10 @@ import {
   TickMath,
   tickToPrice,
   TICK_SPACINGS,
-  encodeSqrtRatioX96,
+  encodeSqrtRatioX32,
 } from '@uniswap/v3-sdk/dist/'
 import { Currency, Token, CurrencyAmount, Price, Rounding } from '@uniswap/sdk-core'
+import { useSolana } from '@saberhq/use-solana'
 import { useCallback, useMemo } from 'react'
 import { useActiveWeb3React } from '../../../hooks/web3'
 import { AppState } from '../../index'
@@ -110,7 +111,10 @@ export function useV3DerivedMintInfo(
   depositBDisabled: boolean
   invertPrice: boolean
 } {
-  const { account } = useActiveWeb3React()
+  // const { account } = useActiveWeb3React()
+
+  const { wallet } = useSolana()
+  const account = wallet?.publicKey?.toString()
 
   const { independentField, typedValue, leftRangeTypedValue, rightRangeTypedValue, startPriceTypedValue } =
     useV3MintState()
@@ -182,7 +186,7 @@ export function useV3DerivedMintInfo(
 
   // check for invalid price input (converts to invalid ratio)
   const invalidPrice = useMemo(() => {
-    const sqrtRatioX96 = price ? encodeSqrtRatioX96(price.numerator, price.denominator) : undefined
+    const sqrtRatioX96 = price ? encodeSqrtRatioX32(price.numerator, price.denominator) : undefined
     const invalid =
       price &&
       sqrtRatioX96 &&

@@ -3,7 +3,7 @@ import {
   nearestUsableTick,
   FeeAmount,
   TICK_SPACINGS,
-  encodeSqrtRatioX96,
+  encodeSqrtRatioX32,
   TickMath,
 } from '@uniswap/v3-sdk/dist/'
 import { Price, Token } from '@uniswap/sdk-core'
@@ -30,13 +30,12 @@ export function tryParseTick(
   const price = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
 
   let tick: number
-
   // check price is within min/max bounds, if outside return min/max
-  const sqrtRatioX96 = encodeSqrtRatioX96(price.numerator, price.denominator)
+  const sqrtRatioX32 = encodeSqrtRatioX32(price.numerator, price.denominator)
 
-  if (JSBI.greaterThanOrEqual(sqrtRatioX96, TickMath.MAX_SQRT_RATIO)) {
+  if (JSBI.greaterThanOrEqual(sqrtRatioX32, TickMath.MAX_SQRT_RATIO)) {
     tick = TickMath.MAX_TICK
-  } else if (JSBI.lessThanOrEqual(sqrtRatioX96, TickMath.MIN_SQRT_RATIO)) {
+  } else if (JSBI.lessThanOrEqual(sqrtRatioX32, TickMath.MIN_SQRT_RATIO)) {
     tick = TickMath.MIN_TICK
   } else {
     // this function is agnostic to the base, will always return the correct tick

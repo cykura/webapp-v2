@@ -44,7 +44,9 @@ export function useContract<T extends Contract = Contract>(
   ABI: any,
   withSignerIfPossible = true
 ): T | null {
-  const { library, account, chainId } = useActiveWeb3React()
+  /// Replace whole useActiveWeb3React() fully
+  const { library, account } = useActiveWeb3React()
+  const chainId = 103
 
   return useMemo(() => {
     if (!addressOrAddressMap || !ABI || !library || !chainId) return null

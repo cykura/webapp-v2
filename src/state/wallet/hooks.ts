@@ -1,3 +1,7 @@
+import { Connection, PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
+import { useSolana } from '@saberhq/use-solana'
+
 import { Currency, Token, CurrencyAmount, Ether } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import { useMemo } from 'react'
@@ -57,13 +61,59 @@ export function useTokenBalancesWithLoadingIndicator(
   address?: string,
   tokens?: (Token | undefined)[]
 ): [{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }, boolean] {
+  const { connection, connected } = useSolana()
+
+  function isAddCheck(value: any): string | false {
+    const add = value as string
+    if (add.length > 0) {
+      return value
+    } else {
+      return false
+    }
+  }
+
   const validatedTokens: Token[] = useMemo(
-    () => tokens?.filter((t?: Token): t is Token => isAddress(t?.address) !== false) ?? [],
+    () => tokens?.filter((t?: Token): t is Token => isAddCheck(t?.address) !== false) ?? [],
     [tokens]
   )
 
+  // This is not required
   const validatedTokenAddresses = useMemo(() => validatedTokens.map((vt) => vt.address), [validatedTokens])
-  const ERC20Interface = new Interface(ERC20ABI) as Erc20Interface
+
+  // Store all spl token balances here
+  const solBalances: any[] = []
+
+  if (connected) {
+    connection
+      .getParsedTokenAccountsByOwner(new PublicKey(address ?? '8AH4pCW88KxSRTzQe3dkEsLCDvjHJJJ5usiPcbkaGA3M'), {
+        programId: TOKEN_PROGRAM_ID,
+      })
+      .then((tokensInfo) => {
+        const tokenBalancesMap: { [key: string]: number | undefined } = {}
+        tokensInfo?.value?.map((v) => {
+          const add: string = v.account.data.parsed.info.mint.toString() as string
+          const amt: number | undefined = v.account.data.parsed.info.tokenAmount as number | undefined
+          tokenBalancesMap[add] = amt
+        })
+
+        validatedTokens.forEach((token: Token) => {
+          if (tokenBalancesMap[token.address]) {
+            // set balance of token
+            solBalances.push({ [token.address]: tokenBalancesMap[token.address] })
+          } else {
+            // account doesn't have token then set to 0
+            solBalances.push({ [token.address]: 0 })
+          }
+        })
+
+        console.log('BALANCES')
+        console.log(solBalances)
+        return [solBalances, false]
+      })
+  }
+  return [{}, true]
+
+  /* const ERC20Interface = new Interface(ERC20ABI) as Erc20Interface
   const balances = useMultipleContractSingleData(
     validatedTokenAddresses,
     ERC20Interface,
@@ -91,7 +141,7 @@ export function useTokenBalancesWithLoadingIndicator(
       [address, validatedTokens, balances]
     ),
     anyLoading,
-  ]
+  ] */
 }
 
 export function useTokenBalances(

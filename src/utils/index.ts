@@ -13,6 +13,9 @@ export function isAddress(value: any): string | false {
   } catch {
     return false
   }
+
+  // If I fix this as below this lags in UI
+  // return value as string
 }
 
 // shorten the checksummed version of the input address to have 0x + 4 characters at start and end

@@ -14,6 +14,7 @@ import { useBytes32TokenContract, useTokenContract } from './useContract'
 import { PublicKey } from '@solana/web3.js'
 
 import { SOLUSDC, SOLUSDT } from '../constants/tokens'
+import { useSolana } from '@saberhq/use-solana'
 
 // reduce token map into standard address <-> Token mapping, optionally include user added tokens
 function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
@@ -53,8 +54,13 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
 }
 
 export function useAllTokens(): { [address: string]: Token } {
+  /// TODO Can switch here and fetch tokens for testing
+  ///  Check for network and return corresponding coins
+  /// 'devnet' | 'testnet' | 'mainnet-beta' | 'localnet'
+  const { network } = useSolana()
+
   // DEV TOKENS
-  const SOL = WSOL[102]
+  const SOL = WSOL[103]
   // const allTokens = useCombinedActiveList()
   // return useTokensFromMap(allTokens, true)
   const map = {
