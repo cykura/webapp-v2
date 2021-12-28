@@ -165,3 +165,9 @@ export class ExtendedEther extends Ether {
 
 export const SOLUSDC = new Token(103, '5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW', 6, 'USDC', 'USDC Coin')
 export const SOLUSDT = new Token(103, '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm', 6, 'USDT', 'USDT Coin')
+
+// LOCALNET TOKENS
+
+export const SOLUSDC_LOCAL = new Token(104, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
+export const SOLUSDT_LOCAL = new Token(104, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
+export const SOL_LOCAL = new Token(104, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')

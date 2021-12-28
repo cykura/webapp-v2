@@ -2,7 +2,7 @@ import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useMemo } from 'react'
-import { ExtendedEther, WETH9_EXTENDED } from '../constants/tokens'
+import { ExtendedEther, SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL, WETH9_EXTENDED } from '../constants/tokens'
 import { useCombinedActiveList } from '../state/lists/hooks'
 import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
 import { useUserAddedTokens } from '../state/user/hooks'
@@ -58,6 +58,19 @@ export function useAllTokens(): { [address: string]: Token } {
   ///  Check for network and return corresponding coins
   /// 'devnet' | 'testnet' | 'mainnet-beta' | 'localnet'
   const { network } = useSolana()
+
+  if (network === 'localnet') {
+    const map = {
+      [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
+      [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
+      [SOL_LOCAL.address]: SOL_LOCAL,
+    }
+    return map
+  } else if (network === 'mainnet-beta') {
+    // return mainnet tokens
+  } else if (network === 'devnet') {
+    // return devnet tokens
+  }
 
   // DEV TOKENS
   const SOL = WSOL[103]

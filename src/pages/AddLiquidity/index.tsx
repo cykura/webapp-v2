@@ -69,7 +69,7 @@ export default function AddLiquidity({
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
   const { account, chainId, library } = useActiveWeb3React()
   const { connect } = useWalletKit()
-  const { disconnect, connected, walletProviderInfo } = useSolana()
+  const { disconnect, connected, walletProviderInfo, wallet } = useSolana()
   const theme = useContext(ThemeContext)
   const toggleWalletModal = useWalletModalToggle() // toggle wallet when disconnected
   const expertMode = useIsExpertMode()
@@ -251,7 +251,7 @@ export default function AddLiquidity({
       library
         .getSigner()
         .estimateGas(txn)
-        .then((estimate) => {
+        .then((estimate: BigNumber) => {
           const newTxn = {
             ...txn,
             gasLimit: calculateGasMargin(estimate),
@@ -275,7 +275,7 @@ export default function AddLiquidity({
               })
             })
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error('Failed to send transaction', error)
           setAttemptingTxn(false)
           // we only care if the error is something _other_ than the user rejected the tx

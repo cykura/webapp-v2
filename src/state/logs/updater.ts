@@ -40,7 +40,7 @@ export default function Updater(): null {
           fromBlock: 0,
           toBlock: blockNumber,
         })
-        .then((logs) => {
+        .then((logs: any) => {
           dispatch(
             fetchedLogs({
               chainId,
@@ -49,7 +49,7 @@ export default function Updater(): null {
             })
           )
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error('Failed to get logs', filter, error)
           dispatch(
             fetchedLogsError({

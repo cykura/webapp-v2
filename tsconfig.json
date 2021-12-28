@@ -22,6 +22,7 @@
     "jsx": "react-jsx",
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
+    "suppressImplicitAnyIndexErrors": true,
     "types": ["react-spring", "jest"],
     "baseUrl": "src"
   },

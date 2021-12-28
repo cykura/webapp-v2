@@ -29,7 +29,7 @@ export default function useAddTokenToMetamask(currencyToAdd: Currency | undefine
             },
           },
         })
-        .then((success) => {
+        .then((success: boolean) => {
           setSuccess(success)
         })
         .catch(() => setSuccess(false))

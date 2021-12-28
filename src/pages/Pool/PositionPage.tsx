@@ -381,7 +381,7 @@ export function PositionPage({
     library
       .getSigner()
       .estimateGas(txn)
-      .then((estimate) => {
+      .then((estimate: any) => {
         const newTxn = {
           ...txn,
           gasLimit: calculateGasMargin(estimate),
@@ -405,7 +405,7 @@ export function PositionPage({
             })
           })
       })
-      .catch((error) => {
+      .catch((error: any) => {
         setCollecting(false)
         console.error(error)
       })

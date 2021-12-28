@@ -55,7 +55,7 @@ export default function Updater(): null {
       const retryOptions = RETRY_OPTIONS_BY_CHAIN_ID[chainId] ?? DEFAULT_RETRY_OPTIONS
       return retry(
         () =>
-          library.getTransactionReceipt(hash).then((receipt) => {
+          library.getTransactionReceipt(hash).then((receipt: any) => {
             if (receipt === null) {
               console.debug('Retrying for hash', hash)
               throw new RetryableError()
@@ -76,7 +76,7 @@ export default function Updater(): null {
       .map((hash) => {
         const { promise, cancel } = getReceipt(hash)
         promise
-          .then((receipt) => {
+          .then((receipt: any) => {
             if (receipt) {
               dispatch(
                 finalizeTransaction({

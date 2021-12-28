@@ -1,4 +1,5 @@
 import { Web3Provider } from '@ethersproject/providers'
+import { useSolana } from '@saberhq/use-solana'
 import { useWeb3React as useWeb3ReactCore } from '@web3-react/core'
 import { Web3ReactContextInterface } from '@web3-react/core/dist/types'
 import { useEffect, useState } from 'react'
@@ -6,10 +7,47 @@ import { isMobile } from 'react-device-detect'
 import { injected } from '../connectors'
 import { NetworkContextName } from '../constants/misc'
 
+// ETH Version
 export function useActiveWeb3React(): Web3ReactContextInterface<Web3Provider> {
   const context = useWeb3ReactCore<Web3Provider>()
   const contextNetwork = useWeb3ReactCore<Web3Provider>(NetworkContextName)
   return context.active ? context : contextNetwork
+}
+
+// SPL Version
+// Replacing with this causes problems with library and connector stuff
+// causes UI to fade out and not be able to input stuff in range. Weird.
+export function useActiveWeb3ReactSol(): any {
+  const context = useWeb3ReactCore<Web3Provider>()
+
+  const { wallet, connection, provider, walletProviderInfo, network } = useSolana()
+
+  const account = wallet?.publicKey?.toString() ?? undefined
+  // by default network set to devnet
+  let chainId = 103
+  switch (network) {
+    case 'mainnet-beta': {
+      chainId = 101
+      break
+    }
+    case 'testnet': {
+      chainId = 102
+      break
+    }
+    case 'localnet': {
+      chainId = 104
+      break
+    }
+    default:
+      chainId = 103
+  }
+
+  return {
+    account,
+    chainId,
+    library: context.library,
+    connector: context.connector,
+  }
 }
 
 export function useEagerConnect() {

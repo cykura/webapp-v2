@@ -4,7 +4,7 @@ import { useSolana } from '@saberhq/use-solana'
 
 import { Currency, Token, CurrencyAmount, Ether } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { UNI } from '../../constants/tokens'
 import { useActiveWeb3React } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
@@ -81,56 +81,41 @@ export function useTokenBalancesWithLoadingIndicator(
   const validatedTokenAddresses = useMemo(() => validatedTokens.map((vt) => vt.address), [validatedTokens])
 
   // Store all spl token balances here
-  const solBalances: any[] = []
+  const solBalances: { [key: string]: number | undefined }[] = []
+  let loading = true
 
-  if (connected) {
-    connection
-      .getParsedTokenAccountsByOwner(new PublicKey(address ?? '8AH4pCW88KxSRTzQe3dkEsLCDvjHJJJ5usiPcbkaGA3M'), {
-        programId: TOKEN_PROGRAM_ID,
+  connection
+    .getParsedTokenAccountsByOwner(new PublicKey(address ?? '8AH4pCW88KxSRTzQe3dkEsLCDvjHJJJ5usiPcbkaGA3M'), {
+      programId: TOKEN_PROGRAM_ID,
+    })
+    .then((tokensInfo) => {
+      const tokenBalancesMap: { [key: string]: number | undefined } = {}
+      tokensInfo?.value?.map((v) => {
+        const add: string = v.account.data.parsed.info.mint.toString() as string
+        const amt: number | undefined = v.account.data.parsed.info.tokenAmount as number | undefined
+        tokenBalancesMap[add] = amt
       })
-      .then((tokensInfo) => {
-        const tokenBalancesMap: { [key: string]: number | undefined } = {}
-        tokensInfo?.value?.map((v) => {
-          const add: string = v.account.data.parsed.info.mint.toString() as string
-          const amt: number | undefined = v.account.data.parsed.info.tokenAmount as number | undefined
-          tokenBalancesMap[add] = amt
-        })
 
-        validatedTokens.forEach((token: Token) => {
-          if (tokenBalancesMap[token.address]) {
-            // set balance of token
-            solBalances.push({ [token.address]: tokenBalancesMap[token.address] })
-          } else {
-            // account doesn't have token then set to 0
-            solBalances.push({ [token.address]: 0 })
-          }
-        })
-
-        console.log('BALANCES')
-        console.log(solBalances)
-        return [solBalances, false]
+      validatedTokens.forEach((token: Token) => {
+        if (tokenBalancesMap[token.address]) {
+          // set balance of token
+          solBalances.push({ [token.address]: tokenBalancesMap[token.address] })
+        } else {
+          // account doesn't have token then set to 0
+          solBalances.push({ [token.address]: 0 })
+        }
       })
-  }
-  return [{}, true]
+      loading = false
+      // const anyLoading: boolean = useMemo(() => loading, [loading, address, solBalances])
+      // console.log(solBalances)
 
-  /* const ERC20Interface = new Interface(ERC20ABI) as Erc20Interface
-  const balances = useMultipleContractSingleData(
-    validatedTokenAddresses,
-    ERC20Interface,
-    'balanceOf',
-    [address],
-    undefined,
-    100_000
-  )
-
-  const anyLoading: boolean = useMemo(() => balances.some((callState) => callState.loading), [balances])
-
-  return [
-    useMemo(
-      () =>
+      return [
         address && validatedTokens.length > 0
           ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
-              const value = balances?.[i]?.result?.[0]
+              console.log('Does this work?')
+              console.log(solBalances)
+              const tkAdd: string = token.address
+              const value: any = solBalances[tkAdd]
               const amount = value ? JSBI.BigInt(value.toString()) : undefined
               if (amount) {
                 memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
@@ -138,16 +123,35 @@ export function useTokenBalancesWithLoadingIndicator(
               return memo
             }, {})
           : {},
-      [address, validatedTokens, balances]
-    ),
-    anyLoading,
-  ] */
+
+        loading,
+      ]
+    })
+    .catch((e) => {
+      console.log('Something went wrong trying to fetch token balances')
+    })
+
+  console.log('Should not reach here')
+  return [{}, true]
+
+  /*  const ERC20Interface = new Interface(ERC20ABI) as Erc20Interface
+    const balances = useMultipleContractSingleData(
+      validatedTokenAddresses,
+      ERC20Interface,
+      'balanceOf',
+      [address],
+      undefined,
+      100_000
+      ) */
+
+  // console.log('LOADSING', anyLoading)
 }
 
 export function useTokenBalances(
   address?: string,
   tokens?: (Token | undefined)[]
 ): { [tokenAddress: string]: CurrencyAmount<Token> | undefined } {
+  // console.log(useTokenBalancesWithLoadingIndicator(address, tokens)[0])
   return useTokenBalancesWithLoadingIndicator(address, tokens)[0]
 }
 

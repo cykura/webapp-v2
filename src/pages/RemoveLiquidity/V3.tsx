@@ -133,7 +133,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
     library
       .getSigner()
       .estimateGas(txn)
-      .then((estimate) => {
+      .then((estimate: any) => {
         const newTxn = {
           ...txn,
           gasLimit: calculateGasMargin(estimate),
@@ -155,7 +155,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
             })
           })
       })
-      .catch((error) => {
+      .catch((error: any) => {
         setAttemptingTxn(false)
         console.error(error)
       })

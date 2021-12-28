@@ -124,8 +124,7 @@ function CurrencyRow({
       {/* <TokenTags currency={currency} /> */}
       {showCurrencyAmount && (
         <RowFixed style={{ justifySelf: 'flex-end' }}>
-          {/* {balance ? <Balance balance={balance} /> : account ? <Loader /> : null} */}
-          00
+          {balance ? <Balance balance={balance} /> : account ? <Loader /> : null}
         </RowFixed>
       )}
     </MenuItem>

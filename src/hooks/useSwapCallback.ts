@@ -277,22 +277,22 @@ export function useSwapCallback(
 
             return library
               .estimateGas(tx)
-              .then((gasEstimate) => {
+              .then((gasEstimate: any) => {
                 return {
                   call,
                   gasEstimate,
                 }
               })
-              .catch((gasError) => {
+              .catch((gasError: any) => {
                 console.debug('Gas estimate failed, trying eth_call to extract error', call)
 
                 return library
                   .call(tx)
-                  .then((result) => {
+                  .then((result: any) => {
                     console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
                     return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
                   })
-                  .catch((callError) => {
+                  .catch((callError: any) => {
                     console.debug('Call threw error', call, callError)
                     return { call, error: new Error(swapErrorToUserReadableMessage(callError)) }
                   })
@@ -331,7 +331,7 @@ export function useSwapCallback(
             ...('gasEstimate' in bestCallOption ? { gasLimit: calculateGasMargin(bestCallOption.gasEstimate) } : {}),
             ...(value && !isZero(value) ? { value } : {}),
           })
-          .then((response) => {
+          .then((response: any) => {
             const inputSymbol = trade.inputAmount.currency.symbol
             const outputSymbol = trade.outputAmount.currency.symbol
             const inputAmount = trade.inputAmount.toSignificant(4)
@@ -357,7 +357,7 @@ export function useSwapCallback(
 
             return response.hash
           })
-          .catch((error) => {
+          .catch((error: any) => {
             // if the user rejected the tx, pass this along
             if (error?.code === 4001) {
               throw new Error('Transaction rejected.')
