@@ -287,8 +287,7 @@ export function PositionPage({
     params: { tokenId: tokenIdFromUrl },
   },
 }: RouteComponentProps<{ tokenId?: string }>) {
-  const { library } = useActiveWeb3React()
-  const { chainId, account } = useActiveWeb3ReactSol()
+  const { chainId, account, librarySol } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
   const parsedTokenId = tokenIdFromUrl ? BigNumber.from(tokenIdFromUrl) : undefined
@@ -362,7 +361,7 @@ export function PositionPage({
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
   const collect = useCallback(() => {
-    if (!chainId || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !library) return
+    if (!chainId || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
 
     setCollecting(true)
 
@@ -379,8 +378,8 @@ export function PositionPage({
       value,
     }
 
-    library
-      .getSigner()
+    librarySol
+      ?.getSigner()
       .estimateGas(txn)
       .then((estimate: any) => {
         const newTxn = {
@@ -388,8 +387,8 @@ export function PositionPage({
           gasLimit: calculateGasMargin(estimate),
         }
 
-        return library
-          .getSigner()
+        return librarySol
+          ?.getSigner()
           .sendTransaction(newTxn)
           .then((response: TransactionResponse) => {
             setCollectMigrationHash(response.hash)
@@ -410,7 +409,7 @@ export function PositionPage({
         setCollecting(false)
         console.error(error)
       })
-  }, [chainId, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, library])
+  }, [chainId, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
   const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
   const ownsNFT = owner === account || positionDetails?.operator === account

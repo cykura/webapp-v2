@@ -18,7 +18,7 @@ function useQueryCacheInvalidator() {
 
 export default function Updater(): null {
   const { library } = useActiveWeb3React()
-  const { chainId } = useActiveWeb3ReactSol()
+  const { chainId, librarySol } = useActiveWeb3ReactSol()
   const dispatch = useAppDispatch()
 
   const windowVisible = useIsWindowVisible()
@@ -45,20 +45,20 @@ export default function Updater(): null {
 
   // attach/detach listeners
   useEffect(() => {
-    if (!library || !chainId || !windowVisible) return undefined
+    if (!librarySol || !chainId || !windowVisible) return undefined
 
     setState({ chainId, blockNumber: null })
 
-    library
-      .getBlockNumber()
-      .then(blockNumberCallback)
-      .catch((error: any) => console.error(`Failed to get block number for chainId: ${chainId}`, error))
+    // librarySol
+    //   ?.getBlockNumber()
+    //   .then(blockNumberCallback)
+    //   .catch((error: any) => console.error(`Failed to get block number for chainId: ${chainId}`, error))
 
-    library.on('block', blockNumberCallback)
+    // librarySol?.on('block', blockNumberCallback)
     return () => {
-      library.removeListener('block', blockNumberCallback)
+      // librarySol?.removeListener('block', blockNumberCallback)
     }
-  }, [dispatch, chainId, library, blockNumberCallback, windowVisible])
+  }, [dispatch, chainId, librarySol, blockNumberCallback, windowVisible])
 
   const debouncedState = useDebounce(state, 100)
 

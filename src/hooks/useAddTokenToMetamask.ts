@@ -12,7 +12,7 @@ export default function useAddTokenToMetamask(currencyToAdd: Currency | undefine
   const token: Token | undefined = currencyToAdd?.wrapped
 
   const [success, setSuccess] = useState<boolean | undefined>()
-
+  // Not Used
   const addToken = useCallback(() => {
     if (library && library.provider.isMetaMask && library.provider.request && token) {
       library.provider

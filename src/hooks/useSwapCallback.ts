@@ -59,7 +59,7 @@ function useSwapCallArguments(
   signatureData: SignatureData | null | undefined
 ): SwapCall[] {
   const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
   const { address: recipientAddress } = useENS(recipientAddressOrName)
   const recipient = recipientAddressOrName === null ? account : recipientAddress
@@ -68,7 +68,7 @@ function useSwapCallArguments(
   const argentWalletContract = useArgentWalletContract()
 
   return useMemo(() => {
-    if (!trade || !recipient || !library || !account || !chainId || !deadline) return []
+    if (!trade || !recipient || !librarySol || !account || !chainId || !deadline) return []
 
     if (trade instanceof V2Trade) {
       if (!routerContract) return []
@@ -179,7 +179,7 @@ function useSwapCallArguments(
     argentWalletContract,
     chainId,
     deadline,
-    library,
+    librarySol,
     recipient,
     routerContract,
     signatureData,
@@ -239,7 +239,7 @@ export function useSwapCallback(
   signatureData: SignatureData | undefined | null
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
   const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
   const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddressOrName, signatureData)
 
@@ -249,7 +249,7 @@ export function useSwapCallback(
   const recipient = recipientAddressOrName === null ? account : recipientAddress
 
   return useMemo(() => {
-    if (!trade || !library || !account || !chainId) {
+    if (!trade || !librarySol || !account || !chainId) {
       return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
     }
     if (!recipient) {
@@ -277,8 +277,8 @@ export function useSwapCallback(
                     value,
                   }
 
-            return library
-              .estimateGas(tx)
+            return librarySol
+              ?.estimateGas(tx)
               .then((gasEstimate: any) => {
                 return {
                   call,
@@ -288,8 +288,8 @@ export function useSwapCallback(
               .catch((gasError: any) => {
                 console.debug('Gas estimate failed, trying eth_call to extract error', call)
 
-                return library
-                  .call(tx)
+                return librarySol
+                  ?.call(tx)
                   .then((result: any) => {
                     console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
                     return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
@@ -323,8 +323,8 @@ export function useSwapCallback(
           call: { address, calldata, value },
         } = bestCallOption
 
-        return library
-          .getSigner()
+        return librarySol
+          ?.getSigner()
           .sendTransaction({
             from: account,
             to: address,
@@ -373,5 +373,5 @@ export function useSwapCallback(
       },
       error: null,
     }
-  }, [trade, library, account, chainId, recipient, recipientAddressOrName, swapCalls, addTransaction])
+  }, [trade, librarySol, account, chainId, recipient, recipientAddressOrName, swapCalls, addTransaction])
 }

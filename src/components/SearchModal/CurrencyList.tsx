@@ -4,7 +4,7 @@ import { CSSProperties, MutableRefObject, useCallback, useMemo } from 'react'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import styled from 'styled-components/macro'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCombinedActiveList } from '../../state/lists/hooks'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import { useCurrencyBalance } from '../../state/wallet/hooks'
@@ -97,15 +97,12 @@ function CurrencyRow({
   style: CSSProperties
   showCurrencyAmount?: boolean
 }) {
-  // const { account } = useActiveWeb3React()
-  const { wallet } = useSolana()
-  const account = wallet?.publicKey?.toString() ?? ''
+  const { account } = useActiveWeb3ReactSol()
   const key = currencyKey(currency)
   const selectedTokenList = useCombinedActiveList()
   const isOnSelectedList = isTokenOnList(selectedTokenList, currency.isToken ? currency : undefined)
   const customAdded = useIsUserAddedToken(currency)
   const balance = useCurrencyBalance(account ?? undefined, currency)
-  console.log('BALANCES ', balance)
 
   // only show add or remove buttons if not on selected list
   return (
@@ -152,6 +149,8 @@ export default function CurrencyList({
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
   showCurrencyAmount?: boolean
 }) {
+  const { account } = useActiveWeb3ReactSol()
+
   const itemData: Currency[] = useMemo(() => {
     return currencies
   }, [currencies])
@@ -168,14 +167,16 @@ export default function CurrencyList({
 
       if (currency) {
         return (
-          <CurrencyRow
-            style={style}
-            currency={currency}
-            isSelected={isSelected}
-            onSelect={handleSelect}
-            otherSelected={otherSelected}
-            showCurrencyAmount={showCurrencyAmount}
-          />
+          account && (
+            <CurrencyRow
+              style={style}
+              currency={currency}
+              isSelected={isSelected}
+              onSelect={handleSelect}
+              otherSelected={otherSelected}
+              showCurrencyAmount={showCurrencyAmount}
+            />
+          )
         )
       } else {
         return null

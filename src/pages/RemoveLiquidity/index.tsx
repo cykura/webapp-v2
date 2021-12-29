@@ -54,7 +54,7 @@ export default function RemoveLiquidity({
 }: RouteComponentProps<{ currencyIdA: string; currencyIdB: string }>) {
   const [currencyA, currencyB] = [useCurrency(currencyIdA) ?? undefined, useCurrency(currencyIdB) ?? undefined]
   const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
   const [tokenA, tokenB] = useMemo(() => [currencyA?.wrapped, currencyB?.wrapped], [currencyA, currencyB])
 
   const theme = useContext(ThemeContext)
@@ -107,7 +107,7 @@ export default function RemoveLiquidity({
   const [approval, approveCallback] = useApproveCallback(parsedAmounts[Field.LIQUIDITY], router?.address)
 
   async function onAttemptToApprove() {
-    if (!pairContract || !pair || !library || !deadline) throw new Error('missing dependencies')
+    if (!pairContract || !pair || !librarySol || !deadline) throw new Error('missing dependencies')
     const liquidityAmount = parsedAmounts[Field.LIQUIDITY]
     if (!liquidityAmount) throw new Error('missing liquidity amount')
 
@@ -151,7 +151,7 @@ export default function RemoveLiquidity({
   const addTransaction = useTransactionAdder()
 
   async function onRemove() {
-    if (!chainId || !library || !account || !deadline || !router) throw new Error('missing dependencies')
+    if (!chainId || !librarySol || !account || !deadline || !router) throw new Error('missing dependencies')
     const { [Field.CURRENCY_A]: currencyAmountA, [Field.CURRENCY_B]: currencyAmountB } = parsedAmounts
     if (!currencyAmountA || !currencyAmountB) {
       throw new Error('missing currency amounts')

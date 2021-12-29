@@ -217,6 +217,8 @@ interface AccountDetailsProps {
   openOptions: () => void
 }
 
+// Not USED
+
 export default function AccountDetails({
   toggleWalletModal,
   pendingTransactions,
@@ -225,22 +227,14 @@ export default function AccountDetails({
   openOptions,
 }: AccountDetailsProps) {
   const { connector } = useActiveWeb3React()
-  const { chainId, account } = useActiveWeb3ReactSol()
+  const { chainId, account, connectorSol } = useActiveWeb3ReactSol()
   const theme = useContext(ThemeContext)
   const dispatch = useAppDispatch()
 
   function formatConnectorName() {
-    const { ethereum } = window
-    const isMetaMask = !!(ethereum && ethereum.isMetaMask)
-    const name = Object.keys(SUPPORTED_WALLETS)
-      .filter(
-        (k) =>
-          SUPPORTED_WALLETS[k].connector === connector && (connector !== injected || isMetaMask === (k === 'METAMASK'))
-      )
-      .map((k) => SUPPORTED_WALLETS[k].name)[0]
     return (
       <WalletName>
-        <Trans>Connected with {name}</Trans>
+        <Trans>Connected with {connectorSol?.name}</Trans>
       </WalletName>
     )
   }

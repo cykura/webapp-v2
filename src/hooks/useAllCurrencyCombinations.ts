@@ -7,7 +7,6 @@ import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 export function useAllCurrencyCombinations(currencyA?: Currency, currencyB?: Currency): [Token, Token][] {
   const { chainId } = useActiveWeb3ReactSol()
 
-  console.log(currencyA, currencyB)
   const [tokenA, tokenB] = chainId ? [currencyA?.wrapped, currencyB?.wrapped] : [undefined, undefined]
 
   const bases: Token[] = useMemo(() => {

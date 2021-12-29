@@ -262,7 +262,7 @@ export default function CurrencyInputPanel({
         {!hideInput && !hideBalance && (
           <FiatRow>
             <RowBetween>
-              {account ? (
+              {account && (
                 <RowFixed style={{ height: '17px' }}>
                   <TYPE.body
                     onClick={onMax}
@@ -287,8 +287,6 @@ export default function CurrencyInputPanel({
                     </StyledBalanceMax>
                   ) : null}
                 </RowFixed>
-              ) : (
-                <span />
               )}
               <FiatValue fiatValue={fiatValue} priceImpact={priceImpact} />
             </RowBetween>

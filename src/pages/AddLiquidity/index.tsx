@@ -67,8 +67,7 @@ export default function AddLiquidity({
   },
   history,
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
-  const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo, wallet } = useSolana()
   const theme = useContext(ThemeContext)
@@ -193,7 +192,7 @@ export default function AddLiquidity({
   )
 
   async function onAdd() {
-    if (!chainId || !library || !account) return
+    if (!chainId || !librarySol || !account) return
 
     if (!positionManager || !currencyA || !currencyB) {
       return
@@ -249,8 +248,8 @@ export default function AddLiquidity({
 
       setAttemptingTxn(true)
 
-      library
-        .getSigner()
+      librarySol
+        ?.getSigner()
         .estimateGas(txn)
         .then((estimate: BigNumber) => {
           const newTxn = {
@@ -258,8 +257,8 @@ export default function AddLiquidity({
             gasLimit: calculateGasMargin(estimate),
           }
 
-          return library
-            .getSigner()
+          return librarySol
+            ?.getSigner()
             .sendTransaction(newTxn)
             .then((response: TransactionResponse) => {
               setAttemptingTxn(false)

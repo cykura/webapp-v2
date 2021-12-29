@@ -147,8 +147,7 @@ export function useClaimCallback(account: string | null | undefined): {
   claimCallback: () => Promise<string>
 } {
   // get claim data for this account
-  const { library } = useActiveWeb3React()
-  const { chainId } = useActiveWeb3ReactSol()
+  const { chainId, librarySol } = useActiveWeb3ReactSol()
   const claimData = useUserClaimData(account)
 
   // used for popup summary
@@ -157,7 +156,7 @@ export function useClaimCallback(account: string | null | undefined): {
   const distributorContract = useMerkleDistributorContract()
 
   const claimCallback = async function () {
-    if (!claimData || !account || !library || !chainId || !distributorContract) return
+    if (!claimData || !account || !librarySol || !chainId || !distributorContract) return
 
     const args = [claimData.index, account, claimData.amount, claimData.proof]
 

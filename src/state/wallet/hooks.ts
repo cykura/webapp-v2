@@ -70,7 +70,6 @@ export function useTokenBalancesWithLoadingIndicator(
 
   function isAddress(value: any): string | false {
     const add = value as string
-    console.log(add)
     if (!add) return false
     if (add.length > 0) {
       return value

@@ -46,22 +46,21 @@ export function useContract<T extends Contract = Contract>(
   withSignerIfPossible = true
 ): T | null {
   /// Replace whole useActiveWeb3React() fully
-  const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
   return useMemo(() => {
-    if (!addressOrAddressMap || !ABI || !library || !chainId) return null
+    if (!addressOrAddressMap || !ABI || !librarySol || !chainId) return null
     let address: string | undefined
     if (typeof addressOrAddressMap === 'string') address = addressOrAddressMap
     else address = addressOrAddressMap[chainId]
     if (!address) return null
     try {
-      return getContract(address, ABI, library, withSignerIfPossible && account ? account : undefined)
+      return getContract(address, ABI, librarySol, withSignerIfPossible && account ? account : undefined)
     } catch (error) {
       console.error('Failed to get contract', error)
       return null
     }
-  }, [addressOrAddressMap, ABI, library, chainId, withSignerIfPossible, account]) as T
+  }, [addressOrAddressMap, ABI, librarySol, chainId, withSignerIfPossible, account]) as T
 }
 
 export function useV2MigratorContract() {

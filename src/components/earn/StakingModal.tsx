@@ -12,7 +12,7 @@ import ProgressCircles from '../ProgressSteps'
 import CurrencyInputPanel from '../CurrencyInputPanel'
 import { Pair } from '@uniswap/v2-sdk'
 import { Token, CurrencyAmount } from '@uniswap/sdk-core'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import { usePairContract, useStakingContract, useV2RouterContract } from '../../hooks/useContract'
 import { useApproveCallback, ApprovalState } from '../../hooks/useApproveCallback'
@@ -44,7 +44,7 @@ interface StakingModalProps {
 }
 
 export default function StakingModal({ isOpen, onDismiss, stakingInfo, userLiquidityUnstaked }: StakingModalProps) {
-  const { library } = useActiveWeb3React()
+  const { librarySol } = useActiveWeb3ReactSol()
 
   // track and parse user input
   const [typedValue, setTypedValue] = useState('')
@@ -133,7 +133,7 @@ export default function StakingModal({ isOpen, onDismiss, stakingInfo, userLiqui
   }, [maxAmountInput, onUserInput])
 
   async function onAttemptToApprove() {
-    if (!pairContract || !library || !deadline) throw new Error('missing dependencies')
+    if (!pairContract || !librarySol || !deadline) throw new Error('missing dependencies')
     if (!parsedAmount) throw new Error('missing liquidity amount')
 
     if (gatherPermitSignature) {

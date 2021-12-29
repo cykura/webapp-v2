@@ -8,8 +8,7 @@ import { EventFilter, keyToFilter } from './utils'
 export default function Updater(): null {
   const dispatch = useAppDispatch()
   const state = useAppSelector((state) => state.logs)
-  const { library } = useActiveWeb3React()
-  const { chainId } = useActiveWeb3ReactSol()
+  const { chainId, librarySol } = useActiveWeb3ReactSol()
 
   const blockNumber = useBlockNumber()
 
@@ -31,12 +30,12 @@ export default function Updater(): null {
   }, [blockNumber, chainId, state])
 
   useEffect(() => {
-    if (!library || !chainId || typeof blockNumber !== 'number' || filtersNeedFetch.length === 0) return
+    if (!librarySol || !chainId || typeof blockNumber !== 'number' || filtersNeedFetch.length === 0) return
 
     dispatch(fetchingLogs({ chainId, filters: filtersNeedFetch, blockNumber }))
     filtersNeedFetch.forEach((filter) => {
-      library
-        .getLogs({
+      librarySol
+        ?.getLogs({
           ...filter,
           fromBlock: 0,
           toBlock: blockNumber,
@@ -61,7 +60,7 @@ export default function Updater(): null {
           )
         })
     })
-  }, [blockNumber, chainId, dispatch, filtersNeedFetch, library])
+  }, [blockNumber, chainId, dispatch, filtersNeedFetch, librarySol])
 
   return null
 }

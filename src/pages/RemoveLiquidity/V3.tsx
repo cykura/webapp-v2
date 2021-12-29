@@ -62,8 +62,7 @@ export default function RemoveLiquidityV3({
 function Remove({ tokenId }: { tokenId: BigNumber }) {
   const { position } = useV3PositionFromTokenId(tokenId)
   const theme = useTheme()
-  const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
   // flag for receiving WETH
   const [receiveWETH, setReceiveWETH] = useState(false)
@@ -108,7 +107,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
       !feeValue1 ||
       !positionSDK ||
       !liquidityPercentage ||
-      !library
+      !librarySol
     ) {
       return
     }
@@ -131,8 +130,8 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
       value,
     }
 
-    library
-      .getSigner()
+    librarySol
+      ?.getSigner()
       .estimateGas(txn)
       .then((estimate: any) => {
         const newTxn = {
@@ -140,8 +139,8 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
           gasLimit: calculateGasMargin(estimate),
         }
 
-        return library
-          .getSigner()
+        return librarySol
+          ?.getSigner()
           .sendTransaction(newTxn)
           .then((response: TransactionResponse) => {
             ReactGA.event({
@@ -172,7 +171,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
     chainId,
     feeValue0,
     feeValue1,
-    library,
+    librarySol,
     liquidityPercentage,
     positionSDK,
   ])

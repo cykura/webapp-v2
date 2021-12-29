@@ -228,15 +228,14 @@ export function useUserVotesAsOfBlock(block: number | undefined): CurrencyAmount
 }
 
 export function useDelegateCallback(): (delegatee: string | undefined) => undefined | Promise<string> {
-  const { library } = useActiveWeb3React()
-  const { account, chainId } = useActiveWeb3ReactSol()
+  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
   const addTransaction = useTransactionAdder()
 
   const uniContract = useUniContract()
 
   return useCallback(
     (delegatee: string | undefined) => {
-      if (!library || !chainId || !account || !isAddress(delegatee ?? '')) return undefined
+      if (!librarySol || !chainId || !account || !isAddress(delegatee ?? '')) return undefined
       const args = [delegatee]
       if (!uniContract) throw new Error('No UNI Contract!')
       return uniContract.estimateGas.delegate(...args, {}).then((estimatedGasLimit) => {
@@ -250,7 +249,7 @@ export function useDelegateCallback(): (delegatee: string | undefined) => undefi
           })
       })
     },
-    [account, addTransaction, chainId, library, uniContract]
+    [account, addTransaction, chainId, librarySol, uniContract]
   )
 }
 

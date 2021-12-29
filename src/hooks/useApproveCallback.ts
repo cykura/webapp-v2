@@ -24,7 +24,6 @@ export function useApproveCallback(
   spender?: string
 ): [ApprovalState, () => Promise<void>] {
   const { account } = useActiveWeb3ReactSol()
-  console.log(amountToApprove?.toExact(), spender)
   const token = amountToApprove?.currency?.isToken ? amountToApprove.currency : undefined
   const currentAllowance = useTokenAllowance(token, account ?? undefined, spender)
   const pendingApproval = useHasPendingApproval(token?.address, spender)

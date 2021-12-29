@@ -62,7 +62,6 @@ export function CurrencySearch({
   const [invertSearchOrder] = useState<boolean>(false)
 
   const allTokens = useAllTokens()
-  console.log(allTokens)
   const list: Token[] = []
   Object.keys(allTokens).map((key) => list.push(allTokens[key]))
 

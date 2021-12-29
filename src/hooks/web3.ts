@@ -18,9 +18,8 @@ export function useActiveWeb3React(): Web3ReactContextInterface<Web3Provider> {
 // Replacing with this causes problems with library and connector stuff
 // causes UI to fade out and not be able to input stuff in range. Weird.
 export function useActiveWeb3ReactSol(): any {
-  const context = useWeb3ReactCore<Web3Provider>()
-
   const { wallet, connection, provider, walletProviderInfo, network } = useSolana()
+  // console.log(walletProviderInfo, provider)
 
   const account = wallet?.publicKey?.toString() ?? undefined
   // by default network set to localnet
@@ -45,8 +44,8 @@ export function useActiveWeb3ReactSol(): any {
   return {
     account,
     chainId,
-    library: context.library,
-    connector: context.connector,
+    librarySol: provider,
+    connectorSol: walletProviderInfo,
   }
 }
 
