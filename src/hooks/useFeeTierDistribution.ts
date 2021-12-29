@@ -39,8 +39,8 @@ export function useFeeTierDistribution(token0: Token | undefined, token1: Token 
 
     const largestUsageFeeTier = Object.keys(distributions)
       .map((d) => Number(d))
-      .filter((d: FeeAmount) => distributions[500] !== 0 && distributions[500] !== undefined)
-      .reduce((a: FeeAmount, b: FeeAmount) => ((distributions[500] ?? 0) > (distributions[500] ?? 0) ? a : b), -1)
+      .filter((d: FeeAmount) => distributions[d] !== 0 && distributions[d] !== undefined)
+      .reduce((a: FeeAmount, b: FeeAmount) => ((distributions[a] ?? 0) > (distributions[b] ?? 0) ? a : b), -1)
 
     const percentages =
       !isLoading && !isError && distributions

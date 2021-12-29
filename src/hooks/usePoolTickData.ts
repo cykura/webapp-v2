@@ -29,8 +29,12 @@ export function useAllV3Ticks(
   currencyB: Currency | undefined,
   feeAmount: FeeAmount | undefined
 ) {
-  const poolAddress =
-    currencyA && currencyB && feeAmount ? Pool.getAddress(currencyA?.wrapped, currencyB?.wrapped, feeAmount) : undefined
+  const [poolAddress, setPoolAddress] = useState<string | undefined>()
+  if (currencyA && currencyB && feeAmount) {
+    Pool.getAddress(currencyA?.wrapped, currencyB?.wrapped, feeAmount).then((address) => {
+      setPoolAddress(address)
+    })
+  } 
 
   //TODO(judo): determine if pagination is necessary for this query
   const { isLoading, isError, data } = useAllV3TicksQuery(

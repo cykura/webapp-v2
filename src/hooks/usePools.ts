@@ -2,7 +2,7 @@ import { computePoolAddress } from '@uniswap/v3-sdk'
 import { V3_CORE_FACTORY_ADDRESSES } from '../constants/addresses'
 import { IUniswapV3PoolStateInterface } from '../types/v3/IUniswapV3PoolState'
 import { Token, Currency } from '@uniswap/sdk-core'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 import { useMultipleContractSingleData } from '../state/multicall/hooks'
 
@@ -23,6 +23,7 @@ export function usePools(
   poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][]
 ): [PoolState, Pool | null][] {
   const { chainId } = useActiveWeb3ReactSol()
+  const [poolAddresses, setPoolAddresses] = useState<(string | undefined)[]>([])
 
   const transformed: ([Token, Token, FeeAmount] | null)[] = useMemo(() => {
     return poolKeys.map(([currencyA, currencyB, feeAmount]) => {
@@ -36,19 +37,25 @@ export function usePools(
     })
   }, [chainId, poolKeys])
 
-  const poolAddresses: (string | undefined)[] = useMemo(() => {
-    // const v3CoreFactoryAddress = chainId && V3_CORE_FACTORY_ADDRESSES[chainId]
-    const v3CoreFactoryAddress = '37kn8WUzihQoAnhYxueA2BnqCA7VRnrVvYoHy1hQ6Veu'
+  useEffect(() => {
+    ;(async () => {
+      // const v3CoreFactoryAddress = chainId && V3_CORE_FACTORY_ADDRESSES[chainId]
+      const v3CoreFactoryAddress = '37kn8WUzihQoAnhYxueA2BnqCA7VRnrVvYoHy1hQ6Veu'
 
-    return transformed.map((value) => {
-      if (!v3CoreFactoryAddress || !value) return undefined
-      return computePoolAddress({
-        factoryAddress: v3CoreFactoryAddress,
-        tokenA: value[0],
-        tokenB: value[1],
-        fee: value[2],
-      })
-    })
+      const poolList = await Promise.all(
+        transformed.map(async (value) => {
+          if (!v3CoreFactoryAddress || !value) return undefined
+          const poolAddress = await computePoolAddress({
+            factoryAddress: v3CoreFactoryAddress,
+            tokenA: value[0],
+            tokenB: value[1],
+            fee: value[2],
+          })
+          return poolAddress
+        })
+      )
+      setPoolAddresses(poolList)
+    })()
   }, [chainId, transformed])
   console.log(`POOL ADDRESS -> ${poolAddresses[0]}`)
 
