@@ -9,24 +9,13 @@ import { TokenAddressMap } from '../state/lists/hooks'
 // returns the checksummed address if the address is valid, otherwise returns false
 export function isAddress(value: any): string | false {
   try {
-    return getAddress(value)
+    if (typeof value !== 'string') {
+      throw Error('Invalid address')
+    }
+    return value
   } catch {
     return false
   }
-
-  // const add = value as string
-  // console.log(add)
-  // if (!add) return false
-  // if (add.length > 0) {
-  //   return value
-  // } else {
-  //   return false
-  // }
-
-  // If I fix this as below this lags in UI
-  // causes some uncaught error with ENS resolver
-  // No luck removing ENS code. WIP though.
-  // return value as string
 }
 
 // shorten the checksummed version of the input address to have 0x + 4 characters at start and end
