@@ -8,7 +8,7 @@ import { SWAP_ROUTER_ADDRESSES, V2_ROUTER_ADDRESS } from '../constants/addresses
 import { useTransactionAdder, useHasPendingApproval } from '../state/transactions/hooks'
 import { calculateGasMargin } from '../utils/calculateGasMargin'
 import { useTokenContract } from './useContract'
-import { useActiveWeb3React } from './web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 import { useTokenAllowance } from './useTokenAllowance'
 
 export enum ApprovalState {
@@ -23,7 +23,7 @@ export function useApproveCallback(
   amountToApprove?: CurrencyAmount<Currency>,
   spender?: string
 ): [ApprovalState, () => Promise<void>] {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
   console.log(amountToApprove?.toExact(), spender)
   const token = amountToApprove?.currency?.isToken ? amountToApprove.currency : undefined
   const currentAllowance = useTokenAllowance(token, account ?? undefined, spender)
@@ -103,7 +103,7 @@ export function useApproveCallbackFromTrade(
   trade: V2Trade<Currency, Currency, TradeType> | V3Trade<Currency, Currency, TradeType> | undefined,
   allowedSlippage: Percent
 ) {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const v3SwapRouterAddress = chainId ? SWAP_ROUTER_ADDRESSES[chainId] : undefined
   const amountToApprove = useMemo(
     () => (trade && trade.inputAmount.currency.isToken ? trade.maximumAmountIn(allowedSlippage) : undefined),

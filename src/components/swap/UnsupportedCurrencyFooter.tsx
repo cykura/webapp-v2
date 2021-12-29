@@ -7,7 +7,7 @@ import Card, { OutlineCard } from 'components/Card'
 import { RowBetween, AutoRow } from 'components/Row'
 import { AutoColumn } from 'components/Column'
 import CurrencyLogo from 'components/CurrencyLogo'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { Currency, Token } from '@uniswap/sdk-core'
 import { useUnsupportedTokens } from '../../hooks/Tokens'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
@@ -45,7 +45,7 @@ export default function UnsupportedCurrencyFooter({
   show: boolean
   currencies: (Currency | undefined)[]
 }) {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const [showDetails, setShowDetails] = useState(false)
 
   const tokens =

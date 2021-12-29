@@ -9,6 +9,7 @@ import useDebounce from './useDebounce'
  * Does a lookup for an ENS name to find its address.
  */
 export default function useENSAddress(ensName?: string | null): { loading: boolean; address: string | null } {
+  console.log('useENSAddress function called')
   const debouncedName = useDebounce(ensName, 200)
   const ensNodeArgument = useMemo(() => {
     if (!debouncedName) return [undefined]

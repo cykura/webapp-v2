@@ -7,10 +7,10 @@ import { useAppDispatch } from 'state/hooks'
 import { fetchTokenList } from '../state/lists/actions'
 import getTokenList from '../utils/getTokenList'
 import resolveENSContentHash from '../utils/resolveENSContentHash'
-import { useActiveWeb3React } from './web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 
 export function useFetchListCallback(): (listUrl: string, sendDispatch?: boolean) => Promise<TokenList> {
-  const { chainId, library } = useActiveWeb3React()
+  const { chainId, library } = useActiveWeb3ReactSol()
   const dispatch = useAppDispatch()
 
   const ensResolver = useCallback(

@@ -6,7 +6,7 @@ import { useCallback } from 'react'
 import { useV2Pair } from '../../hooks/useV2Pairs'
 import { useTotalSupply } from '../../hooks/useTotalSupply'
 
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { AppState } from '../index'
 import { tryParseAmount } from '../swap/hooks'
 import { useTokenBalances } from '../wallet/hooks'
@@ -30,7 +30,7 @@ export function useDerivedBurnInfo(
   }
   error?: string
 } {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
 
   const { independentField, typedValue } = useBurnState()
 

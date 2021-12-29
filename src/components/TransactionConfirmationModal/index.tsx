@@ -12,7 +12,7 @@ import { ButtonPrimary, ButtonLight } from '../Button'
 import { AutoColumn, ColumnCenter } from '../Column'
 import Circle from '../../assets/images/blue-loader.svg'
 import MetaMaskLogo from '../../assets/images/metamask.png'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import useAddTokenToMetamask from 'hooks/useAddTokenToMetamask'
 import { Trans } from '@lingui/macro'
 
@@ -225,7 +225,7 @@ export default function TransactionConfirmationModal({
   content,
   currencyToAdd,
 }: ConfirmationModalProps) {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
 
   if (!chainId) return null
 

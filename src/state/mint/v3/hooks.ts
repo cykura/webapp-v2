@@ -16,7 +16,7 @@ import {
 import { Currency, Token, CurrencyAmount, Price, Rounding } from '@uniswap/sdk-core'
 import { useSolana } from '@saberhq/use-solana'
 import { useCallback, useMemo } from 'react'
-import { useActiveWeb3React } from '../../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../../hooks/web3'
 import { AppState } from '../../index'
 import { tryParseAmount } from '../../swap/hooks'
 import { useCurrencyBalances } from '../../wallet/hooks'
@@ -111,10 +111,7 @@ export function useV3DerivedMintInfo(
   depositBDisabled: boolean
   invertPrice: boolean
 } {
-  // const { account } = useActiveWeb3React()
-
-  const { wallet } = useSolana()
-  const account = wallet?.publicKey?.toString()
+  const { account } = useActiveWeb3ReactSol()
 
   const { independentField, typedValue, leftRangeTypedValue, rightRangeTypedValue, startPriceTypedValue } =
     useV3MintState()

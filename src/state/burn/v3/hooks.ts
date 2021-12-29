@@ -1,7 +1,7 @@
 import { CurrencyAmount, Percent, Currency } from '@uniswap/sdk-core'
 import { Position } from '@uniswap/v3-sdk'
 import { usePool } from 'hooks/usePools'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { useToken } from 'hooks/Tokens'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
 import { useCallback, useMemo } from 'react'
@@ -30,7 +30,7 @@ export function useDerivedV3BurnInfo(
   outOfRange: boolean
   error?: string
 } {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
   const { percent } = useBurnV3State()
 
   const token0 = useToken(position?.token0)

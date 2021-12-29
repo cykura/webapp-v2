@@ -23,8 +23,8 @@ export function useActiveWeb3ReactSol(): any {
   const { wallet, connection, provider, walletProviderInfo, network } = useSolana()
 
   const account = wallet?.publicKey?.toString() ?? undefined
-  // by default network set to devnet
-  let chainId = 103
+  // by default network set to localnet
+  let chainId = 104
   switch (network) {
     case 'mainnet-beta': {
       chainId = 101

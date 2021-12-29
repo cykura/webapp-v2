@@ -1,6 +1,6 @@
 import { useBlockNumber } from '../application/hooks'
 import { useEffect, useMemo } from 'react'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { addListener, removeListener } from './slice'
 import { EventFilter, filterToKey, Log } from './utils'
@@ -28,7 +28,7 @@ export interface UseLogsResult {
  * @param filter The logs filter, without `blockHash`, `fromBlock` or `toBlock` defined.
  */
 export function useLogs(filter: EventFilter | undefined): UseLogsResult {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const blockNumber = useBlockNumber()
 
   const logs = useAppSelector((state) => state.logs)

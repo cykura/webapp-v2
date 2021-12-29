@@ -8,7 +8,7 @@ import { RowBetween } from '../../components/Row'
 import { CardSection, DataCard, CardNoise, CardBGImage } from '../../components/earn/styled'
 import { Countdown } from './Countdown'
 import Loader from '../../components/Loader'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { BIG_INT_ZERO } from '../../constants/misc'
 import { OutlineCard } from '../../components/Card'
 import { Trans } from '@lingui/macro'
@@ -39,7 +39,7 @@ flex-direction: column;
 `
 
 export default function Earn() {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
 
   // staking info for connected account
   const stakingInfos = useStakingInfo()

@@ -6,7 +6,7 @@ import { Currency, Token, CurrencyAmount, Ether } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import { useEffect, useMemo, useState } from 'react'
 import { UNI } from '../../constants/tokens'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
 import { useMulticall2Contract } from '../../hooks/useContract'
 import { isAddress } from '../../utils'
@@ -22,7 +22,7 @@ import { Erc20Interface } from 'abis/types/Erc20'
 export function useETHBalances(uncheckedAddresses?: (string | undefined)[]): {
   [address: string]: CurrencyAmount<Currency> | undefined
 } {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const multicallContract = useMulticall2Contract()
 
   const addresses: string[] = useMemo(
@@ -70,6 +70,8 @@ export function useTokenBalancesWithLoadingIndicator(
 
   function isAddress(value: any): string | false {
     const add = value as string
+    console.log(add)
+    if (!add) return false
     if (add.length > 0) {
       return value
     } else {
@@ -183,7 +185,7 @@ export function useCurrencyBalance(account?: string, currency?: Currency): Curre
 
 // mimics useAllBalances
 export function useAllTokenBalances(): { [tokenAddress: string]: CurrencyAmount<Token> | undefined } {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
   const allTokens = useAllTokens()
   const allTokensArray = useMemo(() => Object.values(allTokens ?? {}), [allTokens])
   const balances = useTokenBalances(account ?? undefined, allTokensArray)
@@ -192,7 +194,7 @@ export function useAllTokenBalances(): { [tokenAddress: string]: CurrencyAmount<
 
 // get the total owned, unclaimed, and unharvested UNI for account
 export function useAggregateUniBalance(): CurrencyAmount<Token> | undefined {
-  const { account, chainId } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3ReactSol()
 
   const uni = chainId ? UNI[chainId] : undefined
 

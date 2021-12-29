@@ -2,22 +2,23 @@ import { Currency, Token } from '@uniswap/sdk-core'
 import flatMap from 'lodash.flatmap'
 import { useMemo } from 'react'
 import { ADDITIONAL_BASES, BASES_TO_CHECK_TRADES_AGAINST, CUSTOM_BASES } from '../constants/routing'
-import { useActiveWeb3React } from './web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 
 export function useAllCurrencyCombinations(currencyA?: Currency, currencyB?: Currency): [Token, Token][] {
-  // const { chainId } = useActiveWeb3React()
-  const chainId = 104
+  const { chainId } = useActiveWeb3ReactSol()
 
+  console.log(currencyA, currencyB)
   const [tokenA, tokenB] = chainId ? [currencyA?.wrapped, currencyB?.wrapped] : [undefined, undefined]
 
   const bases: Token[] = useMemo(() => {
     if (!chainId) return []
 
     const common = BASES_TO_CHECK_TRADES_AGAINST[chainId] ?? []
-    const additionalA = tokenA ? ADDITIONAL_BASES[chainId]?.[tokenA.address] ?? [] : []
-    const additionalB = tokenB ? ADDITIONAL_BASES[chainId]?.[tokenB.address] ?? [] : []
+    // const additionalA = tokenA ? ADDITIONAL_BASES[chainId]?.[tokenA.address] ?? [] : []
+    // const additionalB = tokenB ? ADDITIONAL_BASES[chainId]?.[tokenB.address] ?? [] : []
 
-    return [...common, ...additionalA, ...additionalB]
+    // return [...common, ...additionalA, ...additionalB]
+    return [...common]
   }, [chainId, tokenA, tokenB])
 
   const basePairs: [Token, Token][] = useMemo(

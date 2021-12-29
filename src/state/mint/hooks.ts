@@ -8,7 +8,7 @@ import JSBI from 'jsbi'
 import { PairState, useV2Pair } from '../../hooks/useV2Pairs'
 import { useTotalSupply } from '../../hooks/useTotalSupply'
 
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { tryParseAmount } from '../swap/hooks'
 import { useCurrencyBalances } from '../wallet/hooks'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
@@ -61,7 +61,7 @@ export function useDerivedMintInfo(
   poolTokenPercentage?: Percent
   error?: string
 } {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
 
   const { independentField, typedValue, otherTypedValue } = useMintState()
 

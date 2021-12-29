@@ -14,6 +14,15 @@ export function isAddress(value: any): string | false {
     return false
   }
 
+  // const add = value as string
+  // console.log(add)
+  // if (!add) return false
+  // if (add.length > 0) {
+  //   return value
+  // } else {
+  //   return false
+  // }
+
   // If I fix this as below this lags in UI
   // causes some uncaught error with ENS resolver
   // No luck removing ENS code. WIP though.

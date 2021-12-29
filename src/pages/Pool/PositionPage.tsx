@@ -25,7 +25,7 @@ import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Token, Currency, CurrencyAmount, Percent, Fraction, Price } from '@uniswap/sdk-core'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useIsTransactionPending, useTransactionAdder } from 'state/transactions/hooks'
 import ReactGA from 'react-ga'
@@ -287,7 +287,8 @@ export function PositionPage({
     params: { tokenId: tokenIdFromUrl },
   },
 }: RouteComponentProps<{ tokenId?: string }>) {
-  const { chainId, account, library } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
+  const { chainId, account } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
   const parsedTokenId = tokenIdFromUrl ? BigNumber.from(tokenIdFromUrl) : undefined

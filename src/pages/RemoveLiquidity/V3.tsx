@@ -20,7 +20,7 @@ import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useUserSlippageToleranceWithDefault } from 'state/user/hooks'
 import useTransactionDeadline from 'hooks/useTransactionDeadline'
 import ReactGA from 'react-ga'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { TransactionResponse } from '@ethersproject/providers'
 import { useTransactionAdder } from 'state/transactions/hooks'
 import { Percent } from '@uniswap/sdk-core'
@@ -62,7 +62,8 @@ export default function RemoveLiquidityV3({
 function Remove({ tokenId }: { tokenId: BigNumber }) {
   const { position } = useV3PositionFromTokenId(tokenId)
   const theme = useTheme()
-  const { account, chainId, library } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3ReactSol()
 
   // flag for receiving WETH
   const [receiveWETH, setReceiveWETH] = useState(false)

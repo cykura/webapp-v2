@@ -3,7 +3,7 @@ import { CurrencyAmount, Token } from '@uniswap/sdk-core'
 import { TransactionResponse } from '@ethersproject/providers'
 import { useEffect, useState } from 'react'
 import { UNI } from '../../constants/tokens'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useMerkleDistributorContract } from '../../hooks/useContract'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { useSingleCallResult } from '../multicall/hooks'
@@ -92,7 +92,7 @@ function fetchClaim(account: string): Promise<UserClaimData> {
 // parse distributorContract blob and detect if user has claim data
 // null means we know it does not
 export function useUserClaimData(account: string | null | undefined): UserClaimData | null {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
 
   const [claimInfo, setClaimInfo] = useState<{ [account: string]: UserClaimData | null }>({})
 
@@ -131,7 +131,7 @@ export function useUserHasAvailableClaim(account: string | null | undefined): bo
 }
 
 export function useUserUnclaimedAmount(account: string | null | undefined): CurrencyAmount<Token> | undefined {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const userClaimData = useUserClaimData(account)
   const canClaim = useUserHasAvailableClaim(account)
 
@@ -147,7 +147,8 @@ export function useClaimCallback(account: string | null | undefined): {
   claimCallback: () => Promise<string>
 } {
   // get claim data for this account
-  const { library, chainId } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const claimData = useUserClaimData(account)
 
   // used for popup summary

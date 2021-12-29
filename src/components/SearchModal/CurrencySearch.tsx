@@ -5,7 +5,7 @@ import { t, Trans } from '@lingui/macro'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import { ExtendedEther } from '../../constants/tokens'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens, useToken, useIsUserAddedToken } from '../../hooks/Tokens'
 import { CloseIcon, TYPE } from '../../theme'
 import { isAddress } from '../../utils'
@@ -50,7 +50,7 @@ export function CurrencySearch({
   onDismiss,
   isOpen,
 }: CurrencySearchProps) {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
   // refs for fixed size lists

@@ -1,4 +1,4 @@
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
 import { WETH9_EXTENDED } from '../../constants/tokens'
 import AddLiquidity from './index'
@@ -12,7 +12,7 @@ export function RedirectDuplicateTokenIds(
     },
   } = props
 
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   // const chainId = 103;
 
   // prevent weth + eth

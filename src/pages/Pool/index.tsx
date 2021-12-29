@@ -10,7 +10,7 @@ import { RowBetween, RowFixed } from 'components/Row'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import Toggle from 'components/Toggle'
 import { useV3Positions } from 'hooks/useV3Positions'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { useContext } from 'react'
 import { BookOpen, ChevronDown, Inbox, PlusCircle, MoreVertical } from 'react-feather'
 import { Link } from 'react-router-dom'
@@ -105,7 +105,7 @@ const ShowInactiveToggle = styled.div`
 `
 
 export default function Pool() {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo } = useSolana()
   const toggleWalletModal = useWalletModalToggle()

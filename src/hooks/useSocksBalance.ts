@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useActiveWeb3React } from './web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 import { useTokenBalance } from 'state/wallet/hooks'
 import { SOCKS_CONTROLLER_ADDRESSES } from 'constants/addresses'
 import { Token } from '@uniswap/sdk-core'
@@ -9,7 +9,7 @@ import { SupportedChainId } from 'constants/chains'
 const SOCKS = new Token(SupportedChainId.MAINNET, SOCKS_CONTROLLER_ADDRESSES[SupportedChainId.MAINNET], 0)
 
 export function useHasSocks(): boolean | undefined {
-  const { account, chainId } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3ReactSol()
 
   const balance = useTokenBalance(account ?? undefined, chainId === SupportedChainId.MAINNET ? SOCKS : undefined)
 

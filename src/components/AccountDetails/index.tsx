@@ -1,7 +1,7 @@
 import { useCallback, useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components/macro'
 import { SUPPORTED_WALLETS } from '../../constants/wallet'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { clearAllTransactions } from '../../state/transactions/actions'
 import { shortenAddress } from '../../utils'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
@@ -224,7 +224,8 @@ export default function AccountDetails({
   ENSName,
   openOptions,
 }: AccountDetailsProps) {
-  const { chainId, account, connector } = useActiveWeb3React()
+  const { connector } = useActiveWeb3React()
+  const { chainId, account } = useActiveWeb3ReactSol()
   const theme = useContext(ThemeContext)
   const dispatch = useAppDispatch()
 

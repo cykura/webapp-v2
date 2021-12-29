@@ -8,7 +8,7 @@ import { Currency, CurrencyAmount, Percent, TradeType } from '@uniswap/sdk-core'
 import { Trade as V2Trade } from '@uniswap/v2-sdk'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
 import useSwapSlippageTolerance from '../../hooks/useSwapSlippageTolerance'
 import { Version } from '../../hooks/useToggledVersion'
@@ -124,7 +124,7 @@ export function useDerivedSwapInfo(toggledVersion: Version): {
   toggledTrade: V2Trade<Currency, Currency, TradeType> | V3Trade<Currency, Currency, TradeType> | undefined
   allowedSlippage: Percent
 } {
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
@@ -278,7 +278,7 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
 export function useDefaultsFromURLSearch():
   | { inputCurrencyId: string | undefined; outputCurrencyId: string | undefined }
   | undefined {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const dispatch = useAppDispatch()
   const parsedQs = useParsedQueryString()
   const [result, setResult] = useState<

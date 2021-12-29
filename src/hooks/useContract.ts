@@ -36,7 +36,7 @@ import { V3Migrator } from 'types/v3/V3Migrator'
 import { getContract } from 'utils'
 import { Erc20, ArgentWalletDetector, EnsPublicResolver, EnsRegistrar, Weth } from '../abis/types'
 import { UNI, WETH9_EXTENDED } from '../constants/tokens'
-import { useActiveWeb3React } from './web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 import { useSolana } from '@saberhq/use-solana'
 
 // returns null on errors
@@ -47,9 +47,7 @@ export function useContract<T extends Contract = Contract>(
 ): T | null {
   /// Replace whole useActiveWeb3React() fully
   const { library } = useActiveWeb3React()
-  const { wallet } = useSolana()
-  const account = wallet?.publicKey?.toString() ?? ''
-  const chainId = 103
+  const { account, chainId } = useActiveWeb3ReactSol()
 
   return useMemo(() => {
     if (!addressOrAddressMap || !ABI || !library || !chainId) return null
@@ -75,7 +73,7 @@ export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: b
 }
 
 export function useWETHContract(withSignerIfPossible?: boolean) {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   return useContract<Weth>(chainId ? WETH9_EXTENDED[chainId]?.address : undefined, WETH_ABI, withSignerIfPossible)
 }
 
@@ -126,7 +124,7 @@ export function useGovernanceV1Contract(): Contract | null {
 export const useLatestGovernanceContract = useGovernanceV1Contract
 
 export function useUniContract() {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   return useContract(chainId ? UNI[chainId]?.address : undefined, UNI_ABI, true)
 }
 

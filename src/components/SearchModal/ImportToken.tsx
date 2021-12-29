@@ -12,7 +12,7 @@ import useTheme from 'hooks/useTheme'
 import { ButtonPrimary } from 'components/Button'
 import { SectionBreak } from 'components/swap/styleds'
 import { useAddUserToken } from 'state/user/hooks'
-import { useActiveWeb3React } from 'hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
 import { ExternalLink } from '../../theme/components'
 import ListLogo from 'components/ListLogo'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
@@ -50,7 +50,7 @@ interface ImportProps {
 export function ImportToken({ tokens, list, onBack, onDismiss, handleCurrencySelect }: ImportProps) {
   const theme = useTheme()
 
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
 
   const addToken = useAddUserToken()
 

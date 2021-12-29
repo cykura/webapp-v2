@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useBlockNumber } from '../application/hooks'
 import { addMulticallListeners, ListenerOptions, removeMulticallListeners } from './actions'
 import { Call, parseCallKey, toCallKey } from './utils'
@@ -46,7 +46,7 @@ function useCallsData(
   calls: (Call | undefined)[],
   { blocksPerFetch }: ListenerOptions = { blocksPerFetch: 1 }
 ): CallResult[] {
-  const { chainId } = useActiveWeb3React()
+  const { chainId } = useActiveWeb3ReactSol()
   const callResults = useAppSelector((state) => state.multicall.callResults)
   const dispatch = useAppDispatch()
 

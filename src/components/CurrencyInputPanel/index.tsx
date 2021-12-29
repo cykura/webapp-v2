@@ -12,7 +12,7 @@ import { RowBetween, RowFixed } from '../Row'
 import { TYPE } from '../../theme'
 import { Input as NumericalInput } from '../NumericalInput'
 import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { Trans } from '@lingui/macro'
 import useTheme from '../../hooks/useTheme'
 import { Lock } from 'react-feather'
@@ -189,7 +189,7 @@ export default function CurrencyInputPanel({
   ...rest
 }: CurrencyInputPanelProps) {
   const [modalOpen, setModalOpen] = useState(false)
-  const { account } = useActiveWeb3React()
+  const { account } = useActiveWeb3ReactSol()
   const selectedCurrencyBalance = useCurrencyBalance(account ?? undefined, currency ?? undefined)
   const theme = useTheme()
 

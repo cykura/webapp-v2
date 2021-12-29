@@ -24,7 +24,7 @@ import { useUSDCValue } from '../../hooks/useUSDCPrice'
 import approveAmountCalldata from '../../utils/approveAmountCalldata'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { Review } from './Review'
-import { useActiveWeb3React } from '../../hooks/web3'
+import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
 import { ApprovalState, useApproveCallback } from '../../hooks/useApproveCallback'
 import useTransactionDeadline from '../../hooks/useTransactionDeadline'
@@ -67,7 +67,8 @@ export default function AddLiquidity({
   },
   history,
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
-  const { account, chainId, library } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo, wallet } = useSolana()
   const theme = useContext(ThemeContext)

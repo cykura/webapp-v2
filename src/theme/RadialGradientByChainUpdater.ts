@@ -23,7 +23,7 @@ const setBackground = (newValues: TargetBackgroundStyles) =>
   })
 
 export default function RadialGradientByChainUpdater(): null {
-  // const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3ReactSol()
   const [darkMode] = useDarkModeManager()
   // manage background color
   useEffect(() => {
