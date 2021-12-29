@@ -17,6 +17,7 @@ import { MouseoverTooltip } from '../Tooltip'
 import { MenuItem } from './styleds'
 import Loader from '../Loader'
 import { isTokenOnList } from '../../utils'
+import { useSolana } from '@saberhq/use-solana'
 
 function currencyKey(currency: Currency): string {
   return currency.isToken ? currency.address : 'ETHER'
@@ -96,12 +97,15 @@ function CurrencyRow({
   style: CSSProperties
   showCurrencyAmount?: boolean
 }) {
-  const { account } = useActiveWeb3React()
+  // const { account } = useActiveWeb3React()
+  const { wallet } = useSolana()
+  const account = wallet?.publicKey?.toString() ?? ''
   const key = currencyKey(currency)
   const selectedTokenList = useCombinedActiveList()
   const isOnSelectedList = isTokenOnList(selectedTokenList, currency.isToken ? currency : undefined)
   const customAdded = useIsUserAddedToken(currency)
   const balance = useCurrencyBalance(account ?? undefined, currency)
+  console.log('BALANCES ', balance)
 
   // only show add or remove buttons if not on selected list
   return (

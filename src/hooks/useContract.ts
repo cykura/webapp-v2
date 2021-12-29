@@ -37,6 +37,7 @@ import { getContract } from 'utils'
 import { Erc20, ArgentWalletDetector, EnsPublicResolver, EnsRegistrar, Weth } from '../abis/types'
 import { UNI, WETH9_EXTENDED } from '../constants/tokens'
 import { useActiveWeb3React } from './web3'
+import { useSolana } from '@saberhq/use-solana'
 
 // returns null on errors
 export function useContract<T extends Contract = Contract>(
@@ -45,7 +46,9 @@ export function useContract<T extends Contract = Contract>(
   withSignerIfPossible = true
 ): T | null {
   /// Replace whole useActiveWeb3React() fully
-  const { library, account } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
+  const { wallet } = useSolana()
+  const account = wallet?.publicKey?.toString() ?? ''
   const chainId = 103
 
   return useMemo(() => {

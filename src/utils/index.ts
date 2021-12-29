@@ -15,6 +15,8 @@ export function isAddress(value: any): string | false {
   }
 
   // If I fix this as below this lags in UI
+  // causes some uncaught error with ENS resolver
+  // No luck removing ENS code. WIP though.
   // return value as string
 }
 
@@ -42,6 +44,9 @@ export function getContract(address: string, ABI: any, library: Web3Provider, ac
   if (!isAddress(address) || address === AddressZero) {
     throw Error(`Invalid 'address' parameter '${address}'.`)
   }
+
+  // skipping address check fails
+  // console.log('Add -> ', address)
 
   return new Contract(address, ABI, getProviderOrSigner(library, account) as any)
 }

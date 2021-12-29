@@ -51,7 +51,8 @@ export function useAllV3Routes(
   currencyIn?: Currency,
   currencyOut?: Currency
 ): { loading: boolean; routes: Route<Currency, Currency>[] } {
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = 104
   const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
 
   const [singleHopOnly] = useUserSingleHopOnly()

@@ -404,11 +404,11 @@ export function useV3DerivedMintInfo(
   const { [Field.CURRENCY_A]: currencyAAmount, [Field.CURRENCY_B]: currencyBAmount } = parsedAmounts
 
   if (currencyAAmount && currencyBalances?.[Field.CURRENCY_A]?.lessThan(currencyAAmount)) {
-    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_A]?.symbol} balance`
+    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_A]?.symbol} balance here`
   }
 
   if (currencyBAmount && currencyBalances?.[Field.CURRENCY_B]?.lessThan(currencyBAmount)) {
-    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_B]?.symbol} balance`
+    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_B]?.symbol} balance here`
   }
 
   const invalidPool = poolState === PoolState.INVALID

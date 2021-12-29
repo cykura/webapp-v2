@@ -11,13 +11,16 @@ export default function useENS(nameOrAddress?: string | null): {
   address: string | null
   name: string | null
 } {
-  const validated = isAddress(nameOrAddress)
-  const reverseLookup = useENSName(validated ? validated : undefined)
-  const lookup = useENSAddress(nameOrAddress)
+  // const validated = isAddress(nameOrAddress)
+  // const reverseLookup = useENSName(validated ? validated : undefined)
+  // const lookup = useENSAddress(nameOrAddress)
 
   return {
-    loading: reverseLookup.loading || lookup.loading,
-    address: validated ? validated : lookup.address,
-    name: reverseLookup.ENSName ? reverseLookup.ENSName : !validated && lookup.address ? nameOrAddress || null : null,
+    // loading: reverseLookup.loading || lookup.loading,
+    loading: false,
+    // address: validated ? validated : lookup.address,
+    address: nameOrAddress ?? '',
+    // name: reverseLookup.ENSName ? reverseLookup.ENSName : !validated && lookup.address ? nameOrAddress || null : null,
+    name: nameOrAddress ?? '',
   }
 }

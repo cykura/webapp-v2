@@ -22,7 +22,8 @@ export enum PoolState {
 export function usePools(
   poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][]
 ): [PoolState, Pool | null][] {
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = 104
 
   const transformed: ([Token, Token, FeeAmount] | null)[] = useMemo(() => {
     return poolKeys.map(([currencyA, currencyB, feeAmount]) => {
@@ -37,7 +38,8 @@ export function usePools(
   }, [chainId, poolKeys])
 
   const poolAddresses: (string | undefined)[] = useMemo(() => {
-    const v3CoreFactoryAddress = chainId && V3_CORE_FACTORY_ADDRESSES[chainId]
+    // const v3CoreFactoryAddress = chainId && V3_CORE_FACTORY_ADDRESSES[chainId]
+    const v3CoreFactoryAddress = '37kn8WUzihQoAnhYxueA2BnqCA7VRnrVvYoHy1hQ6Veu'
 
     return transformed.map((value) => {
       if (!v3CoreFactoryAddress || !value) return undefined
@@ -49,6 +51,7 @@ export function usePools(
       })
     })
   }, [chainId, transformed])
+  console.log(`POOL ADDRESS -> ${poolAddresses[0]}`)
 
   const slot0s = useMultipleContractSingleData(poolAddresses, POOL_STATE_INTERFACE, 'slot0')
   const liquidities = useMultipleContractSingleData(poolAddresses, POOL_STATE_INTERFACE, 'liquidity')
