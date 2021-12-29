@@ -74,7 +74,8 @@ export const CUSTOM_BASES: { [chainId: number]: { [tokenAddress: string]: Token[
  * Shows up in the currency select for swap and add liquidity
  */
 export const COMMON_BASES: ChainCurrencyList = {
-  [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
+  // [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
+  [104]: [SOL_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
 }
 
 // used to construct the list of all pairs we consider by default in the frontend

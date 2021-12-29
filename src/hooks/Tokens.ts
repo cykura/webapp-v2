@@ -177,7 +177,7 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
 
 export function useCurrency(currencyId: string | undefined): Currency | null | undefined {
   const { chainId } = useActiveWeb3ReactSol()
-  const isETH = currencyId?.toUpperCase() === 'ETH'
+  const isETH = currencyId?.toUpperCase() === 'SOL_LOCAL'
   const token = useToken(isETH ? undefined : currencyId)
   const extendedEther = useMemo(() => (chainId ? ExtendedEther.onChain(chainId) : undefined), [chainId])
   const weth = chainId ? WETH9_EXTENDED[chainId] : undefined
