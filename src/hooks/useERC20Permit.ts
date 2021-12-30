@@ -7,9 +7,8 @@ import { useMemo, useState } from 'react'
 import { SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
 import { DAI, UNI, USDC } from '../constants/tokens'
 import { useSingleCallResult } from '../state/multicall/hooks'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
+import { useActiveWeb3ReactSol } from './web3'
 import { useEIP2612Contract } from './useContract'
-import useIsArgentWallet from './useIsArgentWallet'
 import useTransactionDeadline from './useTransactionDeadline'
 
 enum PermitType {
@@ -127,7 +126,6 @@ function useERC20Permit(
   const transactionDeadline = useTransactionDeadline()
   const tokenAddress = currencyAmount?.currency?.isToken ? currencyAmount.currency.address : undefined
   const eip2612Contract = useEIP2612Contract(tokenAddress)
-  const isArgentWallet = useIsArgentWallet()
   const nonceInputs = useMemo(() => [account ?? undefined], [account])
   const tokenNonceState = useSingleCallResult(eip2612Contract, 'nonces', nonceInputs)
   const permitInfo =
@@ -137,7 +135,6 @@ function useERC20Permit(
 
   return useMemo(() => {
     if (
-      isArgentWallet ||
       !currencyAmount ||
       !eip2612Contract ||
       !account ||
@@ -244,7 +241,6 @@ function useERC20Permit(
     eip2612Contract,
     account,
     chainId,
-    isArgentWallet,
     transactionDeadline,
     librarySol,
     tokenNonceState.loading,

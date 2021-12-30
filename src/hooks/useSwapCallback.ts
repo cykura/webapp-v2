@@ -6,13 +6,11 @@ import { Currency, Percent, TradeType } from '@uniswap/sdk-core'
 import { useMemo } from 'react'
 import { SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
 import { calculateGasMargin } from '../utils/calculateGasMargin'
-import approveAmountCalldata from '../utils/approveAmountCalldata'
 import { getTradeVersion } from '../utils/getTradeVersion'
 import { useTransactionAdder } from '../state/transactions/hooks'
 import { isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
-import { useArgentWalletContract } from './useArgentWalletContract'
 import { useV2RouterContract } from './useContract'
 import { SignatureData } from './useERC20Permit'
 import useTransactionDeadline from './useTransactionDeadline'
@@ -65,7 +63,6 @@ function useSwapCallArguments(
   const recipient = recipientAddressOrName === null ? account : recipientAddress
   const deadline = useTransactionDeadline()
   const routerContract = useV2RouterContract()
-  const argentWalletContract = useArgentWalletContract()
 
   return useMemo(() => {
     if (!trade || !recipient || !librarySol || !account || !chainId || !deadline) return []
@@ -94,27 +91,10 @@ function useSwapCallArguments(
         )
       }
       return swapMethods.map(({ methodName, args, value }) => {
-        if (argentWalletContract && trade.inputAmount.currency.isToken) {
-          return {
-            address: argentWalletContract.address,
-            calldata: argentWalletContract.interface.encodeFunctionData('wc_multiCall', [
-              [
-                approveAmountCalldata(trade.maximumAmountIn(allowedSlippage), routerContract.address),
-                {
-                  to: routerContract.address,
-                  value: value,
-                  data: routerContract.interface.encodeFunctionData(methodName, args),
-                },
-              ],
-            ]),
-            value: '0x0',
-          }
-        } else {
-          return {
-            address: routerContract.address,
-            calldata: routerContract.interface.encodeFunctionData(methodName, args),
-            value,
-          }
+        return {
+          address: routerContract.address,
+          calldata: routerContract.interface.encodeFunctionData(methodName, args),
+          value,
         }
       })
     } else {
@@ -147,24 +127,6 @@ function useSwapCallArguments(
             }
           : {}),
       })
-      if (argentWalletContract && trade.inputAmount.currency.isToken) {
-        return [
-          {
-            address: argentWalletContract.address,
-            calldata: argentWalletContract.interface.encodeFunctionData('wc_multiCall', [
-              [
-                approveAmountCalldata(trade.maximumAmountIn(allowedSlippage), swapRouterAddress),
-                {
-                  to: swapRouterAddress,
-                  value: value,
-                  data: calldata,
-                },
-              ],
-            ]),
-            value: '0x0',
-          },
-        ]
-      }
       return [
         {
           address: swapRouterAddress,
@@ -173,18 +135,7 @@ function useSwapCallArguments(
         },
       ]
     }
-  }, [
-    account,
-    allowedSlippage,
-    argentWalletContract,
-    chainId,
-    deadline,
-    librarySol,
-    recipient,
-    routerContract,
-    signatureData,
-    trade,
-  ])
+  }, [account, allowedSlippage, chainId, deadline, librarySol, recipient, routerContract, signatureData, trade])
 }
 
 /**
