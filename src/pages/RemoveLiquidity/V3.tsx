@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
-import { WETH9_EXTENDED } from '../../constants/tokens'
+import { SOL_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import AppBody from '../AppBody'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -375,8 +375,8 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
               liquidityValue1?.currency &&
               (liquidityValue0.currency.isNative ||
                 liquidityValue1.currency.isNative ||
-                liquidityValue0.currency.wrapped.equals(WETH9_EXTENDED[liquidityValue0.currency.chainId]) ||
-                liquidityValue1.currency.wrapped.equals(WETH9_EXTENDED[liquidityValue1.currency.chainId])) ? (
+                liquidityValue0.currency.wrapped.equals(SOL_LOCAL) ||
+                liquidityValue1.currency.wrapped.equals(SOL_LOCAL)) ? (
                 <RowBetween>
                   <TYPE.main>
                     <Trans>Collect as WETH</Trans>

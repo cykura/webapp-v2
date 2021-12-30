@@ -39,7 +39,7 @@ export function useSwapActionHandlers(): {
       dispatch(
         selectCurrency({
           field,
-          currencyId: currency.isToken ? currency.address : currency.isNative ? 'wSOL' : '',
+          currencyId: currency.isToken ? currency.address : currency.isNative ? SOL_LOCAL.address : '',
         })
       )
     },
@@ -225,7 +225,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'ETH') return 'ETH'
+    if (urlParam.toUpperCase() === 'wSOL') return SOL_LOCAL.address
   }
   return ''
 }
