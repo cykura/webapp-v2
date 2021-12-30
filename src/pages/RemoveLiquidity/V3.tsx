@@ -28,7 +28,6 @@ import { TYPE } from 'theme'
 import { Wrapper, SmallMaxButton, ResponsiveHeaderText } from './styled'
 import Loader from 'components/Loader'
 import DoubleCurrencyLogo from 'components/DoubleLogo'
-import { Break } from 'components/earn/styled'
 import { NonfungiblePositionManager } from '@uniswap/v3-sdk'
 import useTheme from 'hooks/useTheme'
 import { AddRemoveTabs } from 'components/NavigationTabs'
@@ -345,7 +344,6 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
                   </RowBetween>
                   {feeValue0?.greaterThan(0) || feeValue1?.greaterThan(0) ? (
                     <>
-                      <Break />
                       <RowBetween>
                         <Text fontSize={16} fontWeight={500}>
                           <Trans>{feeValue0?.currency?.symbol} Fees Earned:</Trans>

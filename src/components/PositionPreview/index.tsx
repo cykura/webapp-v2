@@ -6,7 +6,6 @@ import { TYPE } from 'theme'
 import { RowBetween, RowFixed } from 'components/Row'
 import CurrencyLogo from 'components/CurrencyLogo'
 import { unwrappedToken } from 'utils/unwrappedToken'
-import { Break } from 'components/earn/styled'
 import { Trans } from '@lingui/macro'
 import { Currency } from '@uniswap/sdk-core'
 import RateToggle from 'components/RateToggle'
@@ -93,7 +92,6 @@ export const PositionPreview = ({
               <TYPE.label mr="8px">{position.amount1.toSignificant(4)}</TYPE.label>
             </RowFixed>
           </RowBetween>
-          <Break />
           <RowBetween>
             <TYPE.label>
               <Trans>Fee Tier</Trans>

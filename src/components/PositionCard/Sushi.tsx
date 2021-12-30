@@ -7,7 +7,6 @@ import { Trans } from '@lingui/macro'
 import { unwrappedToken } from '../../utils/unwrappedToken'
 import { ButtonEmpty } from '../Button'
 import { transparentize } from 'polished'
-import { CardNoise } from '../earn/styled'
 
 import { useColor } from '../../hooks/useColor'
 
@@ -42,7 +41,6 @@ export default function SushiPositionCard({ tokenA, tokenB, liquidityToken, bord
 
   return (
     <StyledPositionCard border={border} bgColor={backgroundColor}>
-      <CardNoise />
       <AutoColumn gap="12px">
         <FixedHeightRow>
           <AutoRow gap="8px">
