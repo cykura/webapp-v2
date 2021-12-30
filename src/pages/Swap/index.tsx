@@ -75,6 +75,7 @@ export default function Swap({ history }: RouteComponentProps) {
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo } = useSolana()
   const loadedUrlParams = useDefaultsFromURLSearch()
+  // console.log(loadedUrlParams, ' LOADED URL PARAMS')
 
   // token warning stuff
   const [loadedInputCurrency, loadedOutputCurrency] = [
@@ -86,18 +87,20 @@ export default function Swap({ history }: RouteComponentProps) {
     () => [loadedInputCurrency, loadedOutputCurrency]?.filter((c): c is Token => c?.isToken ?? false) ?? [],
     [loadedInputCurrency, loadedOutputCurrency]
   )
+  // console.log(urlLoadedTokens, ' URL LOADED TOKENS')
   const handleConfirmTokenWarning = useCallback(() => {
     setDismissTokenWarning(true)
   }, [])
 
   // dismiss warning if all imported tokens are in active lists
   const defaultTokens = useAllTokens()
-  const importTokensNotInDefault =
-    urlLoadedTokens &&
-    urlLoadedTokens.filter((token: Token) => {
-      return !Boolean(token.address in defaultTokens)
-    })
-
+  /// Used for user added input tokens
+  // const importTokensNotInDefault =
+  //   urlLoadedTokens &&
+  //   urlLoadedTokens.filter((token: Token) => {
+  //     return !Boolean(token.address in defaultTokens)
+  //   })
+  // console.log(importTokensNotInDefault, ' TOKENS NOT IN DEFAULT')
   const theme = useContext(ThemeContext)
 
   // toggle wallet when disconnected
@@ -357,12 +360,12 @@ export default function Swap({ history }: RouteComponentProps) {
 
   return (
     <>
-      <TokenWarningModal
+      {/* <TokenWarningModal
         isOpen={importTokensNotInDefault.length > 0 && !dismissTokenWarning}
         tokens={importTokensNotInDefault}
         onConfirm={handleConfirmTokenWarning}
         onDismiss={handleDismissTokenWarning}
-      />
+      /> */}
       <NetworkAlert />
       <AppBody>
         <SwapHeader allowedSlippage={allowedSlippage} />

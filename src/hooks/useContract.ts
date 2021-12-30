@@ -38,6 +38,7 @@ import { Erc20, ArgentWalletDetector, EnsPublicResolver, EnsRegistrar, Weth } fr
 import { UNI, WETH9_EXTENDED } from '../constants/tokens'
 import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
 import { useSolana } from '@saberhq/use-solana'
+import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL } from '../constants/tokens'
 
 // returns null on errors
 export function useContract<T extends Contract = Contract>(
@@ -68,7 +69,19 @@ export function useV2MigratorContract() {
 }
 
 export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: boolean) {
-  return useContract<Erc20>(tokenAddress, ERC20_ABI, withSignerIfPossible)
+  // return useContract<Erc20>(tokenAddress, ERC20_ABI, withSignerIfPossible)
+
+  // returns Token details like name, symbol, decimals of the token itself
+  // totalSupply is the supply of the pool
+  // estimateGas(), approve(), allowance is also used which is not required for us
+  // console.log(`Fetching details for ${tokenAddress}`)
+  if (SOLUSDC_LOCAL.address === tokenAddress) {
+    return { ...SOLUSDC_LOCAL }
+  } else if (SOLUSDT_LOCAL.address === tokenAddress) {
+    return { ...SOLUSDT_LOCAL }
+  } else {
+    return { ...SOL_LOCAL }
+  }
 }
 
 export function useWETHContract(withSignerIfPossible?: boolean) {
