@@ -56,13 +56,20 @@ export function usePools(
       const poolList = await Promise.all(
         transformed.map(async (value) => {
           if (!v3CoreFactoryAddress || !value) return undefined
-          const poolAddress = await computePoolAddress({
-            factoryAddress: v3CoreFactoryAddress,
-            tokenA: value[0],
-            tokenB: value[1],
-            fee: value[2],
-          })
-          return poolAddress
+          try {
+            const poolAddress = await computePoolAddress({
+              factoryAddress: v3CoreFactoryAddress,
+              tokenA: value[0],
+              tokenB: value[1],
+              fee: value[2],
+            })
+            return poolAddress
+          } catch (e) {
+            console.log(value)
+            console.log('ERROR ', e)
+          } finally {
+            return undefined
+          }
         })
       )
       setPoolAddresses(poolList)

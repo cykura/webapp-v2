@@ -21,6 +21,7 @@ import { Field, replaceSwapState, selectCurrency, setRecipient, switchCurrencies
 import { SwapState } from './reducer'
 import { useUserSingleHopOnly } from 'state/user/hooks'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
+import { SOL_LOCAL } from 'constants/tokens'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -38,7 +39,7 @@ export function useSwapActionHandlers(): {
       dispatch(
         selectCurrency({
           field,
-          currencyId: currency.isToken ? currency.address : currency.isNative ? 'SOL_LOCAL' : '',
+          currencyId: currency.isToken ? currency.address : currency.isNative ? 'wSOL' : '',
         })
       )
     },
@@ -253,7 +254,7 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
   let outputCurrency = parseCurrencyFromURLParameter(parsedQs.outputCurrency)
   if (inputCurrency === '' && outputCurrency === '') {
     // default to wSOL input
-    inputCurrency = 'wSOL'
+    inputCurrency = SOL_LOCAL.address
   } else if (inputCurrency === outputCurrency) {
     // clear output if identical
     outputCurrency = ''

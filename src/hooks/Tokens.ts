@@ -150,10 +150,10 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
 
 export function useCurrency(currencyId: string | undefined): Currency | null | undefined {
   const { chainId } = useActiveWeb3ReactSol()
-  const isETH = currencyId?.toUpperCase() === 'SOL_LOCAL'
+  const isETH = currencyId?.toUpperCase() === SOL_LOCAL.address
   const token = useToken(isETH ? undefined : currencyId)
-  const extendedEther = useMemo(() => (chainId ? ExtendedEther.onChain(chainId) : undefined), [chainId])
-  const weth = chainId ? WETH9_EXTENDED[chainId] : undefined
+  const extendedEther = useMemo(() => (chainId ? SOL_LOCAL : undefined), [chainId])
+  const weth = chainId ? SOL_LOCAL : undefined
   if (weth?.address?.toLowerCase() === currencyId?.toLowerCase()) return weth
   return isETH ? extendedEther : token
 }
