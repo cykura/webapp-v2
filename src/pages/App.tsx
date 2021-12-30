@@ -11,7 +11,6 @@ import AddLiquidity from './AddLiquidity'
 import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
 import Pool from './Pool'
 import { PositionPage } from './Pool/PositionPage'
-import RemoveLiquidity from './RemoveLiquidity'
 import RemoveLiquidityV3 from './RemoveLiquidity/V3'
 import Swap from './Swap'
 import { RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
@@ -84,7 +83,6 @@ export default function App() {
                 component={AddLiquidity}
               />
 
-              <Route exact strict path="/remove/v2/:currencyIdA/:currencyIdB" component={RemoveLiquidity} />
               <Route exact strict path="/remove/:tokenId" component={RemoveLiquidityV3} />
 
               <Route component={RedirectPathToSwapOnly} />
