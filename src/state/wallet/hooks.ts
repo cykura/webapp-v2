@@ -10,7 +10,6 @@ import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
 import { useMulticall2Contract } from '../../hooks/useContract'
 import { isAddress } from '../../utils'
-import { useUserUnclaimedAmount } from '../claim/hooks'
 import { useMultipleContractSingleData, useSingleContractMultipleData } from '../multicall/hooks'
 import { useTotalUniEarned } from '../stake/hooks'
 import { Interface } from '@ethersproject/abi'
@@ -198,8 +197,8 @@ export function useAggregateUniBalance(): CurrencyAmount<Token> | undefined {
   const uni = chainId ? UNI[chainId] : undefined
 
   const uniBalance: CurrencyAmount<Token> | undefined = useTokenBalance(account ?? undefined, uni)
-  const uniUnclaimed: CurrencyAmount<Token> | undefined = useUserUnclaimedAmount(account)
-  const uniUnHarvested: CurrencyAmount<Token> | undefined = useTotalUniEarned()
+  let uniUnclaimed: CurrencyAmount<Token> | undefined
+  let uniUnHarvested: CurrencyAmount<Token> | undefined
 
   if (!uni) return undefined
 
