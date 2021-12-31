@@ -1,3 +1,4 @@
+import { PublicKey } from '@solana/web3.js'
 import { FACTORY_ADDRESS as V2_FACTORY_ADDRESS } from '@uniswap/v2-sdk'
 import { FACTORY_ADDRESS as V3_FACTORY_ADDRESS } from '@uniswap/v3-sdk'
 import { constructSameAddressMap } from '../utils/constructSameAddressMap'
@@ -61,3 +62,6 @@ export const V3_MIGRATOR_ADDRESSES: AddressMap = constructSameAddressMap('0xA564
   SupportedChainId.ARBITRUM_ONE,
   SupportedChainId.ARBITRUM_RINKEBY,
 ])
+
+export const PROGRAM_ID_STR = 'cysonxupBUVurvLe3Kz9mYrwmNfh43gEP4MgXwHmsUk'
+export const PROGRAM_ID = new PublicKey('cysonxupBUVurvLe3Kz9mYrwmNfh43gEP4MgXwHmsUk')

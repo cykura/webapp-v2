@@ -1,8 +1,8 @@
-import { computePoolAddress } from '@uniswap/v3-sdk'
+import { computePoolAddress, u32ToSeed } from '@uniswap/v3-sdk'
 import * as anchor from '@project-serum/anchor'
 import { SolanaWalletAdapter, useSolana } from '@saberhq/use-solana'
 import idl from '../constants/cyclos-core.json'
-import { V3_CORE_FACTORY_ADDRESSES } from '../constants/addresses'
+import { PROGRAM_ID_STR, V3_CORE_FACTORY_ADDRESSES } from '../constants/addresses'
 import { IUniswapV3PoolStateInterface } from '../types/v3/IUniswapV3PoolState'
 import { Token, Currency } from '@uniswap/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
@@ -13,8 +13,9 @@ import { Pool, FeeAmount } from '@uniswap/v3-sdk'
 import { abi as IUniswapV3PoolStateABI } from '@uniswap/v3-core/artifacts/contracts/interfaces/pool/IUniswapV3PoolState.sol/IUniswapV3PoolState.json'
 import { Interface } from '@ethersproject/abi'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import { POOL_SEED } from 'constants/tokens'
 
-const POOL_STATE_INTERFACE = new Interface(IUniswapV3PoolStateABI) as IUniswapV3PoolStateInterface
+// const POOL_STATE_INTERFACE = new Interface(IUniswapV3PoolStateABI) as IUniswapV3PoolStateInterface
 
 export enum PoolState {
   LOADING,
@@ -32,7 +33,7 @@ export function usePools(
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: false,
   })
-  const cyclosCore = new anchor.Program(idl as anchor.Idl, '9qe9svzmigVAvWh2qX9AJq3p4N9QbTyx2yRCfN1aAZam', provider)
+  const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
 
   const [poolAddresses, setPoolAddresses] = useState<(string | undefined)[]>([])
 
@@ -51,23 +52,28 @@ export function usePools(
   useEffect(() => {
     ;(async () => {
       // const v3CoreFactoryAddress = chainId && V3_CORE_FACTORY_ADDRESSES[chainId]
-      const v3CoreFactoryAddress = '9qe9svzmigVAvWh2qX9AJq3p4N9QbTyx2yRCfN1aAZam'
-
+      const v3CoreFactoryAddress = PROGRAM_ID_STR
       const poolList = await Promise.all(
         transformed.map(async (value) => {
           if (!v3CoreFactoryAddress || !value) return undefined
           try {
-            const poolAddress = await computePoolAddress({
-              factoryAddress: v3CoreFactoryAddress,
-              tokenA: value[0],
-              tokenB: value[1],
-              fee: value[2],
-            })
-            return poolAddress
+            const [tokenA, tokenB, feeAmount] = value
+            const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA] // does safety checks
+
+            const tk0 = new anchor.web3.PublicKey(token0.address)
+            const tk1 = new anchor.web3.PublicKey(token1.address)
+            const [poolAState, poolAStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+              [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
+              cyclosCore.programId
+            )
+            // console.log('tk0', tokenA.address)
+            // console.log('tk1', tokenB.address)
+            // console.log('fee', feeAmount)
+            // console.log('poolAState', poolAState.toString())
+            return poolAState.toString()
           } catch (e) {
             console.log(value)
             console.log('ERROR ', e)
-          } finally {
             return undefined
           }
         })

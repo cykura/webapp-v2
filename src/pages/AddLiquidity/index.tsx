@@ -6,7 +6,7 @@ import { Currency, CurrencyAmount, Percent } from '@uniswap/sdk-core'
 import { AlertTriangle, AlertCircle } from 'react-feather'
 import ReactGA from 'react-ga'
 import { ZERO_PERCENT } from '../../constants/misc'
-import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES } from '../../constants/addresses'
+import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, PROGRAM_ID_STR } from '../../constants/addresses'
 import {
   BITMAP_SEED,
   FEE_SEED,
@@ -212,14 +212,18 @@ export default function AddLiquidity({
     const provider = new anchor.Provider(connection, wallet as Wallet, {
       skipPreflight: false,
     })
-    const cyclosCore = new anchor.Program<CyclosCore>(IDL, '9qe9svzmigVAvWh2qX9AJq3p4N9QbTyx2yRCfN1aAZam', provider)
+    const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
     const fee = 500
     const tickSpacing = 10
 
     // Convinence helpers
-    const token1 = new PublicKey(currencyA?.wrapped.address)
-    const token2 = new PublicKey(currencyB?.wrapped.address)
+    const tokenA = currencyA?.wrapped
+    const tokenB = currencyB?.wrapped
+    const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+
+    const token1 = new anchor.web3.PublicKey(tk1.address)
+    const token2 = new anchor.web3.PublicKey(tk2.address)
 
     // create fee state
     const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -227,7 +231,6 @@ export default function AddLiquidity({
       cyclosCore.programId
     )
     console.log(`feeState -> ${feeState.toString()}`)
-
     // create pool state
     const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
       [POOL_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee)],
@@ -392,7 +395,6 @@ export default function AddLiquidity({
           },
         }),
       ]
-
       tx.feePayer = wallet?.publicKey ?? undefined
       await wallet?.signTransaction(tx)
 
