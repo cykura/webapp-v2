@@ -44,3 +44,13 @@ export function tryParseTick(
 
   return nearestUsableTick(tick, TICK_SPACINGS[feeAmount])
 }
+
+// CYS Helpers
+// move to SDK
+// Generate seed buffer from a u32 number
+export function u16ToSeed(num: number) {
+  const arr = new ArrayBuffer(2)
+  const view = new DataView(arr)
+  view.setUint16(0, num, false)
+  return new Uint8Array(arr)
+}

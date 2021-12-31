@@ -7,7 +7,16 @@ import { AlertTriangle, AlertCircle } from 'react-feather'
 import ReactGA from 'react-ga'
 import { ZERO_PERCENT } from '../../constants/misc'
 import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES } from '../../constants/addresses'
-import { SOL_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
+import {
+  BITMAP_SEED,
+  FEE_SEED,
+  OBSERVATION_SEED,
+  POOL_SEED,
+  POSITION_SEED,
+  SOL_LOCAL,
+  TICK_SEED,
+  WETH9_EXTENDED,
+} from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
 import { Text } from 'rebass'
@@ -46,7 +55,7 @@ import {
   useRangeHopCallbacks,
   useV3DerivedMintInfo,
 } from 'state/mint/v3/hooks'
-import { FeeAmount, NonfungiblePositionManager } from '@uniswap/v3-sdk'
+import { FeeAmount, NonfungiblePositionManager, u32ToSeed } from '@uniswap/v3-sdk'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { useDerivedPositionInfo } from 'hooks/useDerivedPositionInfo'
 import { PositionPreview } from 'components/PositionPreview'
@@ -57,6 +66,12 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { AddRemoveTabs } from 'components/NavigationTabs'
 import HoverInlineText from 'components/HoverInlineText'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
+import * as anchor from '@project-serum/anchor'
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import idl from '../../constants/cyclos-core.json'
+import { CyclosCore, IDL } from 'types/cyclos-core'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import { u16ToSeed } from 'state/mint/v3/utils'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -68,7 +83,10 @@ export default function AddLiquidity({
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
-  const { disconnect, connected, walletProviderInfo, wallet } = useSolana()
+  const { disconnect, connected, walletProviderInfo, wallet, connection, providerMut } = useSolana()
+  const { PublicKey, SystemProgram, Transaction, SYSVAR_RENT_PUBKEY } = anchor.web3
+  const { BN } = anchor
+
   const theme = useContext(ThemeContext)
   const toggleWalletModal = useWalletModalToggle() // toggle wallet when disconnected
   const expertMode = useIsExpertMode()
@@ -188,7 +206,283 @@ export default function AddLiquidity({
     outOfRange ? ZERO_PERCENT : DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE
   )
 
-  async function onAdd() {
+  async function OnAdd() {
+    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
+
+    const provider = new anchor.Provider(connection, wallet as Wallet, {
+      skipPreflight: false,
+    })
+    const cyclosCore = new anchor.Program<CyclosCore>(IDL, '9qe9svzmigVAvWh2qX9AJq3p4N9QbTyx2yRCfN1aAZam', provider)
+
+    const fee = 500
+    const tickSpacing = 10
+
+    // Convinence helpers
+    const token1 = new PublicKey(currencyA?.wrapped.address)
+    const token2 = new PublicKey(currencyB?.wrapped.address)
+
+    // create fee state
+    const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [FEE_SEED, u32ToSeed(fee)],
+      cyclosCore.programId
+    )
+    console.log(`feeState -> ${feeState.toString()}`)
+
+    // create pool state
+    const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+      [POOL_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee)],
+      cyclosCore.programId
+    )
+    console.log(`poolState -> ${poolState.toString()}`)
+
+    // create init Observation state
+    const [initialObservationState, initialObservationBump] = await PublicKey.findProgramAddress(
+      [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(0)],
+      cyclosCore.programId
+    )
+    console.log(`initialObservationState -> ${initialObservationState.toString()}`)
+
+    // get init Price from UI - should encode into Q32.32
+    // taken from test file
+    const initPrice = new BN(4297115210)
+
+    // taken as contants in test file
+    const tickLower = 0
+    const tickUpper = 10
+    const wordPosLower = (tickLower / tickSpacing) >> 8
+    const wordPosUpper = (tickUpper / tickSpacing) >> 8
+
+    //fetch ATA of pool tokens
+    const vault1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token2,
+      poolState,
+      true
+    )
+    console.log(`vault1 -> ${vault1.toString()}`)
+    const vault0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      poolState,
+      true
+    )
+    console.log(`vault0 -> ${vault0.toString()}`)
+
+    //fetch ATA of pool tokens
+    const userATA0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      wallet?.publicKey,
+      true
+    )
+    console.log(`user ATA 0 -> ${userATA0.toString()}`)
+    const userATA1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token2,
+      wallet?.publicKey,
+      true
+    )
+    console.log(`user ATA 1 -> ${userATA1.toString()}`)
+
+    // If pool not exist, create and init pool and create tick and bitmap tokens accounts
+    //  this can be checked using `noLiquidity`
+
+    // Create and init pool
+    if (noLiquidity) {
+      console.log('Creating and init pool')
+      const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, initPrice, {
+        accounts: {
+          poolCreator: wallet?.publicKey,
+          token0: token1,
+          token1: token2,
+          feeState,
+          poolState,
+          initialObservationState,
+          vault0,
+          vault1,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        },
+      })
+
+      console.log(createHash, ' txn hash for create Pool')
+    }
+
+    // Create tick and bitmap accounts
+    const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
+      cyclosCore.programId
+    )
+
+    const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
+      cyclosCore.programId
+    )
+
+    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
+      cyclosCore.programId
+    )
+    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
+      cyclosCore.programId
+    )
+
+    const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+
+    const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+      [
+        POSITION_SEED,
+        token1.toBuffer(),
+        token2.toBuffer(),
+        u32ToSeed(fee),
+        factoryState.toBuffer(),
+        u32ToSeed(tickLower),
+        u32ToSeed(tickUpper),
+      ],
+      cyclosCore.programId
+    )
+
+    // Build the transaction
+    if (noLiquidity) {
+      console.log('Creating all accounts')
+
+      const tx = new Transaction()
+      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+      tx.instructions = [
+        cyclosCore.instruction.initTickAccount(tickLowerStateBump, tickLower, {
+          accounts: {
+            signer: wallet?.publicKey,
+            poolState: poolState,
+            tickState: tickLowerState,
+            systemProgram: SystemProgram.programId,
+          },
+        }),
+        cyclosCore.instruction.initTickAccount(tickUpperStateBump, tickUpper, {
+          accounts: {
+            signer: wallet?.publicKey,
+            poolState: poolState,
+            tickState: tickUpperState,
+            systemProgram: SystemProgram.programId,
+          },
+        }),
+        cyclosCore.instruction.initBitmapAccount(bitmapLowerBump, wordPosLower, {
+          accounts: {
+            signer: wallet?.publicKey,
+            poolState: poolState,
+            bitmapState: bitmapLowerState,
+            systemProgram: SystemProgram.programId,
+          },
+        }),
+        cyclosCore.instruction.initPositionAccount(corePositionBump, {
+          accounts: {
+            signer: wallet?.publicKey,
+            recipient: factoryState,
+            poolState: poolState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            positionState: corePositionState,
+            systemProgram: SystemProgram.programId,
+          },
+        }),
+      ]
+
+      tx.feePayer = wallet?.publicKey ?? undefined
+      await wallet?.signTransaction(tx)
+
+      const hash = await providerMut?.send(tx)
+      console.log(hash, ' -> create account hash')
+    }
+
+    console.log('Not creating account and init pool')
+    // Then finally mint the required position
+    // Need to fix this wallet.publicKey is undefined
+    const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+      [POSITION_SEED, wallet?.publicKey.toBuffer()],
+      cyclosCore.programId
+    )
+
+    const positionNftAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      wallet?.publicKey ?? PublicKey.default,
+      wallet?.publicKey ?? PublicKey.default
+    )
+
+    const amount0Desired = new BN(0)
+    const amount1Desired = new BN(1_000_000)
+    const deadline = new BN(Date.now() / 1000 + 10_000)
+
+    // fetch observation accounts
+    const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
+
+    const latestObservationState = (
+      await PublicKey.findProgramAddress(
+        [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const nextObservationState = (
+      await PublicKey.findProgramAddress(
+        [
+          OBSERVATION_SEED,
+          token1.toBuffer(),
+          token2.toBuffer(),
+          u32ToSeed(fee),
+          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+        ],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
+      tokenizedPositionBump,
+      amount0Desired,
+      amount1Desired,
+      new BN(0),
+      new BN(0),
+      deadline,
+      {
+        accounts: {
+          minter: wallet?.publicKey,
+          recipient: wallet?.publicKey,
+          factoryState,
+          nftMint: wallet?.publicKey,
+          nftAccount: positionNftAccount,
+          poolState: poolState,
+          corePositionState: corePositionState,
+          tickLowerState: tickLowerState,
+          tickUpperState: tickUpperState,
+          bitmapLowerState: bitmapLowerState,
+          bitmapUpperState: bitmapUpperState,
+          tokenAccount0: userATA0,
+          tokenAccount1: userATA1,
+          vault0: vault0,
+          vault1: vault1,
+          latestObservationState: latestObservationState,
+          nextObservationState: nextObservationState,
+          tokenizedPositionState: tokenizedPositionState,
+          coreProgram: cyclosCore.programId,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        },
+      }
+    )
+
+    console.log(hashRes)
+  }
+
+  // replace this eventually with onAdd()
+  async function onAdder() {
     if (!chainId || !librarySol || !account) return
 
     if (!positionManager || !currencyA || !currencyB) {
@@ -384,7 +678,7 @@ export default function AddLiquidity({
                 />
               )}
               bottomContent={() => (
-                <ButtonPrimary style={{ marginTop: '1rem' }} onClick={onAdd}>
+                <ButtonPrimary style={{ marginTop: '1rem' }} onClick={OnAdd}>
                   <Text fontWeight={500} fontSize={20}>
                     <Trans>Add</Trans>
                   </Text>
@@ -730,7 +1024,7 @@ export default function AddLiquidity({
                       )}
                     <ButtonError
                       onClick={() => {
-                        expertMode ? onAdd() : setShowConfirm(true)
+                        expertMode ? OnAdd() : setShowConfirm(true)
                       }}
                       disabled={
                         !isValid ||

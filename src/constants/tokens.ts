@@ -1,3 +1,4 @@
+import { PublicKey } from '@solana/web3.js'
 import { WETH9, Token, Ether } from '@uniswap/sdk-core'
 import { UNI_ADDRESS } from './addresses'
 import { SupportedChainId } from './chains'
@@ -171,3 +172,13 @@ export const SOLUSDT = new Token(103, '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB
 export const SOLUSDC_LOCAL = new Token(104, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
 export const SOLUSDT_LOCAL = new Token(104, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
 export const SOL_LOCAL = new Token(104, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')
+
+// TOKEN BUMPS
+
+// Seed bumps
+export const BITMAP_SEED = Buffer.from('b')
+export const POOL_SEED = Buffer.from('p')
+export const POSITION_SEED = Buffer.from('ps')
+export const OBSERVATION_SEED = Buffer.from('o')
+export const TICK_SEED = Buffer.from('t')
+export const FEE_SEED = Buffer.from('f')
