@@ -356,18 +356,10 @@ export default function AddLiquidity({
     const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
     const bitmapLowerStateInfo = await connection.getAccountInfo(bitmapLowerState)
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
-    const factoryStateInfo = await connection.getAccountInfo(factoryState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
     // Build the transaction
-    if (
-      noLiquidity &&
-      !corePositionStateInfo &&
-      !tickLowerStateInfo &&
-      !tickUpperStateInfo &&
-      !bitmapLowerStateInfo &&
-      !factoryStateInfo
-    ) {
+    if (noLiquidity && !corePositionStateInfo && !tickLowerStateInfo && !tickUpperStateInfo && !bitmapLowerStateInfo) {
       console.log('Creating all accounts')
 
       const tx = new Transaction()
