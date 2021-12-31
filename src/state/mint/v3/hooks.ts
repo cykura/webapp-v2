@@ -12,10 +12,11 @@ import {
   tickToPrice,
   TICK_SPACINGS,
   encodeSqrtRatioX32,
-} from '@uniswap/v3-sdk/dist/'
+  u32ToSeed,
+} from '@uniswap/v3-sdk'
 import { Currency, Token, CurrencyAmount, Price, Rounding } from '@uniswap/sdk-core'
 import { useSolana } from '@saberhq/use-solana'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from '../../../hooks/web3'
 import { AppState } from '../../index'
 import { tryParseAmount } from '../../swap/hooks'
@@ -24,6 +25,9 @@ import { Field, Bound, typeInput, typeStartPriceInput, typeLeftRangeInput, typeR
 import { tryParseTick } from './utils'
 import { usePool } from 'hooks/usePools'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
+import { PROGRAM_ID } from 'constants/addresses'
+import { POOL_SEED } from 'constants/tokens'
+import { PublicKey } from '@solana/web3.js'
 
 export function useV3MintState(): AppState['mintV3'] {
   return useAppSelector((state) => state.mintV3)
@@ -112,6 +116,8 @@ export function useV3DerivedMintInfo(
   invertPrice: boolean
 } {
   const { account } = useActiveWeb3ReactSol()
+  const [noLiquidity, setNoLiquidity] = useState(false)
+  const { connection } = useSolana()
 
   const { independentField, typedValue, leftRangeTypedValue, rightRangeTypedValue, startPriceTypedValue } =
     useV3MintState()
@@ -151,7 +157,21 @@ export function useV3DerivedMintInfo(
 
   // pool
   const [poolState, pool] = usePool(currencies[Field.CURRENCY_A], currencies[Field.CURRENCY_B], feeAmount)
-  const noLiquidity = poolState === PoolState.NOT_EXISTS
+
+  if (!!token0 && !!token1 && !!feeAmount) {
+    const tk0 = new PublicKey(token0.address)
+    const tk1 = new PublicKey(token1.address)
+
+    PublicKey.findProgramAddress([POOL_SEED, tk0?.toBuffer(), tk1?.toBuffer(), u32ToSeed(feeAmount)], PROGRAM_ID).then(
+      ([poolStatePDA, _]) => {
+        connection.getAccountInfo(poolStatePDA).then((info) => {
+          setNoLiquidity(!info)
+        })
+      }
+    )
+  }
+
+  // const noLiquidity = poolState === PoolState.NOT_EXISTS
 
   // note to parse inputs in reverse
   const invertPrice = Boolean(baseToken && token0 && !baseToken.equals(token0))

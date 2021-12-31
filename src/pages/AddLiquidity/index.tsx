@@ -352,8 +352,22 @@ export default function AddLiquidity({
       cyclosCore.programId
     )
 
+    const tickLowerStateInfo = await connection.getAccountInfo(tickLowerState)
+    const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
+    const bitmapLowerStateInfo = await connection.getAccountInfo(bitmapLowerState)
+    const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
+    const factoryStateInfo = await connection.getAccountInfo(factoryState)
+    const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
+
     // Build the transaction
-    if (noLiquidity) {
+    if (
+      noLiquidity &&
+      !corePositionStateInfo &&
+      !tickLowerStateInfo &&
+      !tickUpperStateInfo &&
+      !bitmapLowerStateInfo &&
+      !factoryStateInfo
+    ) {
       console.log('Creating all accounts')
 
       const tx = new Transaction()
