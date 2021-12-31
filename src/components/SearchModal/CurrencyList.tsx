@@ -166,18 +166,16 @@ export default function CurrencyList({
       const handleSelect = () => currency && onCurrencySelect(currency)
 
       if (currency) {
-        return (
-          account && (
-            <CurrencyRow
-              style={style}
-              currency={currency}
-              isSelected={isSelected}
-              onSelect={handleSelect}
-              otherSelected={otherSelected}
-              showCurrencyAmount={showCurrencyAmount}
-            />
-          )
-        )
+        return account ? (
+          <CurrencyRow
+            style={style}
+            currency={currency}
+            isSelected={isSelected}
+            onSelect={handleSelect}
+            otherSelected={otherSelected}
+            showCurrencyAmount={showCurrencyAmount}
+          />
+        ) : null
       } else {
         return null
       }
