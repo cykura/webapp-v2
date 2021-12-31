@@ -405,16 +405,18 @@ export default function AddLiquidity({
     console.log('Not creating account and init pool')
     // Then finally mint the required position
     // Need to fix this wallet.publicKey is undefined
+    const nftMintKeypair = new anchor.web3.Keypair()
+
     const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
-      [POSITION_SEED, wallet?.publicKey.toBuffer()],
+      [POSITION_SEED, nftMintKeypair.publicKey.toBuffer()],
       cyclosCore.programId
     )
 
     const positionNftAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      wallet?.publicKey ?? PublicKey.default,
-      wallet?.publicKey ?? PublicKey.default
+      nftMintKeypair.publicKey,
+      wallet.publicKey
     )
 
     const amount0Desired = new BN(0)
@@ -456,7 +458,7 @@ export default function AddLiquidity({
           minter: wallet?.publicKey,
           recipient: wallet?.publicKey,
           factoryState,
-          nftMint: wallet?.publicKey,
+          nftMint: nftMintKeypair.publicKey,
           nftAccount: positionNftAccount,
           poolState: poolState,
           corePositionState: corePositionState,
@@ -477,9 +479,9 @@ export default function AddLiquidity({
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         },
+        signers: [nftMintKeypair],
       }
     )
-
     console.log(hashRes)
   }
 
