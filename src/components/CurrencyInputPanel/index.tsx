@@ -1,4 +1,3 @@
-import { Pair } from '@uniswap/v2-sdk'
 import { Currency, CurrencyAmount, Percent, Token } from '@uniswap/sdk-core'
 import { useState, useCallback, ReactNode } from 'react'
 import styled from 'styled-components/macro'
@@ -154,7 +153,6 @@ interface CurrencyInputPanelProps {
   onCurrencySelect?: (currency: Currency) => void
   currency?: Currency | null
   hideBalance?: boolean
-  pair?: Pair | null
   hideInput?: boolean
   otherCurrency?: Currency | null
   fiatValue?: CurrencyAmount<Token> | null
@@ -183,7 +181,6 @@ export default function CurrencyInputPanel({
   fiatValue,
   priceImpact,
   hideBalance = false,
-  pair = null, // used for double token logo
   hideInput = false,
   locked = false,
   ...rest
@@ -223,26 +220,14 @@ export default function CurrencyInputPanel({
           >
             <Aligner>
               <RowFixed>
-                {pair ? (
-                  <span style={{ marginRight: '0.5rem' }}>
-                    <DoubleCurrencyLogo currency0={pair.token0} currency1={pair.token1} size={24} margin={true} />
-                  </span>
-                ) : currency ? (
-                  <CurrencyLogo style={{ marginRight: '0.5rem' }} currency={currency} size={'24px'} />
-                ) : null}
-                {pair ? (
-                  <StyledTokenName className="pair-name-container">
-                    {pair?.token0.symbol}:{pair?.token1.symbol}
-                  </StyledTokenName>
-                ) : (
-                  <StyledTokenName className="token-symbol-container" active={Boolean(currency && currency.symbol)}>
-                    {(currency && currency.symbol && currency.symbol.length > 20
-                      ? currency.symbol.slice(0, 4) +
-                        '...' +
-                        currency.symbol.slice(currency.symbol.length - 5, currency.symbol.length)
-                      : currency?.symbol) || <Trans>Select a token</Trans>}
-                  </StyledTokenName>
-                )}
+                {currency && <CurrencyLogo style={{ marginRight: '0.5rem' }} currency={currency} size={'24px'} />}
+                <StyledTokenName className="token-symbol-container" active={Boolean(currency && currency.symbol)}>
+                  {(currency && currency.symbol && currency.symbol.length > 20
+                    ? currency.symbol.slice(0, 4) +
+                      '...' +
+                      currency.symbol.slice(currency.symbol.length - 5, currency.symbol.length)
+                    : currency?.symbol) || <Trans>Select a token</Trans>}
+                </StyledTokenName>
               </RowFixed>
               {onCurrencySelect && <StyledDropDown selected={!!currency} />}
             </Aligner>
