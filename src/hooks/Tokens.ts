@@ -2,16 +2,11 @@ import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useMemo } from 'react'
-import { ExtendedEther, SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL, WETH9_EXTENDED } from '../constants/tokens'
-import { useCombinedActiveList } from '../state/lists/hooks'
-import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
+import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
-import { isAddress } from '../utils'
-import { TokenAddressMap, useUnsupportedTokenList } from './../state/lists/hooks'
-
-import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
-import { useBytes32TokenContract, useTokenContract } from './useContract'
-import { PublicKey } from '@solana/web3.js'
+import { TokenAddressMap } from './../state/lists/hooks'
+import { useActiveWeb3ReactSol } from './web3'
+import { useTokenContract } from './useContract'
 
 import { SOLUSDC, SOLUSDT } from '../constants/tokens'
 import { useSolana } from '@saberhq/use-solana'
@@ -82,11 +77,6 @@ export function useAllTokens(): { [address: string]: Token } {
     [SOL.address]: SOL,
   }
   return map
-}
-
-export function useUnsupportedTokens(): { [address: string]: Token } {
-  const unsupportedTokensMap = useUnsupportedTokenList()
-  return useTokensFromMap(unsupportedTokensMap, false)
 }
 
 export function useIsTokenActive(token: Token | undefined | null): boolean {

@@ -8,7 +8,6 @@ import ReactDOM from 'react-dom'
 import ReactGA from 'react-ga'
 import { Provider } from 'react-redux'
 import { HashRouter } from 'react-router-dom'
-import Blocklist from './components/Blocklist'
 import { NetworkContextName } from './constants/misc'
 import { LanguageProvider } from './i18n'
 import App from './pages/App'
@@ -96,15 +95,13 @@ ReactDOM.render(
           <LanguageProvider>
             <Web3ReactProvider getLibrary={getLibrary}>
               <Web3ProviderNetwork getLibrary={getLibrary}>
-                <Blocklist>
-                  <Updaters />
-                  <ThemeProvider>
-                    <SnackbarProvider>
-                      <ThemedGlobalStyle />
-                      <App />
-                    </SnackbarProvider>
-                  </ThemeProvider>
-                </Blocklist>
+                <Updaters />
+                <ThemeProvider>
+                  <SnackbarProvider>
+                    <ThemedGlobalStyle />
+                    <App />
+                  </SnackbarProvider>
+                </ThemeProvider>
               </Web3ProviderNetwork>
             </Web3ReactProvider>
           </LanguageProvider>

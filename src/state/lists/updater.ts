@@ -8,7 +8,6 @@ import useInterval from '../../hooks/useInterval'
 import useIsWindowVisible from '../../hooks/useIsWindowVisible'
 import { acceptListUpdate } from './actions'
 import { useActiveListUrls } from './hooks'
-import { UNSUPPORTED_LIST_URLS } from 'constants/lists'
 import { useAppDispatch } from 'state/hooks'
 
 export default function Updater(): null {
@@ -36,16 +35,6 @@ export default function Updater(): null {
     Object.keys(lists).forEach((listUrl) => {
       const list = lists[listUrl]
       if (!list.current && !list.loadingRequestId && !list.error) {
-        fetchList(listUrl).catch((error) => console.debug('list added fetching error', error))
-      }
-    })
-  }, [dispatch, fetchList, librarySol, lists])
-
-  // if any lists from unsupported lists are loaded, check them too (in case new updates since last visit)
-  useEffect(() => {
-    UNSUPPORTED_LIST_URLS.forEach((listUrl) => {
-      const list = lists[listUrl]
-      if (!list || (!list.current && !list.loadingRequestId && !list.error)) {
         fetchList(listUrl).catch((error) => console.debug('list added fetching error', error))
       }
     })

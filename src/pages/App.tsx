@@ -5,7 +5,6 @@ import GoogleAnalyticsReporter from '../components/analytics/GoogleAnalyticsRepo
 import ErrorBoundary from '../components/ErrorBoundary'
 import Header from '../components/Header'
 import Popups from '../components/Popups'
-import Web3ReactManager from '../components/Web3ReactManager'
 import DarkModeQueryParamReader from '../theme/DarkModeQueryParamReader'
 import AddLiquidity from './AddLiquidity'
 import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
@@ -60,34 +59,32 @@ export default function App() {
         </HeaderWrapper>
         <BodyWrapper>
           <Popups />
-          <Web3ReactManager>
-            <Switch>
-              <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
-              <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
-              <Route exact strict path="/swap" component={Swap} />
+          <Switch>
+            <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
+            <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
+            <Route exact strict path="/swap" component={Swap} />
 
-              <Route exact strict path="/pool" component={Pool} />
-              <Route exact strict path="/pool/:tokenId" component={PositionPage} />
+            <Route exact strict path="/pool" component={Pool} />
+            <Route exact strict path="/pool/:tokenId" component={PositionPage} />
 
-              <Route
-                exact
-                strict
-                path="/add/:currencyIdA?/:currencyIdB?/:feeAmount?"
-                component={RedirectDuplicateTokenIds}
-              />
+            <Route
+              exact
+              strict
+              path="/add/:currencyIdA?/:currencyIdB?/:feeAmount?"
+              component={RedirectDuplicateTokenIds}
+            />
 
-              <Route
-                exact
-                strict
-                path="/increase/:currencyIdA?/:currencyIdB?/:feeAmount?/:tokenId?"
-                component={AddLiquidity}
-              />
+            <Route
+              exact
+              strict
+              path="/increase/:currencyIdA?/:currencyIdB?/:feeAmount?/:tokenId?"
+              component={AddLiquidity}
+            />
 
-              <Route exact strict path="/remove/:tokenId" component={RemoveLiquidityV3} />
+            <Route exact strict path="/remove/:tokenId" component={RemoveLiquidityV3} />
 
-              <Route component={RedirectPathToSwapOnly} />
-            </Switch>
-          </Web3ReactManager>
+            <Route component={RedirectPathToSwapOnly} />
+          </Switch>
           <Marginer />
         </BodyWrapper>
       </AppWrapper>

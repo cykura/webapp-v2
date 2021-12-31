@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo, useState } from 'react'
 import { useWalletKit } from '@gokiprotocol/walletkit'
-import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
+import { useSolana } from '@saberhq/use-solana'
 import { TransactionResponse } from '@ethersproject/providers'
 import { Currency, CurrencyAmount, Percent } from '@uniswap/sdk-core'
 import { AlertTriangle, AlertCircle } from 'react-feather'
@@ -15,7 +15,6 @@ import {
   POSITION_SEED,
   SOL_LOCAL,
   TICK_SEED,
-  WETH9_EXTENDED,
 } from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
@@ -27,9 +26,7 @@ import { AutoColumn } from '../../components/Column'
 import TransactionConfirmationModal, { ConfirmationModalContent } from '../../components/TransactionConfirmationModal'
 import CurrencyInputPanel from '../../components/CurrencyInputPanel'
 import { RowBetween, RowFixed } from '../../components/Row'
-import { useIsSwapUnsupported } from '../../hooks/useIsSwapUnsupported'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
-import approveAmountCalldata from '../../utils/approveAmountCalldata'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { Review } from './Review'
 import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
@@ -46,7 +43,6 @@ import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import AppBody from '../AppBody'
 import { Dots } from '../Pool/styleds'
 import { currencyId } from '../../utils/currencyId'
-import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter'
 import { DynamicSection, CurrencyDropdown, StyledInput, Wrapper, ScrollablePage } from './styled'
 import { Trans, t } from '@lingui/macro'
 import {
@@ -637,8 +633,6 @@ export default function AddLiquidity({
     setTxHash('')
   }, [history, onFieldAInput, txHash])
 
-  const addIsUnsupported = useIsSwapUnsupported(currencies?.CURRENCY_A, currencies?.CURRENCY_B)
-
   const clearAll = useCallback(() => {
     onFieldAInput('')
     onFieldBInput('')
@@ -982,13 +976,7 @@ export default function AddLiquidity({
                 </AutoColumn>
               </DynamicSection>
               <div>
-                {addIsUnsupported ? (
-                  <ButtonPrimary disabled={true} $borderRadius="12px" padding={'12px'}>
-                    <TYPE.main mb="4px">
-                      <Trans>Unsupported Asset</Trans>
-                    </TYPE.main>
-                  </ButtonPrimary>
-                ) : !connected ? (
+                {!connected ? (
                   <ButtonLight onClick={connect} $borderRadius="12px" padding={'12px'}>
                     <Trans>Connect wallet</Trans>
                   </ButtonLight>
@@ -1051,12 +1039,6 @@ export default function AddLiquidity({
             </AutoColumn>
           </Wrapper>
         </AppBody>
-        {addIsUnsupported && (
-          <UnsupportedCurrencyFooter
-            show={addIsUnsupported}
-            currencies={[currencies.CURRENCY_A, currencies.CURRENCY_B]}
-          />
-        )}
       </ScrollablePage>
       <SwitchLocaleLink />
     </>
