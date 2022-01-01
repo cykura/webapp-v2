@@ -26,7 +26,6 @@ import TradePrice from '../../components/swap/TradePrice'
 import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import { useCurrency } from '../../hooks/Tokens'
 import { V3TradeState } from '../../hooks/useBestV3Trade'
-import { useERC20PermitFromTrade } from '../../hooks/useERC20Permit'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
 import useWrapCallback, { WrapType } from '../../hooks/useWrapCallback'
@@ -155,22 +154,17 @@ export default function Swap({ history }: RouteComponentProps) {
   const routeNotFound = !trade?.route
   const isLoadingRoute = V3TradeState.LOADING === v3TradeState
 
-  const {
-    state: signatureState,
-    signatureData,
-    gatherPermitSignature,
-  } = useERC20PermitFromTrade(trade, allowedSlippage)
+  // const {
+  //   state: signatureState,
+  //   signatureData,
+  //   gatherPermitSignature,
+  // } = useERC20PermitFromTrade(trade, allowedSlippage)
 
   const maxInputAmount: CurrencyAmount<Currency> | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
   const showMaxButton = Boolean(maxInputAmount?.greaterThan(0) && !parsedAmounts[Field.INPUT]?.equalTo(maxInputAmount))
 
   // the callback to execute the swap
-  const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(
-    trade,
-    allowedSlippage,
-    recipient,
-    signatureData
-  )
+  const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(trade, allowedSlippage, recipient)
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
