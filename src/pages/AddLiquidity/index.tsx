@@ -64,6 +64,7 @@ import idl from '../../constants/cyclos-core.json'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { u16ToSeed } from 'state/mint/v3/utils'
+import { useSnackbar } from 'notistack'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -80,6 +81,7 @@ export default function AddLiquidity({
   const { BN } = anchor
 
   const theme = useContext(ThemeContext)
+  const { enqueueSnackbar } = useSnackbar()
   const expertMode = useIsExpertMode()
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
@@ -147,7 +149,7 @@ export default function AddLiquidity({
   const [attemptingTxn, setAttemptingTxn] = useState<boolean>(false) // clicked confirm
 
   // txn values
-  const deadline = useTransactionDeadline() // custom from users settings
+  // const deadline = useTransactionDeadline() // custom from users settings
 
   const [txHash, setTxHash] = useState<string>('')
 
@@ -187,6 +189,15 @@ export default function AddLiquidity({
     outOfRange ? ZERO_PERCENT : DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE
   )
 
+  // get value and prices at ticks
+  const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
+  const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
+
+  console.log(startPriceTypedValue)
+  console.log(+formattedAmounts[Field.CURRENCY_A] * 1e6)
+  console.log(+formattedAmounts?.[Field.CURRENCY_B] * 1e6)
+  console.log(ticks)
+
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
 
@@ -195,8 +206,8 @@ export default function AddLiquidity({
     })
     const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
-    const fee = 500
-    const tickSpacing = 10
+    const fee = feeAmount ?? 500
+    const tickSpacing = fee / 50
 
     // Convinence helpers
     const tokenA = currencyA?.wrapped
@@ -229,10 +240,11 @@ export default function AddLiquidity({
     // get init Price from UI - should encode into Q32.32
     // taken from test file
     const initPrice = new BN(4297115210)
+    // const initPrice = new BN(startPriceTypedValue)
 
     // taken as contants in test file
-    const tickLower = 0
-    const tickUpper = 10
+    const tickLower = ticks.LOWER ?? 0
+    const tickUpper = ticks.UPPER ?? 10
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
 
@@ -278,26 +290,34 @@ export default function AddLiquidity({
     // Create and init pool
     if (noLiquidity) {
       console.log('Creating and init pool')
-      const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, initPrice, {
-        accounts: {
-          poolCreator: wallet?.publicKey,
-          token0: token1,
-          token1: token2,
-          feeState,
-          poolState,
-          initialObservationState,
-          vault0,
-          vault1,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        },
-      })
-
-      console.log(createHash, ' txn hash for create Pool')
+      try {
+        const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, initPrice, {
+          accounts: {
+            poolCreator: wallet?.publicKey,
+            token0: token1,
+            token1: token2,
+            feeState,
+            poolState,
+            initialObservationState,
+            vault0,
+            vault1,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          },
+        })
+        console.log(createHash, ' txn hash for create Pool')
+        enqueueSnackbar('Pool Created', {
+          variant: 'success',
+        })
+      } catch (err: any) {
+        enqueueSnackbar(err?.message ?? 'Something went wrong', {
+          variant: 'error',
+        })
+        return
+      }
     }
-
     // Create tick and bitmap accounts
     const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
       [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
@@ -340,53 +360,66 @@ export default function AddLiquidity({
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
     // Build the transaction
-    if (noLiquidity && !corePositionStateInfo && !tickLowerStateInfo && !tickUpperStateInfo && !bitmapLowerStateInfo) {
+    if (!corePositionStateInfo && !tickLowerStateInfo && !tickUpperStateInfo && !bitmapLowerStateInfo) {
       console.log('Creating all accounts')
-
-      const tx = new Transaction()
-      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-      tx.instructions = [
-        cyclosCore.instruction.initTickAccount(tickLowerStateBump, tickLower, {
-          accounts: {
-            signer: wallet?.publicKey,
-            poolState: poolState,
-            tickState: tickLowerState,
-            systemProgram: SystemProgram.programId,
-          },
-        }),
-        cyclosCore.instruction.initTickAccount(tickUpperStateBump, tickUpper, {
-          accounts: {
-            signer: wallet?.publicKey,
-            poolState: poolState,
-            tickState: tickUpperState,
-            systemProgram: SystemProgram.programId,
-          },
-        }),
-        cyclosCore.instruction.initBitmapAccount(bitmapLowerBump, wordPosLower, {
-          accounts: {
-            signer: wallet?.publicKey,
-            poolState: poolState,
-            bitmapState: bitmapLowerState,
-            systemProgram: SystemProgram.programId,
-          },
-        }),
-        cyclosCore.instruction.initPositionAccount(corePositionBump, {
-          accounts: {
-            signer: wallet?.publicKey,
-            recipient: factoryState,
-            poolState: poolState,
-            tickLowerState: tickLowerState,
-            tickUpperState: tickUpperState,
-            positionState: corePositionState,
-            systemProgram: SystemProgram.programId,
-          },
-        }),
-      ]
-      tx.feePayer = wallet?.publicKey ?? undefined
-      await wallet?.signTransaction(tx)
-
-      const hash = await providerMut?.send(tx)
-      console.log(hash, ' -> create account hash')
+      try {
+        const tx = new Transaction()
+        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.instructions = [
+          cyclosCore.instruction.initTickAccount(tickLowerStateBump, tickLower, {
+            accounts: {
+              signer: wallet?.publicKey,
+              poolState: poolState,
+              tickState: tickLowerState,
+              systemProgram: SystemProgram.programId,
+            },
+          }),
+          cyclosCore.instruction.initTickAccount(tickUpperStateBump, tickUpper, {
+            accounts: {
+              signer: wallet?.publicKey,
+              poolState: poolState,
+              tickState: tickUpperState,
+              systemProgram: SystemProgram.programId,
+            },
+          }),
+          cyclosCore.instruction.initBitmapAccount(bitmapLowerBump, wordPosLower, {
+            accounts: {
+              signer: wallet?.publicKey,
+              poolState: poolState,
+              bitmapState: bitmapLowerState,
+              systemProgram: SystemProgram.programId,
+            },
+          }),
+          // cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
+          //   accounts: {
+          //     signer: wallet?.publicKey,
+          //     poolState: poolState,
+          //     bitmapState: bitmapUpperState,
+          //     systemProgram: SystemProgram.programId,
+          //   },
+          // }),
+          cyclosCore.instruction.initPositionAccount(corePositionBump, {
+            accounts: {
+              signer: wallet?.publicKey,
+              recipient: factoryState,
+              poolState: poolState,
+              tickLowerState: tickLowerState,
+              tickUpperState: tickUpperState,
+              positionState: corePositionState,
+              systemProgram: SystemProgram.programId,
+            },
+          }),
+        ]
+        tx.feePayer = wallet?.publicKey ?? undefined
+        await wallet?.signTransaction(tx)
+        const hash = await providerMut?.send(tx)
+        console.log(hash, ' -> create account hash')
+      } catch (err: any) {
+        enqueueSnackbar(err?.message ?? 'Something went wrong', {
+          variant: 'error',
+        })
+        return
+      }
     }
 
     console.log('Not creating account and init pool')
@@ -408,6 +441,8 @@ export default function AddLiquidity({
 
     const amount0Desired = new BN(0)
     const amount1Desired = new BN(1_000_000)
+    const amount0Minimum = new BN(0)
+    const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
 
     // fetch observation accounts
@@ -433,118 +468,125 @@ export default function AddLiquidity({
       )
     )[0]
 
-    const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
-      tokenizedPositionBump,
-      amount0Desired,
-      amount1Desired,
-      new BN(0),
-      new BN(0),
-      deadline,
-      {
-        accounts: {
-          minter: wallet?.publicKey,
-          recipient: wallet?.publicKey,
-          factoryState,
-          nftMint: nftMintKeypair.publicKey,
-          nftAccount: positionNftAccount,
-          poolState: poolState,
-          corePositionState: corePositionState,
-          tickLowerState: tickLowerState,
-          tickUpperState: tickUpperState,
-          bitmapLowerState: bitmapLowerState,
-          bitmapUpperState: bitmapUpperState,
-          tokenAccount0: userATA0,
-          tokenAccount1: userATA1,
-          vault0: vault0,
-          vault1: vault1,
-          latestObservationState: latestObservationState,
-          nextObservationState: nextObservationState,
-          tokenizedPositionState: tokenizedPositionState,
-          coreProgram: cyclosCore.programId,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        },
-        signers: [nftMintKeypair],
-      }
-    )
-    console.log(hashRes)
+    try {
+      const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
+        tokenizedPositionBump,
+        amount0Desired,
+        amount1Desired,
+        amount0Minimum,
+        amount1Minimum,
+        deadline,
+        {
+          accounts: {
+            minter: wallet?.publicKey,
+            recipient: wallet?.publicKey,
+            factoryState,
+            nftMint: nftMintKeypair.publicKey,
+            nftAccount: positionNftAccount,
+            poolState: poolState,
+            corePositionState: corePositionState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            bitmapLowerState: bitmapLowerState,
+            bitmapUpperState: bitmapUpperState,
+            tokenAccount0: userATA0,
+            tokenAccount1: userATA1,
+            vault0: vault0,
+            vault1: vault1,
+            latestObservationState: latestObservationState,
+            nextObservationState: nextObservationState,
+            tokenizedPositionState: tokenizedPositionState,
+            coreProgram: cyclosCore.programId,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          },
+          signers: [nftMintKeypair],
+        }
+      )
+      console.log(hashRes)
+    } catch (err: any) {
+      enqueueSnackbar(err?.message ?? 'Something went wrong', {
+        variant: 'error',
+      })
+      return
+    }
   }
 
   // replace this eventually with onAdd()
-  async function onAdder() {
-    if (!chainId || !librarySol || !account) return
+  // async function onAdder() {
+  //   if (!chainId || !librarySol || !account) return
 
-    if (!positionManager || !currencyA || !currencyB) {
-      return
-    }
+  //   if (!positionManager || !currencyA || !currencyB) {
+  //     return
+  //   }
 
-    if (position && account && deadline) {
-      const useNative = currencyA.isNative ? currencyA : currencyB.isNative ? currencyB : undefined
-      const { calldata, value } =
-        hasExistingPosition && tokenId
-          ? NonfungiblePositionManager.addCallParameters(position, {
-              tokenId,
-              slippageTolerance: allowedSlippage,
-              deadline: deadline.toString(),
-              useNative,
-            })
-          : NonfungiblePositionManager.addCallParameters(position, {
-              slippageTolerance: allowedSlippage,
-              recipient: account,
-              deadline: deadline.toString(),
-              useNative,
-              createPool: noLiquidity,
-            })
+  //   if (position && account && deadline) {
+  //     const useNative = currencyA.isNative ? currencyA : currencyB.isNative ? currencyB : undefined
+  //     const { calldata, value } =
+  //       hasExistingPosition && tokenId
+  //         ? NonfungiblePositionManager.addCallParameters(position, {
+  //             tokenId,
+  //             slippageTolerance: allowedSlippage,
+  //             deadline: deadline.toString(),
+  //             useNative,
+  //           })
+  //         : NonfungiblePositionManager.addCallParameters(position, {
+  //             slippageTolerance: allowedSlippage,
+  //             recipient: account,
+  //             deadline: deadline.toString(),
+  //             useNative,
+  //             createPool: noLiquidity,
+  //           })
 
-      const txn: { to: string; data: string; value: string } = {
-        to: NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
-        data: calldata,
-        value,
-      }
+  //     const txn: { to: string; data: string; value: string } = {
+  //       to: NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
+  //       data: calldata,
+  //       value,
+  //     }
 
-      setAttemptingTxn(true)
+  //     setAttemptingTxn(true)
 
-      librarySol
-        ?.getSigner()
-        .estimateGas(txn)
-        .then((estimate: BigNumber) => {
-          const newTxn = {
-            ...txn,
-            gasLimit: calculateGasMargin(estimate),
-          }
+  //     librarySol
+  //       ?.getSigner()
+  //       .estimateGas(txn)
+  //       .then((estimate: BigNumber) => {
+  //         const newTxn = {
+  //           ...txn,
+  //           gasLimit: calculateGasMargin(estimate),
+  //         }
 
-          return librarySol
-            ?.getSigner()
-            .sendTransaction(newTxn)
-            .then((response: TransactionResponse) => {
-              setAttemptingTxn(false)
-              addTransaction(response, {
-                summary: noLiquidity
-                  ? t`Create pool and add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`
-                  : t`Add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`,
-              })
-              setTxHash(response.hash)
-              ReactGA.event({
-                category: 'Liquidity',
-                action: 'Add',
-                label: [currencies[Field.CURRENCY_A]?.symbol, currencies[Field.CURRENCY_B]?.symbol].join('/'),
-              })
-            })
-        })
-        .catch((error: any) => {
-          console.error('Failed to send transaction', error)
-          setAttemptingTxn(false)
-          // we only care if the error is something _other_ than the user rejected the tx
-          if (error?.code !== 4001) {
-            console.error(error)
-          }
-        })
-    } else {
-      return
-    }
-  }
+  //         return librarySol
+  //           ?.getSigner()
+  //           .sendTransaction(newTxn)
+  //           .then((response: TransactionResponse) => {
+  //             setAttemptingTxn(false)
+  //             addTransaction(response, {
+  //               summary: noLiquidity
+  //                 ? t`Create pool and add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`
+  //                 : t`Add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`,
+  //             })
+  //             setTxHash(response.hash)
+  //             ReactGA.event({
+  //               category: 'Liquidity',
+  //               action: 'Add',
+  //               label: [currencies[Field.CURRENCY_A]?.symbol, currencies[Field.CURRENCY_B]?.symbol].join('/'),
+  //             })
+  //           })
+  //       })
+  //       .catch((error: any) => {
+  //         console.error('Failed to send transaction', error)
+  //         setAttemptingTxn(false)
+  //         // we only care if the error is something _other_ than the user rejected the tx
+  //         if (error?.code !== 4001) {
+  //           console.error(error)
+  //         }
+  //       })
+  //   } else {
+  //     return
+  //   }
+  // }
 
   const pendingText = `Supplying ${!depositADisabled ? parsedAmounts[Field.CURRENCY_A]?.toSignificant(6) : ''} ${
     !depositADisabled ? currencies[Field.CURRENCY_A]?.symbol : ''
@@ -625,10 +667,6 @@ export default function AddLiquidity({
     onRightRangeInput('')
     history.push(`/add`)
   }, [history, onFieldAInput, onFieldBInput, onLeftRangeInput, onRightRangeInput])
-
-  // get value and prices at ticks
-  const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
-  const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
   const { getDecrementLower, getIncrementLower, getDecrementUpper, getIncrementUpper } = useRangeHopCallbacks(
     baseCurrency ?? undefined,

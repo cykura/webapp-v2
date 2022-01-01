@@ -411,10 +411,13 @@ export function useV3DerivedMintInfo(
     errorMessage = errorMessage ?? t`Invalid price input`
   }
 
-  if (
-    (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled) ||
-    (!parsedAmounts[Field.CURRENCY_B] && !depositBDisabled)
-  ) {
+  // if (
+  //   (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled) ||
+  //   (!parsedAmounts[Field.CURRENCY_B] && !depositBDisabled)
+  // ) {
+  //   errorMessage = errorMessage ?? t`Enter an amount`
+  // }
+  if (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled && !parsedAmounts[Field.CURRENCY_B] && !depositBDisabled) {
     errorMessage = errorMessage ?? t`Enter an amount`
   }
 
