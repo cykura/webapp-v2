@@ -1,8 +1,7 @@
 import { t, Trans } from '@lingui/macro'
 import { useContext, useCallback, ReactNode } from 'react'
 import styled, { ThemeContext } from 'styled-components/macro'
-import useENS from '../../hooks/useENS'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { ExternalLink, TYPE } from '../../theme'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
 import { AutoColumn } from '../Column'
@@ -86,8 +85,6 @@ export default function AddressInputPanel({
   const { chainId } = useActiveWeb3ReactSol()
   const theme = useContext(ThemeContext)
 
-  const { address, loading, name } = useENS(value)
-
   const handleInput = useCallback(
     (event) => {
       const input = event.target.value
@@ -97,20 +94,18 @@ export default function AddressInputPanel({
     [onChange]
   )
 
-  const error = Boolean(value.length > 0 && !loading && !address)
-
   return (
     <InputPanel id={id}>
-      <ContainerRow error={error}>
+      <ContainerRow error={false}>
         <InputContainer>
           <AutoColumn gap="md">
             <RowBetween>
               <TYPE.black color={theme.text2} fontWeight={500} fontSize={14}>
                 {label ?? <Trans>Recipient</Trans>}
               </TYPE.black>
-              {address && chainId && (
+              {value && chainId && (
                 <ExternalLink
-                  href={getExplorerLink(chainId, name ?? address, ExplorerDataType.ADDRESS)}
+                  href={getExplorerLink(chainId, value, ExplorerDataType.ADDRESS)}
                   style={{ fontSize: '14px' }}
                 >
                   <Trans>(View on Explorer)</Trans>
@@ -124,8 +119,7 @@ export default function AddressInputPanel({
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
-              placeholder={placeholder ?? t`Wallet Address or ENS name`}
-              error={error}
+              placeholder={placeholder ?? t`Wallet Address`}
               pattern="^(0x[a-fA-F0-9]{40})$"
               onChange={handleInput}
               value={value}

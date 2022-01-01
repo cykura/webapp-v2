@@ -2,23 +2,16 @@ import { Contract } from '@ethersproject/contracts'
 import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import { abi as MulticallABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/UniswapInterfaceMulticall.sol/UniswapInterfaceMulticall.json'
 
-import ENS_PUBLIC_RESOLVER_ABI from 'abis/ens-public-resolver.json'
-import ENS_ABI from 'abis/ens-registrar.json'
 import ERC20_BYTES32_ABI from 'abis/erc20_bytes32.json'
 import WETH_ABI from 'abis/weth.json'
 import EIP_2612 from 'abis/eip_2612.json'
 
-import {
-  NONFUNGIBLE_POSITION_MANAGER_ADDRESSES,
-  QUOTER_ADDRESSES,
-  MULTICALL_ADDRESS,
-  ENS_REGISTRAR_ADDRESSES,
-} from 'constants/addresses'
+import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, QUOTER_ADDRESSES, MULTICALL_ADDRESS } from 'constants/addresses'
 import { abi as NFTPositionManagerABI } from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import { useMemo } from 'react'
 import { Quoter, NonfungiblePositionManager, UniswapInterfaceMulticall } from 'types/v3'
 import { getContract } from 'utils'
-import { EnsPublicResolver, EnsRegistrar, Weth } from '../abis/types'
+import { Weth } from '../abis/types'
 import { WETH9_EXTENDED } from '../constants/tokens'
 import { useActiveWeb3ReactSol } from './web3'
 import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL } from '../constants/tokens'
@@ -66,14 +59,6 @@ export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: b
 export function useWETHContract(withSignerIfPossible?: boolean) {
   const { chainId } = useActiveWeb3ReactSol()
   return useContract<Weth>(chainId ? WETH9_EXTENDED[chainId]?.address : undefined, WETH_ABI, withSignerIfPossible)
-}
-
-export function useENSRegistrarContract(withSignerIfPossible?: boolean) {
-  return useContract<EnsRegistrar>(ENS_REGISTRAR_ADDRESSES, ENS_ABI, withSignerIfPossible)
-}
-
-export function useENSResolverContract(address: string | undefined, withSignerIfPossible?: boolean) {
-  return useContract<EnsPublicResolver>(address, ENS_PUBLIC_RESOLVER_ABI, withSignerIfPossible)
 }
 
 export function useBytes32TokenContract(tokenAddress?: string, withSignerIfPossible?: boolean): Contract | null {

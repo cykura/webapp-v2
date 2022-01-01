@@ -11,7 +11,6 @@ import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import { SignatureData } from './useERC20Permit'
 import useTransactionDeadline from './useTransactionDeadline'
-import useENS from './useENS'
 
 enum SwapCallbackState {
   INVALID,
@@ -43,19 +42,17 @@ interface FailedCall extends SwapCallEstimate {
  * Returns the swap calls that can be used to make the trade
  * @param trade trade to execute
  * @param allowedSlippage user allowed slippage
- * @param recipientAddressOrName the ENS name or address of the recipient of the swap output
+ * @param recipientAddress the address of the recipient of the swap output
  * @param signatureData the signature data of the permit of the input token amount, if available
  */
 function useSwapCallArguments(
   trade: V3Trade<Currency, Currency, TradeType> | undefined, // trade to execute, required
   allowedSlippage: Percent, // in bips
-  recipientAddressOrName: string | null, // the ENS name or address of the recipient of the trade, or null if swap should be returned to sender
+  recipientAddress: string | null, // the address of the recipient of the trade, or null if swap should be returned to sender
   signatureData: SignatureData | null | undefined
 ): SwapCall[] {
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
-
-  const { address: recipientAddress } = useENS(recipientAddressOrName)
-  const recipient = recipientAddressOrName === null ? account : recipientAddress
+  const recipient = recipientAddress ?? account
   const deadline = useTransactionDeadline()
 
   return useMemo(() => {
@@ -146,24 +143,23 @@ function swapErrorToUserReadableMessage(error: any): string {
 export function useSwapCallback(
   trade: V3Trade<Currency, Currency, TradeType> | undefined, // trade to execute, required
   allowedSlippage: Percent, // in bips
-  recipientAddressOrName: string | null, // the ENS name or address of the recipient of the trade, or null if swap should be returned to sender
+  recipientAddress: string | null, // the address of the recipient of the trade, or null if swap should be returned to sender
   signatureData: SignatureData | undefined | null
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
-  const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddressOrName, signatureData)
+  const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddress, signatureData)
 
   const addTransaction = useTransactionAdder()
 
-  const { address: recipientAddress } = useENS(recipientAddressOrName)
-  const recipient = recipientAddressOrName === null ? account : recipientAddress
+  const recipient = recipientAddress ?? account
 
   return useMemo(() => {
     if (!trade || !librarySol || !account || !chainId) {
       return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
     }
     if (!recipient) {
-      if (recipientAddressOrName !== null) {
+      if (recipientAddress !== null) {
         return { state: SwapCallbackState.INVALID, callback: null, error: 'Invalid recipient' }
       } else {
         return { state: SwapCallbackState.LOADING, callback: null, error: null }
@@ -254,9 +250,9 @@ export function useSwapCallback(
               recipient === account
                 ? base
                 : `${base} to ${
-                    recipientAddressOrName && isAddress(recipientAddressOrName)
-                      ? shortenAddress(recipientAddressOrName)
-                      : recipientAddressOrName
+                    recipientAddress && isAddress(recipientAddress)
+                      ? shortenAddress(recipientAddress)
+                      : recipientAddress
                   }`
 
             addTransaction(response, {
@@ -279,5 +275,5 @@ export function useSwapCallback(
       },
       error: null,
     }
-  }, [trade, librarySol, account, chainId, recipient, recipientAddressOrName, swapCalls, addTransaction])
+  }, [trade, librarySol, account, chainId, recipient, recipientAddress, swapCalls, addTransaction])
 }
