@@ -19,6 +19,7 @@ import TransactionUpdater from './state/transactions/updater'
 import UserUpdater from './state/user/updater'
 import ThemeProvider, { ThemedGlobalStyle } from './theme'
 import { SnackbarProvider } from 'notistack'
+import GradientUpdater from './theme/BgGradient'
 
 if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
@@ -53,6 +54,7 @@ function Updaters() {
       <TransactionUpdater />
       <MulticallUpdater />
       <LogsUpdater />
+      <GradientUpdater />
     </>
   )
 }
