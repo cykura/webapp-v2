@@ -29,13 +29,12 @@ import { RowBetween, RowFixed } from '../../components/Row'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { Review } from './Review'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
 import { ApprovalState, useApproveCallback } from '../../hooks/useApproveCallback'
 import useTransactionDeadline from '../../hooks/useTransactionDeadline'
 import { useWalletModalToggle } from '../../state/application/hooks'
 import { Field, Bound } from '../../state/mint/v3/actions'
-import { NetworkAlert } from 'components/NetworkAlert/NetworkAlert'
 import { useTransactionAdder } from '../../state/transactions/hooks'
 import { useIsExpertMode, useUserSlippageToleranceWithDefault } from '../../state/user/hooks'
 import { TYPE, ExternalLink } from '../../theme'
@@ -661,7 +660,6 @@ export default function AddLiquidity({
   return (
     <>
       <ScrollablePage>
-        <NetworkAlert />
         <TransactionConfirmationModal
           isOpen={showConfirm}
           onDismiss={handleDismissConfirmation}

@@ -1,6 +1,5 @@
 import 'inter-ui'
 import '@reach/dialog/styles.css'
-import { createWeb3ReactRoot, Web3ReactProvider } from '@web3-react/core'
 import { WalletKitProvider } from '@gokiprotocol/walletkit'
 import { StrictMode } from 'react'
 import { isMobile } from 'react-device-detect'
@@ -8,7 +7,6 @@ import ReactDOM from 'react-dom'
 import ReactGA from 'react-ga'
 import { Provider } from 'react-redux'
 import { HashRouter } from 'react-router-dom'
-import { NetworkContextName } from './constants/misc'
 import { LanguageProvider } from './i18n'
 import App from './pages/App'
 import store from './state'
@@ -20,11 +18,7 @@ import LogsUpdater from './state/logs/updater'
 import TransactionUpdater from './state/transactions/updater'
 import UserUpdater from './state/user/updater'
 import ThemeProvider, { ThemedGlobalStyle } from './theme'
-import RadialGradientByChainUpdater from './theme/RadialGradientByChainUpdater'
-import getLibrary from './utils/getLibrary'
 import { SnackbarProvider } from 'notistack'
-
-const Web3ProviderNetwork = createWeb3ReactRoot(NetworkContextName)
 
 if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
@@ -53,7 +47,6 @@ if (typeof GOOGLE_ANALYTICS_ID === 'string') {
 function Updaters() {
   return (
     <>
-      <RadialGradientByChainUpdater />
       <ListsUpdater />
       <UserUpdater />
       <ApplicationUpdater />
@@ -93,17 +86,13 @@ ReactDOM.render(
       >
         <HashRouter>
           <LanguageProvider>
-            <Web3ReactProvider getLibrary={getLibrary}>
-              <Web3ProviderNetwork getLibrary={getLibrary}>
-                <Updaters />
-                <ThemeProvider>
-                  <SnackbarProvider>
-                    <ThemedGlobalStyle />
-                    <App />
-                  </SnackbarProvider>
-                </ThemeProvider>
-              </Web3ProviderNetwork>
-            </Web3ReactProvider>
+            <Updaters />
+            <ThemeProvider>
+              <SnackbarProvider>
+                <ThemedGlobalStyle />
+                <App />
+              </SnackbarProvider>
+            </ThemeProvider>
           </LanguageProvider>
         </HashRouter>
       </WalletKitProvider>

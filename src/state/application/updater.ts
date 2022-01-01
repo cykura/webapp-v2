@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { supportedChainId } from 'utils/supportedChainId'
 import useDebounce from '../../hooks/useDebounce'
 import useIsWindowVisible from '../../hooks/useIsWindowVisible'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { updateBlockNumber, updateChainId } from './actions'
 
 function useQueryCacheInvalidator() {
@@ -17,7 +17,6 @@ function useQueryCacheInvalidator() {
 }
 
 export default function Updater(): null {
-  const { library } = useActiveWeb3React()
   const { chainId, librarySol } = useActiveWeb3ReactSol()
   const dispatch = useAppDispatch()
 

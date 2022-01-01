@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/macro'
 import { useWalletKit } from '@gokiprotocol/walletkit'
-import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
+import { useSolana } from '@saberhq/use-solana'
 import { ButtonGray, ButtonPrimary } from 'components/Button'
 import { AutoColumn } from 'components/Column'
 import { FlyoutAlignment, NewMenu, PopupMenu } from 'components/Menu'
@@ -10,16 +10,15 @@ import { RowBetween, RowFixed } from 'components/Row'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import Toggle from 'components/Toggle'
 import { useV3Positions } from 'hooks/useV3Positions'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
+import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useContext } from 'react'
-import { BookOpen, ChevronDown, Inbox, PlusCircle, MoreVertical } from 'react-feather'
+import { BookOpen, Inbox, PlusCircle, MoreVertical } from 'react-feather'
 import { Link } from 'react-router-dom'
 import { useWalletModalToggle } from 'state/application/hooks'
 import { useUserHideClosedPositions } from 'state/user/hooks'
 import styled, { ThemeContext } from 'styled-components/macro'
 import { HideSmall, TYPE } from 'theme'
 import { PositionDetails } from 'types/position'
-import CTACards from './CTACards'
 import { LoadingRows } from './styleds'
 
 const PageWrapper = styled(AutoColumn)`
@@ -190,8 +189,6 @@ export default function Pool() {
                 />
               </ButtonRow>
             </TitleRow>
-
-            {/* <CTACards /> */}
 
             <MainContentWrapper>
               {positionsLoading ? (

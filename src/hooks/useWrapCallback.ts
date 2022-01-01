@@ -4,7 +4,7 @@ import { WETH9_EXTENDED } from '../constants/tokens'
 import { tryParseAmount } from '../state/swap/hooks'
 import { useTransactionAdder } from '../state/transactions/hooks'
 import { useCurrencyBalance } from '../state/wallet/hooks'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
+import { useActiveWeb3ReactSol } from './web3'
 import { useWETHContract } from './useContract'
 
 export enum WrapType {

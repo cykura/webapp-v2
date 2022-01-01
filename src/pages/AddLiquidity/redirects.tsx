@@ -1,4 +1,4 @@
-import { useActiveWeb3React, useActiveWeb3ReactSol } from 'hooks/web3'
+import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
 import { SOL_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
 import AddLiquidity from './index'

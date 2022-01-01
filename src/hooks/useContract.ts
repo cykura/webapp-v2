@@ -22,7 +22,6 @@ export function useContract<T extends Contract = Contract>(
   ABI: any,
   withSignerIfPossible = true
 ): T | null {
-  /// Replace whole useActiveWeb3React() fully
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
 
   return useMemo(() => {

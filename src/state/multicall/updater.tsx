@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useMulticall2Contract } from '../../hooks/useContract'
 import useDebounce from '../../hooks/useDebounce'
 import chunkArray from '../../utils/chunkArray'

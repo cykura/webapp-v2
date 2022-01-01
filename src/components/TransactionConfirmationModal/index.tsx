@@ -12,7 +12,7 @@ import { ButtonPrimary, ButtonLight } from '../Button'
 import { AutoColumn, ColumnCenter } from '../Column'
 import Circle from '../../assets/images/blue-loader.svg'
 import MetaMaskLogo from '../../assets/images/metamask.png'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from '../../hooks/web3'
+import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { Trans } from '@lingui/macro'
 
 const Wrapper = styled.div`
@@ -91,7 +91,6 @@ function TransactionSubmittedContent({
   inline?: boolean // not in modal
 }) {
   const theme = useContext(ThemeContext)
-  const { library } = useActiveWeb3React()
 
   return (
     <Wrapper>

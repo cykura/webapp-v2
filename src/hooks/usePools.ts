@@ -6,7 +6,7 @@ import { PROGRAM_ID_STR, V3_CORE_FACTORY_ADDRESSES } from '../constants/addresse
 import { IUniswapV3PoolStateInterface } from '../types/v3/IUniswapV3PoolState'
 import { Token, Currency } from '@uniswap/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
-import { useActiveWeb3React, useActiveWeb3ReactSol } from './web3'
+import { useActiveWeb3ReactSol } from './web3'
 import { useMultipleContractSingleData } from '../state/multicall/hooks'
 
 import { Pool, FeeAmount } from '@uniswap/v3-sdk'
