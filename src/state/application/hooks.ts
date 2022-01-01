@@ -21,24 +21,8 @@ export function useToggleModal(modal: ApplicationModal): () => void {
   return useCallback(() => dispatch(setOpenModal(open ? null : modal)), [dispatch, modal, open])
 }
 
-export function useWalletModalToggle(): () => void {
-  return useToggleModal(ApplicationModal.WALLET)
-}
-
 export function useToggleSettingsMenu(): () => void {
   return useToggleModal(ApplicationModal.SETTINGS)
-}
-
-export function useToggleSelfClaimModal(): () => void {
-  return useToggleModal(ApplicationModal.SELF_CLAIM)
-}
-
-export function useToggleDelegateModal(): () => void {
-  return useToggleModal(ApplicationModal.DELEGATE)
-}
-
-export function useToggleVoteModal(): () => void {
-  return useToggleModal(ApplicationModal.VOTE)
 }
 
 // returns a function that allows adding a popup
