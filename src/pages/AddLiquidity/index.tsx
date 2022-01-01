@@ -31,7 +31,6 @@ import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { Review } from './Review'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
-import { ApprovalState, useApproveCallback } from '../../hooks/useApproveCallback'
 import useTransactionDeadline from '../../hooks/useTransactionDeadline'
 import { useWalletModalToggle } from '../../state/application/hooks'
 import { Field, Bound } from '../../state/mint/v3/actions'
@@ -40,7 +39,6 @@ import { useIsExpertMode, useUserSlippageToleranceWithDefault } from '../../stat
 import { TYPE, ExternalLink } from '../../theme'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import AppBody from '../AppBody'
-import { Dots } from '../Pool/styleds'
 import { currencyId } from '../../utils/currencyId'
 import { DynamicSection, CurrencyDropdown, StyledInput, Wrapper, ScrollablePage } from './styled'
 import { Trans, t } from '@lingui/macro'
@@ -185,16 +183,6 @@ export default function AddLiquidity({
       }
     },
     {}
-  )
-
-  // check whether the user has approved the router on the tokens
-  const [approvalA, approveACallback] = useApproveCallback(
-    parsedAmounts[Field.CURRENCY_A],
-    chainId ? NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId] : undefined
-  )
-  const [approvalB, approveBCallback] = useApproveCallback(
-    parsedAmounts[Field.CURRENCY_B],
-    chainId ? NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId] : undefined
   )
 
   const allowedSlippage = useUserSlippageToleranceWithDefault(
@@ -653,10 +641,6 @@ export default function AddLiquidity({
     pool
   )
 
-  // we need an existence check on parsed amounts for single-asset deposits
-  const showApprovalA = approvalA !== ApprovalState.APPROVED && !!parsedAmounts[Field.CURRENCY_A]
-  const showApprovalB = approvalB !== ApprovalState.APPROVED && !!parsedAmounts[Field.CURRENCY_B]
-
   return (
     <>
       <ScrollablePage>
@@ -980,53 +964,11 @@ export default function AddLiquidity({
                   </ButtonLight>
                 ) : (
                   <AutoColumn gap={'md'}>
-                    {(approvalA === ApprovalState.NOT_APPROVED ||
-                      approvalA === ApprovalState.PENDING ||
-                      approvalB === ApprovalState.NOT_APPROVED ||
-                      approvalB === ApprovalState.PENDING) &&
-                      isValid && (
-                        <RowBetween>
-                          {showApprovalA && (
-                            <ButtonPrimary
-                              onClick={approveACallback}
-                              disabled={approvalA === ApprovalState.PENDING}
-                              width={showApprovalB ? '48%' : '100%'}
-                            >
-                              {approvalA === ApprovalState.PENDING ? (
-                                <Dots>
-                                  <Trans>Approving {currencies[Field.CURRENCY_A]?.symbol}</Trans>
-                                </Dots>
-                              ) : (
-                                <Trans>Approve {currencies[Field.CURRENCY_A]?.symbol}</Trans>
-                              )}
-                            </ButtonPrimary>
-                          )}
-                          {showApprovalB && (
-                            <ButtonPrimary
-                              onClick={approveBCallback}
-                              disabled={approvalB === ApprovalState.PENDING}
-                              width={showApprovalA ? '48%' : '100%'}
-                            >
-                              {approvalB === ApprovalState.PENDING ? (
-                                <Dots>
-                                  <Trans>Approving {currencies[Field.CURRENCY_B]?.symbol}</Trans>
-                                </Dots>
-                              ) : (
-                                <Trans>Approve {currencies[Field.CURRENCY_B]?.symbol}</Trans>
-                              )}
-                            </ButtonPrimary>
-                          )}
-                        </RowBetween>
-                      )}
                     <ButtonError
                       onClick={() => {
                         expertMode ? OnAdd() : setShowConfirm(true)
                       }}
-                      disabled={
-                        !isValid ||
-                        (approvalA !== ApprovalState.APPROVED && !depositADisabled) ||
-                        (approvalB !== ApprovalState.APPROVED && !depositBDisabled)
-                      }
+                      disabled={!isValid}
                       error={!isValid && !!parsedAmounts[Field.CURRENCY_A] && !!parsedAmounts[Field.CURRENCY_B]}
                     >
                       <Text fontWeight={500}>{errorMessage ? errorMessage : <Trans>Add</Trans>}</Text>
