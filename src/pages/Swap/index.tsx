@@ -24,14 +24,12 @@ import { ArrowWrapper, Dots, SwapCallbackError, Wrapper } from '../../components
 import SwapHeader from '../../components/swap/SwapHeader'
 import TradePrice from '../../components/swap/TradePrice'
 import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
-import { useAllTokens, useCurrency } from '../../hooks/Tokens'
+import { useCurrency } from '../../hooks/Tokens'
 import { V3TradeState } from '../../hooks/useBestV3Trade'
-import { useERC20PermitFromTrade } from '../../hooks/useERC20Permit'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
 import useWrapCallback, { WrapType } from '../../hooks/useWrapCallback'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
-import { useWalletModalToggle } from '../../state/application/hooks'
 import { Field } from '../../state/swap/actions'
 import {
   useDefaultsFromURLSearch,
@@ -59,7 +57,7 @@ const StyledInfo = styled(Info)`
 export default function Swap({ history }: RouteComponentProps) {
   const { account } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
-  const { disconnect, connected, walletProviderInfo } = useSolana()
+  const { connected } = useSolana()
   const loadedUrlParams = useDefaultsFromURLSearch()
 
   // token warning stuff
@@ -67,29 +65,8 @@ export default function Swap({ history }: RouteComponentProps) {
     useCurrency(loadedUrlParams?.inputCurrencyId),
     useCurrency(loadedUrlParams?.outputCurrencyId),
   ]
-  const [dismissTokenWarning, setDismissTokenWarning] = useState<boolean>(false)
-  const urlLoadedTokens: Token[] = useMemo(
-    () => [loadedInputCurrency, loadedOutputCurrency]?.filter((c): c is Token => c?.isToken ?? false) ?? [],
-    [loadedInputCurrency, loadedOutputCurrency]
-  )
-  // console.log(urlLoadedTokens, ' URL LOADED TOKENS')
-  const handleConfirmTokenWarning = useCallback(() => {
-    setDismissTokenWarning(true)
-  }, [])
 
-  // dismiss warning if all imported tokens are in active lists
-  const defaultTokens = useAllTokens()
-  /// Used for user added input tokens
-  // const importTokensNotInDefault =
-  //   urlLoadedTokens &&
-  //   urlLoadedTokens.filter((token: Token) => {
-  //     return !Boolean(token.address in defaultTokens)
-  //   })
-  // console.log(importTokensNotInDefault, ' TOKENS NOT IN DEFAULT')
   const theme = useContext(ThemeContext)
-
-  // toggle wallet when disconnected
-  const toggleWalletModal = useWalletModalToggle()
 
   // for expert mode
   const [isExpertMode] = useExpertModeManager()
@@ -149,12 +126,6 @@ export default function Swap({ history }: RouteComponentProps) {
     [onUserInput]
   )
 
-  // reset if they close warning without tokens in params
-  const handleDismissTokenWarning = useCallback(() => {
-    setDismissTokenWarning(true)
-    history.push('/swap/')
-  }, [history])
-
   // modal and loading
   const [{ showConfirm, tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
     showConfirm: boolean
@@ -183,24 +154,17 @@ export default function Swap({ history }: RouteComponentProps) {
   const routeNotFound = !trade?.route
   const isLoadingRoute = V3TradeState.LOADING === v3TradeState
 
-  // check whether the user has approved the router on the input token
-  // const [approvalState, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage)
-  const {
-    state: signatureState,
-    signatureData,
-    gatherPermitSignature,
-  } = useERC20PermitFromTrade(trade, allowedSlippage)
+  // const {
+  //   state: signatureState,
+  //   signatureData,
+  //   gatherPermitSignature,
+  // } = useERC20PermitFromTrade(trade, allowedSlippage)
 
   const maxInputAmount: CurrencyAmount<Currency> | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
   const showMaxButton = Boolean(maxInputAmount?.greaterThan(0) && !parsedAmounts[Field.INPUT]?.equalTo(maxInputAmount))
 
   // the callback to execute the swap
-  const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(
-    trade,
-    allowedSlippage,
-    recipient,
-    signatureData
-  )
+  const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(trade, allowedSlippage, recipient)
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
@@ -282,7 +246,6 @@ export default function Swap({ history }: RouteComponentProps) {
 
   const handleInputSelect = useCallback(
     (inputCurrency) => {
-      // setApprovalSubmitted(false) // reset 2 step UI for approvals
       onCurrencySelection(Field.INPUT, inputCurrency)
     },
     [onCurrencySelection]

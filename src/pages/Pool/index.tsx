@@ -14,7 +14,6 @@ import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useContext } from 'react'
 import { BookOpen, Inbox, PlusCircle, MoreVertical } from 'react-feather'
 import { Link } from 'react-router-dom'
-import { useWalletModalToggle } from 'state/application/hooks'
 import { useUserHideClosedPositions } from 'state/user/hooks'
 import styled, { ThemeContext } from 'styled-components/macro'
 import { HideSmall, TYPE } from 'theme'
@@ -107,7 +106,6 @@ export default function Pool() {
   const { account } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
   const { disconnect, connected, walletProviderInfo } = useSolana()
-  const toggleWalletModal = useWalletModalToggle()
 
   const theme = useContext(ThemeContext)
   const [userHideClosedPositions, setUserHideClosedPositions] = useUserHideClosedPositions()
