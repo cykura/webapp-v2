@@ -2,14 +2,11 @@ import { Contract } from '@ethersproject/contracts'
 import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import { abi as MulticallABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/UniswapInterfaceMulticall.sol/UniswapInterfaceMulticall.json'
 
-import WETH_ABI from 'abis/weth.json'
 import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, QUOTER_ADDRESSES, MULTICALL_ADDRESS } from 'constants/addresses'
 import { abi as NFTPositionManagerABI } from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import { useMemo } from 'react'
 import { Quoter, NonfungiblePositionManager, UniswapInterfaceMulticall } from 'types/v3'
 import { getContract } from 'utils'
-import { Weth } from '../abis/types'
-import { WETH9_EXTENDED } from '../constants/tokens'
 import { useActiveWeb3ReactSol } from './web3'
 import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL } from '../constants/tokens'
 
@@ -44,11 +41,6 @@ export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: b
   } else {
     return { ...SOL_LOCAL }
   }
-}
-
-export function useWETHContract(withSignerIfPossible?: boolean) {
-  const { chainId } = useActiveWeb3ReactSol()
-  return useContract<Weth>(chainId ? WETH9_EXTENDED[chainId]?.address : undefined, WETH_ABI, withSignerIfPossible)
 }
 
 export function useMulticall2Contract() {
