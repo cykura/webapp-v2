@@ -28,7 +28,6 @@ import { useCurrency } from '../../hooks/Tokens'
 import { V3TradeState } from '../../hooks/useBestV3Trade'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
-import useWrapCallback, { WrapType } from '../../hooks/useWrapCallback'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { Field } from '../../state/swap/actions'
 import {
@@ -83,27 +82,20 @@ export default function Swap({ history }: RouteComponentProps) {
     inputError: swapInputError,
   } = useDerivedSwapInfo()
 
-  const {
-    wrapType,
-    execute: onWrap,
-    inputError: wrapInputError,
-  } = useWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
-  const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
+  // const {
+  //   wrapType,
+  //   execute: onWrap,
+  //   inputError: wrapInputError,
+  // } = useWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
+  // const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
   const recipientAddress = recipient
 
-  const parsedAmounts = useMemo(
-    () =>
-      showWrap
-        ? {
-            [Field.INPUT]: parsedAmount,
-            [Field.OUTPUT]: parsedAmount,
-          }
-        : {
-            [Field.INPUT]: independentField === Field.INPUT ? parsedAmount : trade?.inputAmount,
-            [Field.OUTPUT]: independentField === Field.OUTPUT ? parsedAmount : trade?.outputAmount,
-          },
-    [independentField, parsedAmount, showWrap, trade]
-  )
+  const parsedAmounts = useMemo(() => {
+    return {
+      [Field.INPUT]: independentField === Field.INPUT ? parsedAmount : trade?.inputAmount,
+      [Field.OUTPUT]: independentField === Field.OUTPUT ? parsedAmount : trade?.outputAmount,
+    }
+  }, [independentField, parsedAmount, trade])
 
   const fiatValueInput = useUSDCValue(parsedAmounts[Field.INPUT])
   const fiatValueOutput = useUSDCValue(parsedAmounts[Field.OUTPUT])
@@ -143,9 +135,7 @@ export default function Swap({ history }: RouteComponentProps) {
 
   const formattedAmounts = {
     [independentField]: typedValue,
-    [dependentField]: showWrap
-      ? parsedAmounts[independentField]?.toExact() ?? ''
-      : parsedAmounts[dependentField]?.toSignificant(6) ?? '',
+    [dependentField]: parsedAmounts[dependentField]?.toSignificant(6) ?? '',
   }
 
   const userHasSpecifiedInputOutput = Boolean(
@@ -290,9 +280,7 @@ export default function Swap({ history }: RouteComponentProps) {
           <AutoColumn gap={'md'}>
             <div style={{ display: 'relative' }}>
               <CurrencyInputPanel
-                label={
-                  independentField === Field.OUTPUT && !showWrap ? <Trans>From (at most)</Trans> : <Trans>From</Trans>
-                }
+                label={independentField === Field.OUTPUT && <Trans>From (at most)</Trans>}
                 value={formattedAmounts[Field.INPUT]}
                 showMaxButton={showMaxButton}
                 currency={currencies[Field.INPUT]}
@@ -314,7 +302,7 @@ export default function Swap({ history }: RouteComponentProps) {
               <CurrencyInputPanel
                 value={formattedAmounts[Field.OUTPUT]}
                 onUserInput={handleTypeOutput}
-                label={independentField === Field.INPUT && !showWrap ? <Trans>To (at least)</Trans> : <Trans>To</Trans>}
+                label={independentField === Field.INPUT && <Trans>To (at least)</Trans>}
                 showMaxButton={false}
                 hideBalance={false}
                 fiatValue={fiatValueOutput ?? undefined}
@@ -327,7 +315,7 @@ export default function Swap({ history }: RouteComponentProps) {
               />
             </div>
 
-            {recipient !== null && !showWrap ? (
+            {recipient && (
               <>
                 <AutoRow justify="space-between" style={{ padding: '0 1rem' }}>
                   <ArrowWrapper clickable={false}>
@@ -339,61 +327,50 @@ export default function Swap({ history }: RouteComponentProps) {
                 </AutoRow>
                 <AddressInputPanel id="recipient" value={recipient} onChange={onChangeRecipient} />
               </>
-            ) : null}
-
-            {showWrap ? null : (
-              <Row style={{ justifyContent: !trade ? 'center' : 'space-between' }}>
-                <RowFixed>
-                  {trade && (
-                    <ButtonGray
-                      width="fit-content"
-                      padding="0.1rem 0.5rem"
-                      disabled
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        height: '24px',
-                        opacity: 0.8,
-                        marginLeft: '0.25rem',
-                      }}
-                    >
-                      <TYPE.black fontSize={12}>
-                        <Trans>V3</Trans>
-                      </TYPE.black>
-                    </ButtonGray>
-                  )}
-                </RowFixed>
-                {trade ? (
-                  <RowFixed>
-                    <TradePrice
-                      price={trade.executionPrice}
-                      showInverted={showInverted}
-                      setShowInverted={setShowInverted}
-                    />
-                    <MouseoverTooltipContent
-                      content={<AdvancedSwapDetails trade={trade} allowedSlippage={allowedSlippage} />}
-                    >
-                      <StyledInfo />
-                    </MouseoverTooltipContent>
-                  </RowFixed>
-                ) : null}
-              </Row>
             )}
+
+            <Row style={{ justifyContent: !trade ? 'center' : 'space-between' }}>
+              <RowFixed>
+                {trade && (
+                  <ButtonGray
+                    width="fit-content"
+                    padding="0.1rem 0.5rem"
+                    disabled
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      height: '24px',
+                      opacity: 0.8,
+                      marginLeft: '0.25rem',
+                    }}
+                  >
+                    <TYPE.black fontSize={12}>
+                      <Trans>V3</Trans>
+                    </TYPE.black>
+                  </ButtonGray>
+                )}
+              </RowFixed>
+              {trade ? (
+                <RowFixed>
+                  <TradePrice
+                    price={trade.executionPrice}
+                    showInverted={showInverted}
+                    setShowInverted={setShowInverted}
+                  />
+                  <MouseoverTooltipContent
+                    content={<AdvancedSwapDetails trade={trade} allowedSlippage={allowedSlippage} />}
+                  >
+                    <StyledInfo />
+                  </MouseoverTooltipContent>
+                </RowFixed>
+              ) : null}
+            </Row>
 
             <div>
               {!connected ? (
                 <ButtonLight onClick={connect}>
                   <Trans>Connect Wallet</Trans>
                 </ButtonLight>
-              ) : showWrap ? (
-                <ButtonPrimary disabled={Boolean(wrapInputError)} onClick={onWrap}>
-                  {wrapInputError ??
-                    (wrapType === WrapType.WRAP ? (
-                      <Trans>Wrap</Trans>
-                    ) : wrapType === WrapType.UNWRAP ? (
-                      <Trans>Unwrap</Trans>
-                    ) : null)}
-                </ButtonPrimary>
               ) : routeNotFound && userHasSpecifiedInputOutput ? (
                 <GreyCard style={{ textAlign: 'center' }}>
                   <TYPE.main mb="4px">
