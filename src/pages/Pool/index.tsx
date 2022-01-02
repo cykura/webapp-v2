@@ -19,6 +19,7 @@ import styled, { ThemeContext } from 'styled-components/macro'
 import { HideSmall, TYPE } from 'theme'
 import { PositionDetails } from 'types/position'
 import { LoadingRows } from './styleds'
+import JSBI from 'jsbi'
 
 const PageWrapper = styled(AutoColumn)`
   max-width: 870px;
@@ -114,7 +115,7 @@ export default function Pool() {
 
   const [openPositions, closedPositions] = positions?.reduce<[PositionDetails[], PositionDetails[]]>(
     (acc, p) => {
-      acc[p.liquidity?.isZero() ? 1 : 0].push(p)
+      acc[JSBI.EQ(p?.liquidity, 0) ? 1 : 0].push(p)
       return acc
     },
     [[], []]

@@ -41,8 +41,12 @@ import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
 import Toggle from 'components/Toggle'
+<<<<<<< Updated upstream
 import { Network } from '@saberhq/solana-contrib'
 import { useSolana } from '@gokiprotocol/walletkit'
+=======
+import JSBI from 'jsbi'
+>>>>>>> Stashed changes
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -306,7 +310,7 @@ export function PositionPage({
     tokenId,
   } = positionDetails || {}
 
-  const removed = liquidity?.eq(0)
+  const removed = JSBI.EQ(liquidity, 0)
 
   const token0 = useToken(token0Address)
   const token1 = useToken(token1Address)
@@ -354,7 +358,13 @@ export function PositionPage({
   }, [inverted, pool, priceLower, priceUpper])
 
   // fees
-  const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, positionDetails?.tokenId, receiveWETH)
+  // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, positionDetails?.tokenId, receiveWETH)
+  const t0 = token0 as Currency
+  const t1 = token1 as Currency
+  const [feeValue0, feeValue1] = [
+    CurrencyAmount.fromRawAmount(t0, positionDetails?.tokensOwed0 ?? JSBI.BigInt(0)),
+    CurrencyAmount.fromRawAmount(t1, positionDetails?.tokensOwed1 ?? JSBI.BigInt(0)),
+  ]
 
   const [collecting, setCollecting] = useState<boolean>(false)
   const [collectMigrationHash, setCollectMigrationHash] = useState<string | null>(null)
@@ -367,6 +377,30 @@ export function PositionPage({
     if (!network || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
 
     setCollecting(true)
+
+    // calling the contract
+    // coreProgram.rpc.collectFromTokenized(amount0Max, amount1Max, {
+    //   accounts: {
+    //     ownerOrDelegate: owner,
+    //     nftAccount: positionANftAccount,
+    //     tokenizedPositionState: tokenizedPositionAState,
+    //     factoryState,
+    //     poolState: poolAState,
+    //     corePositionState: corePositionAState,
+    //     tickLowerState: tickLowerAState,
+    //     tickUpperState: tickUpperAState,
+    //     bitmapLowerState: bitmapLowerAState,
+    //     bitmapUpperState: bitmapUpperAState,
+    //     latestObservationState: latestObservationAState,
+    //     nextObservationState: nextObservationAState,
+    //     coreProgram: coreProgram.programId,
+    //     vault0: vaultA0,
+    //     vault1: vaultA1,
+    //     recipientWallet0: feeRecipientWallet0,
+    //     recipientWallet1: feeRecipientWallet1,
+    //     tokenProgram: TOKEN_PROGRAM_ID,
+    //   },
+    // })
 
     const { calldata, value } = NonfungiblePositionManager.collectCallParameters({
       tokenId: tokenId.toString(),

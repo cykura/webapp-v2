@@ -206,8 +206,8 @@ export default function AddLiquidity({
     })
     const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
-    const fee = feeAmount ?? 500
-    const tickSpacing = fee / 50
+    const fee = 500
+    const tickSpacing = 10
 
     // Convinence helpers
     const tokenA = currencyA?.wrapped
@@ -243,8 +243,10 @@ export default function AddLiquidity({
     // const initPrice = new BN(startPriceTypedValue)
 
     // taken as contants in test file
-    const tickLower = ticks.LOWER ?? 0
-    const tickUpper = ticks.UPPER ?? 10
+    // const tickLower = ticks.LOWER ?? 0
+    // const tickUpper = ticks.UPPER ?? 10
+    const tickLower = 0
+    const tickUpper = 10
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
 

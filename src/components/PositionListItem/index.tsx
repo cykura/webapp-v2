@@ -17,6 +17,7 @@ import { RowFixed } from 'components/Row'
 import HoverInlineText from 'components/HoverInlineText'
 import { DAI, USDC, USDT, WBTC, WETH9_EXTENDED } from '../../constants/tokens'
 import { Trans } from '@lingui/macro'
+import JSBI from 'jsbi'
 
 const LinkRow = styled(Link)`
   align-items: center;
@@ -192,7 +193,8 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
   const currency1 = token1 ? unwrappedToken(token1) : undefined
 
   // construct Position from details returned
-  const [, pool] = usePool(currency0 ?? undefined, currency1 ?? undefined, feeAmount)
+  const pool = usePool(currency0 ?? undefined, currency1 ?? undefined, feeAmount)
+  console.log(pool)
 
   const position = useMemo(() => {
     if (pool) {
@@ -212,7 +214,7 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
 
   const positionSummaryLink = '/pool/' + positionDetails.tokenId
 
-  const removed = liquidity?.eq(0)
+  const removed = JSBI.EQ(liquidity, 0)
 
   return (
     <LinkRow to={positionSummaryLink}>

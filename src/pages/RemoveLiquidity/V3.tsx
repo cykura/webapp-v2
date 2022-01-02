@@ -34,6 +34,7 @@ import { AddRemoveTabs } from 'components/NavigationTabs'
 import RangeBadge from 'components/Badge/RangeBadge'
 import Toggle from 'components/Toggle'
 import { t, Trans } from '@lingui/macro'
+import JSBI from 'jsbi'
 
 const DEFAULT_REMOVE_V3_LIQUIDITY_SLIPPAGE_TOLERANCE = new Percent(5, 100)
 
@@ -80,7 +81,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
   } = useDerivedV3BurnInfo(position, receiveWETH)
   const { onPercentSelect } = useBurnV3ActionHandlers()
 
-  const removed = position?.liquidity?.eq(0)
+  const removed = JSBI.EQ(position?.liquidity, 0)
 
   // boilerplate for the slider
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)

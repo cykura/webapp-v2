@@ -12,6 +12,7 @@ import { selectPercent } from './actions'
 import { unwrappedToken } from 'utils/unwrappedToken'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { t } from '@lingui/macro'
+import JSBI from 'jsbi'
 
 export function useBurnV3State(): AppState['burnV3'] {
   return useAppSelector((state) => state.burnV3)
@@ -69,7 +70,13 @@ export function useDerivedV3BurnInfo(
       ? CurrencyAmount.fromRawAmount(asWETH ? token1 : unwrappedToken(token1), discountedAmount1)
       : undefined
 
-  const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, position?.tokenId, asWETH)
+  // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, position?.tokenId)
+  const t0 = token0 as Currency
+  const t1 = token1 as Currency
+  const [feeValue0, feeValue1] = [
+    CurrencyAmount.fromRawAmount(t0, position?.tokensOwed0 ?? JSBI.BigInt(0)),
+    CurrencyAmount.fromRawAmount(t1, position?.tokensOwed1 ?? JSBI.BigInt(0)),
+  ]
 
   const outOfRange =
     pool && position ? pool.tickCurrent < position.tickLower || pool.tickCurrent > position.tickUpper : false

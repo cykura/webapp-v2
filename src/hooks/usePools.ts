@@ -123,12 +123,39 @@ export function usePools(
 export function usePool(
   currencyA: Currency | undefined,
   currencyB: Currency | undefined,
-  feeAmount: FeeAmount | undefined
-): [PoolState, Pool | null] {
+  feeAmount: FeeAmount
+): Pool | null {
   const poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][] = useMemo(
     () => [[currencyA, currencyB, feeAmount]],
     [currencyA, currencyB, feeAmount]
   )
+  const { chainId, account } = useActiveWeb3ReactSol()
+  const { connection, wallet } = useSolana()
 
-  return usePools(poolKeys)[0]
+  const provider = new anchor.Provider(connection, wallet as Wallet, {
+    skipPreflight: false,
+  })
+  const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+
+  const [poolState, setPoolState] = useState<Pool | null>(null)
+
+  useEffect(() => {
+    ;(async () => {
+      if (!currencyA?.wrapped || !currencyB?.wrapped) return
+      const tk0 = new anchor.web3.PublicKey(currencyA?.wrapped.address)
+      const tk1 = new anchor.web3.PublicKey(currencyB?.wrapped.address)
+      const [poolState, _] = await anchor.web3.PublicKey.findProgramAddress(
+        [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
+        cyclosCore.programId
+      )
+
+      const slot0 = await cyclosCore.account.poolState.fetch(poolState)
+
+      setPoolState(
+        new Pool(currencyA?.wrapped, currencyB?.wrapped, feeAmount, slot0.sqrtPriceX96, slot0.liquidity, slot0.tick)
+      )
+    })()
+  }, [chainId, account, currencyA, currencyB, feeAmount])
+
+  return poolState
 }
