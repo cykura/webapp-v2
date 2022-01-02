@@ -11,9 +11,9 @@ import { AlertTriangle, ArrowUpCircle, CheckCircle } from 'react-feather'
 import { ButtonPrimary, ButtonLight } from '../Button'
 import { AutoColumn, ColumnCenter } from '../Column'
 import Circle from '../../assets/images/blue-loader.svg'
-import MetaMaskLogo from '../../assets/images/metamask.png'
-import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { Trans } from '@lingui/macro'
+import { Network } from '@saberhq/solana-contrib'
+import { useSolana } from '@gokiprotocol/walletkit'
 
 const Wrapper = styled.div`
   width: 100%;
@@ -79,14 +79,14 @@ function ConfirmationPendingContent({
 
 function TransactionSubmittedContent({
   onDismiss,
-  chainId,
+  network,
   hash,
   currencyToAdd,
   inline,
 }: {
   onDismiss: () => void
+  network: Network
   hash: string | undefined
-  chainId: number
   currencyToAdd?: Currency | undefined
   inline?: boolean // not in modal
 }) {
@@ -108,8 +108,8 @@ function TransactionSubmittedContent({
           <Text fontWeight={500} fontSize={20} textAlign="center">
             <Trans>Transaction Submitted</Trans>
           </Text>
-          {chainId && hash && (
-            <ExternalLink href={getExplorerLink(chainId, hash, ExplorerDataType.TRANSACTION)}>
+          {network && hash && (
+            <ExternalLink href={getExplorerLink(network, hash, ExplorerDataType.TRANSACTION)}>
               <Text fontWeight={500} fontSize={14} color={theme.primary1}>
                 <Trans>View on Explorer</Trans>
               </Text>
@@ -204,9 +204,9 @@ export default function TransactionConfirmationModal({
   content,
   currencyToAdd,
 }: ConfirmationModalProps) {
-  const { chainId } = useActiveWeb3ReactSol()
+  const { network } = useSolana()
 
-  if (!chainId) return null
+  if (!network) return null
 
   // confirmation screen
   return (
@@ -215,7 +215,7 @@ export default function TransactionConfirmationModal({
         <ConfirmationPendingContent onDismiss={onDismiss} pendingText={pendingText} />
       ) : hash ? (
         <TransactionSubmittedContent
-          chainId={chainId}
+          network={network}
           hash={hash}
           onDismiss={onDismiss}
           currencyToAdd={currencyToAdd}

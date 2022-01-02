@@ -41,6 +41,8 @@ import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
 import Toggle from 'components/Toggle'
+import { Network } from '@saberhq/solana-contrib'
+import { useSolana } from '@gokiprotocol/walletkit'
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -173,12 +175,12 @@ function CurrentPriceCard({
   )
 }
 
-function LinkedCurrency({ chainId, currency }: { chainId?: number; currency?: Currency }) {
+function LinkedCurrency({ network, currency }: { network?: Network; currency?: Currency }) {
   const address = (currency as Token)?.address
 
-  if (typeof chainId === 'number' && address) {
+  if (network && address) {
     return (
-      <ExternalLink href={getExplorerLink(chainId, address, ExplorerDataType.TOKEN)}>
+      <ExternalLink href={getExplorerLink(network, address, ExplorerDataType.TOKEN)}>
         <RowFixed>
           <CurrencyLogo currency={currency} size={'20px'} style={{ marginRight: '0.5rem' }} />
           <TYPE.main>{currency?.symbol} ↗</TYPE.main>
@@ -287,7 +289,8 @@ export function PositionPage({
     params: { tokenId: tokenIdFromUrl },
   },
 }: RouteComponentProps<{ tokenId?: string }>) {
-  const { chainId, account, librarySol } = useActiveWeb3ReactSol()
+  const { network } = useSolana()
+  const { account, librarySol } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
   const parsedTokenId = tokenIdFromUrl ? BigNumber.from(tokenIdFromUrl) : undefined
@@ -361,7 +364,7 @@ export function PositionPage({
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
   const collect = useCallback(() => {
-    if (!chainId || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
+    if (!network || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
 
     setCollecting(true)
 
@@ -409,7 +412,7 @@ export function PositionPage({
         setCollecting(false)
         console.error(error)
       })
-  }, [chainId, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
+  }, [network, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
   const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
   const ownsNFT = owner === account || positionDetails?.operator === account
@@ -580,8 +583,8 @@ export function PositionPage({
                 <div style={{ marginRight: 12 }}>
                   <NFT image={metadata.result.image} height={400} />
                 </div>
-                {typeof chainId === 'number' && owner && !ownsNFT ? (
-                  <ExternalLink href={getExplorerLink(chainId, owner, ExplorerDataType.ADDRESS)}>
+                {network && owner && !ownsNFT ? (
+                  <ExternalLink href={getExplorerLink(network, owner, ExplorerDataType.ADDRESS)}>
                     <Trans>Owner</Trans>
                   </ExternalLink>
                 ) : null}
@@ -618,7 +621,7 @@ export function PositionPage({
                   <LightCard padding="12px 16px">
                     <AutoColumn gap="md">
                       <RowBetween>
-                        <LinkedCurrency chainId={chainId} currency={currencyQuote} />
+                        <LinkedCurrency network={network} currency={currencyQuote} />
                         <RowFixed>
                           <TYPE.main>
                             {inverted ? position?.amount0.toSignificant(4) : position?.amount1.toSignificant(4)}
@@ -633,7 +636,7 @@ export function PositionPage({
                         </RowFixed>
                       </RowBetween>
                       <RowBetween>
-                        <LinkedCurrency chainId={chainId} currency={currencyBase} />
+                        <LinkedCurrency network={network} currency={currencyBase} />
                         <RowFixed>
                           <TYPE.main>
                             {inverted ? position?.amount1.toSignificant(4) : position?.amount0.toSignificant(4)}
