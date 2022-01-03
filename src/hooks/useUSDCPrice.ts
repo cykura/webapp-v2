@@ -2,7 +2,6 @@ import { Currency, CurrencyAmount, Price, Token } from '@uniswap/sdk-core'
 import { useMemo } from 'react'
 import { SupportedChainId } from '../constants/chains'
 import { USDC, USDC_ARBITRUM, SOLUSDC, SOLUSDC_LOCAL } from '../constants/tokens'
-import { useBestV3TradeExactOut } from './useBestV3Trade'
 import { useActiveWeb3ReactSol } from './web3'
 
 // Stablecoin amounts used when calculating spot price for a given currency.
@@ -19,30 +18,31 @@ const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
  * @param currency currency to compute the USDC price of
  */
 export default function useUSDCPrice(currency?: Currency): Price<Currency, Token> | undefined {
-  const { chainId } = useActiveWeb3ReactSol()
+  return undefined
+  // const { chainId } = useActiveWeb3ReactSol()
 
-  const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
-  const stablecoin = amountOut?.currency
+  // const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
+  // const stablecoin = amountOut?.currency
 
-  const v3USDCTrade = useBestV3TradeExactOut(currency, amountOut)
+  // const v3USDCTrade = useBestV3TradeExactOut(currency, amountOut)
 
-  return useMemo(() => {
-    if (!currency || !stablecoin) {
-      return undefined
-    }
+  // return useMemo(() => {
+  //   if (!currency || !stablecoin) {
+  //     return undefined
+  //   }
 
-    // handle usdc
-    if (currency?.wrapped.equals(stablecoin)) {
-      return new Price(stablecoin, stablecoin, '1', '1')
-    }
+  //   // handle usdc
+  //   if (currency?.wrapped.equals(stablecoin)) {
+  //     return new Price(stablecoin, stablecoin, '1', '1')
+  //   }
 
-    if (v3USDCTrade.trade) {
-      const { numerator, denominator } = v3USDCTrade.trade.route.midPrice
-      return new Price(currency, stablecoin, denominator, numerator)
-    }
+  //   if (v3USDCTrade.trade) {
+  //     const { numerator, denominator } = v3USDCTrade.trade.route.midPrice
+  //     return new Price(currency, stablecoin, denominator, numerator)
+  //   }
 
-    return undefined
-  }, [currency, stablecoin, v3USDCTrade.trade])
+  //   return undefined
+  // }, [currency, stablecoin, v3USDCTrade.trade])
 }
 
 export function useUSDCValue(currencyAmount: CurrencyAmount<Currency> | undefined | null) {

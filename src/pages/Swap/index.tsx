@@ -73,7 +73,7 @@ export default function Swap({ history }: RouteComponentProps) {
   // swap state
   const { independentField, typedValue, recipient } = useSwapState()
   const {
-    v3TradeState: { trade: v3Trade, state: v3TradeState },
+    // v3TradeState: { trade: v3Trade, state: v3TradeState },
     toggledTrade: trade,
     allowedSlippage,
     currencyBalances,
@@ -82,6 +82,7 @@ export default function Swap({ history }: RouteComponentProps) {
     inputError: swapInputError,
   } = useDerivedSwapInfo()
 
+  // let trade: V3Trade<Currency, Currency, TradeType> | undefined
   // const {
   //   wrapType,
   //   execute: onWrap,
@@ -142,7 +143,8 @@ export default function Swap({ history }: RouteComponentProps) {
     currencies[Field.INPUT] && currencies[Field.OUTPUT] && parsedAmounts[independentField]?.greaterThan(JSBI.BigInt(0))
   )
   const routeNotFound = !trade?.route
-  const isLoadingRoute = V3TradeState.LOADING === v3TradeState
+  const isLoadingRoute = false
+  // const isLoadingRoute = V3TradeState.LOADING === v3TradeState
 
   // const {
   //   state: signatureState,
@@ -159,45 +161,56 @@ export default function Swap({ history }: RouteComponentProps) {
   const [singleHopOnly] = useUserSingleHopOnly()
 
   const handleSwap = useCallback(() => {
-    if (!swapCallback) {
-      return
+    async function handleSwap() {
+      console.log('handling swap')
+      if (!swapCallback) {
+        return
+      }
+      try {
+        await swapCallback()
+        console.log('swapped!')
+      } catch (error) {
+        console.log(error)
+      }
     }
-    if (priceImpact && !confirmPriceImpactWithoutFee(priceImpact)) {
-      return
-    }
-    setSwapState({ attemptingTxn: true, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: undefined })
-    swapCallback()
-      .then((hash) => {
-        setSwapState({ attemptingTxn: false, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: hash })
+    handleSwap()
 
-        ReactGA.event({
-          category: 'Swap',
-          action:
-            recipient === null
-              ? 'Swap w/o Send'
-              : (recipientAddress ?? recipient) === account
-              ? 'Swap w/o Send + recipient'
-              : 'Swap w/ Send',
-          label: [
-            trade?.inputAmount?.currency?.symbol,
-            trade?.outputAmount?.currency?.symbol,
-            'V3',
-            singleHopOnly ? 'SH' : 'MH',
-          ].join('/'),
-        })
-      })
-      .catch((error) => {
-        setSwapState({
-          attemptingTxn: false,
-          tradeToConfirm,
-          showConfirm,
-          swapErrorMessage: error.message,
-          txHash: undefined,
-        })
-      })
+    // if (priceImpact && !confirmPriceImpactWithoutFee(priceImpact)) {
+    //   return
+    // }
+    // setSwapState({ attemptingTxn: true, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: undefined })
+    // swapCallback()
+    //   .then((hash) => {
+    //     setSwapState({ attemptingTxn: false, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: hash })
+
+    //     ReactGA.event({
+    //       category: 'Swap',
+    //       action:
+    //         recipient === null
+    //           ? 'Swap w/o Send'
+    //           : (recipientAddress ?? recipient) === account
+    //           ? 'Swap w/o Send + recipient'
+    //           : 'Swap w/ Send',
+    //       label: [
+    //         trade?.inputAmount?.currency?.symbol,
+    //         trade?.outputAmount?.currency?.symbol,
+    //         'V3',
+    //         singleHopOnly ? 'SH' : 'MH',
+    //       ].join('/'),
+    //     })
+    //   })
+    //   .catch((error) => {
+    //     setSwapState({
+    //       attemptingTxn: false,
+    //       tradeToConfirm,
+    //       showConfirm,
+    //       swapErrorMessage: error.message,
+    //       txHash: undefined,
+    //     })
+    //   })
   }, [
     priceImpact,
-    swapCallback,
+    // swapCallback,
     tradeToConfirm,
     showConfirm,
     recipient,
@@ -210,17 +223,17 @@ export default function Swap({ history }: RouteComponentProps) {
   // errors
   const [showInverted, setShowInverted] = useState<boolean>(false)
 
-  // warnings on the greater of fiat value price impact and execution price impact
-  const priceImpactSeverity = useMemo(() => {
-    const executionPriceImpact = trade?.priceImpact
-    return warningSeverity(
-      executionPriceImpact && priceImpact
-        ? executionPriceImpact.greaterThan(priceImpact)
-          ? executionPriceImpact
-          : priceImpact
-        : executionPriceImpact ?? priceImpact
-    )
-  }, [priceImpact, trade])
+  // // warnings on the greater of fiat value price impact and execution price impact
+  // const priceImpactSeverity = useMemo(() => {
+  //   const executionPriceImpact = trade?.priceImpact
+  //   return warningSeverity(
+  //     executionPriceImpact && priceImpact
+  //       ? executionPriceImpact.greaterThan(priceImpact)
+  //         ? executionPriceImpact
+  //         : priceImpact
+  //       : executionPriceImpact ?? priceImpact
+  //   )
+  // }, [priceImpact, trade])
 
   const handleConfirmDismiss = useCallback(() => {
     setSwapState({ showConfirm: false, tradeToConfirm, attemptingTxn, swapErrorMessage, txHash })
@@ -231,7 +244,8 @@ export default function Swap({ history }: RouteComponentProps) {
   }, [attemptingTxn, onUserInput, swapErrorMessage, tradeToConfirm, txHash])
 
   const handleAcceptChanges = useCallback(() => {
-    setSwapState({ tradeToConfirm: trade, swapErrorMessage, txHash, attemptingTxn, showConfirm })
+    console.log('accepted')
+    // setSwapState({ tradeToConfirm: trade, swapErrorMessage, txHash, attemptingTxn, showConfirm })
   }, [attemptingTxn, showConfirm, swapErrorMessage, trade, txHash])
 
   const handleInputSelect = useCallback(
@@ -250,7 +264,7 @@ export default function Swap({ history }: RouteComponentProps) {
     [onCurrencySelection]
   )
 
-  const priceImpactTooHigh = priceImpactSeverity > 3 && !isExpertMode
+  // const priceImpactTooHigh = priceImpactSeverity > 3 && !isExpertMode
 
   return (
     <>
@@ -263,7 +277,7 @@ export default function Swap({ history }: RouteComponentProps) {
       <AppBody>
         <SwapHeader allowedSlippage={allowedSlippage} />
         <Wrapper id="swap-page">
-          <ConfirmSwapModal
+          {/* <ConfirmSwapModal
             isOpen={showConfirm}
             trade={trade}
             originalTrade={tradeToConfirm}
@@ -275,7 +289,7 @@ export default function Swap({ history }: RouteComponentProps) {
             onConfirm={handleSwap}
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
-          />
+          /> */}
 
           <AutoColumn gap={'md'}>
             <div style={{ display: 'relative' }}>
@@ -330,27 +344,7 @@ export default function Swap({ history }: RouteComponentProps) {
             )}
 
             <Row style={{ justifyContent: !trade ? 'center' : 'space-between' }}>
-              <RowFixed>
-                {trade && (
-                  <ButtonGray
-                    width="fit-content"
-                    padding="0.1rem 0.5rem"
-                    disabled
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      height: '24px',
-                      opacity: 0.8,
-                      marginLeft: '0.25rem',
-                    }}
-                  >
-                    <TYPE.black fontSize={12}>
-                      <Trans>V3</Trans>
-                    </TYPE.black>
-                  </ButtonGray>
-                )}
-              </RowFixed>
-              {trade ? (
+              {/* {trade ? (
                 <RowFixed>
                   <TradePrice
                     price={trade.executionPrice}
@@ -363,7 +357,7 @@ export default function Swap({ history }: RouteComponentProps) {
                     <StyledInfo />
                   </MouseoverTooltipContent>
                 </RowFixed>
-              ) : null}
+              ) : null} */}
             </Row>
 
             <div>
@@ -391,27 +385,28 @@ export default function Swap({ history }: RouteComponentProps) {
                     if (isExpertMode) {
                       handleSwap()
                     } else {
-                      setSwapState({
-                        tradeToConfirm: trade,
-                        attemptingTxn: false,
-                        swapErrorMessage: undefined,
-                        showConfirm: true,
-                        txHash: undefined,
-                      })
+                      console.log('setting swap state')
+                      // setSwapState({
+                      //   tradeToConfirm: trade,
+                      //   attemptingTxn: false,
+                      //   swapErrorMessage: undefined,
+                      //   showConfirm: true,
+                      //   txHash: undefined,
+                      // })
                     }
                   }}
                   id="swap-button"
-                  disabled={!isValid || priceImpactTooHigh || !!swapCallbackError}
-                  error={isValid && priceImpactSeverity > 2 && !swapCallbackError}
+                  // disabled={!isValid || priceImpactTooHigh || !!swapCallbackError}
+                  // error={isValid && priceImpactSeverity > 2 && !swapCallbackError}
                 >
                   <Text fontSize={20} fontWeight={500}>
                     {swapInputError ? (
                       swapInputError
-                    ) : priceImpactTooHigh ? (
-                      <Trans>Price Impact Too High</Trans>
-                    ) : priceImpactSeverity > 2 ? (
-                      <Trans>Swap Anyway</Trans>
                     ) : (
+                      // ) : priceImpactTooHigh ? (
+                      //   <Trans>Price Impact Too High</Trans>
+                      // ) : priceImpactSeverity > 2 ? (
+                      //   <Trans>Swap Anyway</Trans>
                       <Trans>Swap</Trans>
                     )}
                   </Text>
