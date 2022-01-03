@@ -47,19 +47,19 @@ export default function RemoveLiquidityV3({
 }: RouteComponentProps<{ tokenId: string }>) {
   const parsedTokenId = useMemo(() => {
     try {
-      return BigNumber.from(tokenId)
+      return tokenId
     } catch {
-      return null
+      return undefined
     }
   }, [tokenId])
 
-  if (parsedTokenId === null || parsedTokenId.eq(0)) {
+  if (parsedTokenId === undefined) {
     return <Redirect to={{ ...location, pathname: '/pool' }} />
   }
 
   return <Remove tokenId={parsedTokenId} />
 }
-function Remove({ tokenId }: { tokenId: BigNumber }) {
+function Remove({ tokenId }: { tokenId: string | undefined }) {
   const { position } = useV3PositionFromTokenId(tokenId)
   const theme = useTheme()
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
@@ -113,7 +113,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
     }
 
     const { calldata, value } = NonfungiblePositionManager.removeCallParameters(positionSDK, {
-      tokenId: tokenId.toString(),
+      tokenId: tokenId!.toString(),
       liquidityPercentage,
       slippageTolerance: allowedSlippage,
       deadline: deadline.toString(),
@@ -271,7 +271,7 @@ function Remove({ tokenId }: { tokenId: BigNumber }) {
         <AddRemoveTabs
           creating={false}
           adding={false}
-          positionID={tokenId.toString()}
+          positionID={tokenId!.toString()}
           defaultSlippage={DEFAULT_REMOVE_V3_LIQUIDITY_SLIPPAGE_TOLERANCE}
         />
         <Wrapper>

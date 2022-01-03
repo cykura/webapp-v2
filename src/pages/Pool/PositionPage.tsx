@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NonfungiblePositionManager, Pool, Position } from '@uniswap/v3-sdk'
 
 import { PoolState, usePool } from 'hooks/usePools'
@@ -41,12 +41,10 @@ import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
 import Toggle from 'components/Toggle'
-<<<<<<< Updated upstream
 import { Network } from '@saberhq/solana-contrib'
 import { useSolana } from '@gokiprotocol/walletkit'
-=======
 import JSBI from 'jsbi'
->>>>>>> Stashed changes
+import { SOLUSDC_LOCAL, SOLUSDT_LOCAL } from 'constants/tokens'
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -297,7 +295,8 @@ export function PositionPage({
   const { account, librarySol } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
-  const parsedTokenId = tokenIdFromUrl ? BigNumber.from(tokenIdFromUrl) : undefined
+  const parsedTokenId = tokenIdFromUrl ?? undefined
+
   const { loading, position: positionDetails } = useV3PositionFromTokenId(parsedTokenId)
 
   const {
@@ -324,7 +323,7 @@ export function PositionPage({
   const [receiveWETH, setReceiveWETH] = useState(false)
 
   // construct Position from details returned
-  const [poolState, pool] = usePool(token0 ?? undefined, token1 ?? undefined, feeAmount)
+  const pool = usePool(token0 ?? undefined, token1 ?? undefined, feeAmount)
   const position = useMemo(() => {
     if (pool && liquidity && typeof tickLower === 'number' && typeof tickUpper === 'number') {
       return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
@@ -359,8 +358,9 @@ export function PositionPage({
 
   // fees
   // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, positionDetails?.tokenId, receiveWETH)
-  const t0 = token0 as Currency
-  const t1 = token1 as Currency
+  // Neede for the first Initial loading - See how uni handles this?
+  const t0 = SOLUSDC_LOCAL || (token0 as Currency)
+  const t1 = SOLUSDT_LOCAL || (token1 as Currency)
   const [feeValue0, feeValue1] = [
     CurrencyAmount.fromRawAmount(t0, positionDetails?.tokensOwed0 ?? JSBI.BigInt(0)),
     CurrencyAmount.fromRawAmount(t1, positionDetails?.tokensOwed1 ?? JSBI.BigInt(0)),
@@ -449,7 +449,7 @@ export function PositionPage({
   }, [network, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
   const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
-  const ownsNFT = owner === account || positionDetails?.operator === account
+  const ownsNFT = positionDetails?.operator === account
 
   // usdc prices always in terms of tokens
   const price0 = useUSDCPrice(token0 ?? undefined)
@@ -519,7 +519,7 @@ export function PositionPage({
       !collectMigrationHash
   )
 
-  return loading || poolState === PoolState.LOADING || !feeAmount ? (
+  return loading || !pool || !feeAmount ? (
     <LoadingRows>
       <div />
       <div />

@@ -24,7 +24,9 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
   const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
   const stablecoin = amountOut?.currency
 
+  // console.log('usdc ', amountOut, stablecoin)
   const v3USDCTrade = useBestV3TradeExactOut(currency, amountOut)
+  console.log(v3USDCTrade)
 
   return useMemo(() => {
     if (!currency || !stablecoin) {

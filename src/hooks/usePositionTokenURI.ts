@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
 import { useV3NFTPositionManagerContract } from './useContract'
 
-type TokenId = number | JSBI | BigNumber
+type TokenId = number | JSBI | BigNumber | string | undefined
 
 const STARTS_WITH = 'data:application/json;base64,'
 

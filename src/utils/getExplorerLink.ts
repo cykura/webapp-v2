@@ -7,7 +7,7 @@ export enum ExplorerDataType {
   BLOCK = 'block',
 }
 
-export function getExplorerLink(network: Network, data: string, type: ExplorerDataType) {
+export function getExplorerLink(network: Network, data = 'dummyData', type: ExplorerDataType) {
   let uri = `https://explorer.solana.com/${type}/${data}/?cluster=`
 
   if (network == 'localnet') {

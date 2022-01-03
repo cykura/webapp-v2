@@ -194,7 +194,6 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
 
   // construct Position from details returned
   const pool = usePool(currency0 ?? undefined, currency1 ?? undefined, feeAmount)
-  console.log(pool)
 
   const position = useMemo(() => {
     if (pool) {

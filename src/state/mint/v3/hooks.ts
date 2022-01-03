@@ -156,7 +156,7 @@ export function useV3DerivedMintInfo(
   }
 
   // pool
-  const [poolState, pool] = usePool(currencies[Field.CURRENCY_A], currencies[Field.CURRENCY_B], feeAmount)
+  const pool = usePool(currencies[Field.CURRENCY_A], currencies[Field.CURRENCY_B], feeAmount)
 
   if (!!token0 && !!token1 && !!feeAmount) {
     const tk0 = new PublicKey(token0.address)
@@ -403,10 +403,6 @@ export function useV3DerivedMintInfo(
     errorMessage = t`Connect Eth Wallet`
   }
 
-  if (poolState === PoolState.INVALID) {
-    errorMessage = errorMessage ?? t`Invalid pair`
-  }
-
   if (invalidPrice) {
     errorMessage = errorMessage ?? t`Invalid price input`
   }
@@ -431,7 +427,9 @@ export function useV3DerivedMintInfo(
     errorMessage = t`Insufficient ${currencies[Field.CURRENCY_B]?.symbol} balance here`
   }
 
-  const invalidPool = poolState === PoolState.INVALID
+  // Need to change theses
+  const poolState = pool ? PoolState.EXISTS : PoolState.INVALID
+  const invalidPool = false
 
   return {
     dependentField,

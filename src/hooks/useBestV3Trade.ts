@@ -1,10 +1,11 @@
 import { Currency, CurrencyAmount, TradeType } from '@uniswap/sdk-core'
-import { encodeRouteToPath, Route, Trade } from '@uniswap/v3-sdk'
+import { encodeRouteToPath, FeeAmount, Route, Trade } from '@uniswap/v3-sdk'
 import { BigNumber } from 'ethers'
 import { useMemo } from 'react'
 import { useSingleContractMultipleData } from '../state/multicall/hooks'
 import { useAllV3Routes } from './useAllV3Routes'
 import { useV3Quoter } from './useContract'
+import { usePool } from './usePools'
 
 export enum V3TradeState {
   LOADING,
@@ -104,74 +105,100 @@ export function useBestV3TradeExactOut(
   currencyIn?: Currency,
   amountOut?: CurrencyAmount<Currency>
 ): { state: V3TradeState; trade: Trade<Currency, Currency, TradeType.EXACT_OUTPUT> | null } {
-  const quoter = useV3Quoter()
-  const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
+  // const quoter = useV3Quoter()
+  // const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
+  let poolLoading: boolean
 
-  const quoteExactOutInputs = useMemo(() => {
-    return routes.map((route) => [
-      encodeRouteToPath(route, true),
-      amountOut ? `0x${amountOut.quotient.toString(16)}` : undefined,
-    ])
-  }, [amountOut, routes])
+  // console.log(currencyIn, amountOut?.currency)
 
-  const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactOutput', quoteExactOutInputs)
+  const pool = usePool(currencyIn, amountOut?.currency, FeeAmount.LOWEST)
+  let constantRoute: Route<Currency, Currency>
+  if (pool && currencyIn && amountOut?.currency) {
+    constantRoute = new Route([pool], currencyIn, amountOut?.currency)
+  }
+  console.log(currencyIn, amountOut?.currency, pool)
+
+  if (!pool) {
+    poolLoading = true
+  } else {
+    poolLoading = false
+  }
+
+  // const quoteExactOutInputs = useMemo(() => {
+  //   return routes.map((route) => [
+  //     encodeRouteToPath(route, true),
+  //     amountOut ? `0x${amountOut.quotient.toString(16)}` : undefined,
+  //   ])
+  // }, [amountOut, routes])
+
+  // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactOutput', quoteExactOutInputs)
 
   return useMemo(() => {
-    if (!amountOut || !currencyIn || quotesResults.some(({ valid }) => !valid)) {
-      return {
-        state: V3TradeState.INVALID,
-        trade: null,
-      }
-    }
+    // if (!amountOut || !currencyIn || quotesResults.some(({ valid }) => !valid)) {
+    //   return {
+    //     state: V3TradeState.INVALID,
+    //     trade: null,
+    //   }
+    // }
 
-    if (routesLoading || quotesResults.some(({ loading }) => loading)) {
+    if (!pool || !amountOut?.currency) {
       return {
         state: V3TradeState.LOADING,
         trade: null,
       }
     }
 
-    const { bestRoute, amountIn } = quotesResults.reduce(
-      (currentBest: { bestRoute: Route<Currency, Currency> | null; amountIn: BigNumber | null }, { result }, i) => {
-        if (!result) return currentBest
+    // if (routesLoading || quotesResults.some(({ loading }) => loading)) {
+    //   return {
+    //     state: V3TradeState.LOADING,
+    //     trade: null,
+    //   }
+    // }
 
-        if (currentBest.amountIn === null) {
-          return {
-            bestRoute: routes[i],
-            amountIn: result.amountIn,
-          }
-        } else if (currentBest.amountIn.gt(result.amountIn)) {
-          return {
-            bestRoute: routes[i],
-            amountIn: result.amountIn,
-          }
-        }
+    // const  { bestRoute, amountIn } = {constantRoute, }
+    // const { bestRoute, amountIn } = quotesResults.reduce(
+    //   (currentBest: { bestRoute: Route<Currency, Currency> | null; amountIn: BigNumber | null }, { result }, i) => {
+    //     if (!result) return currentBest
 
-        return currentBest
-      },
-      {
-        bestRoute: null,
-        amountIn: null,
-      }
-    )
+    //     if (currentBest.amountIn === null) {
+    //       return {
+    //         bestRoute: routes[i],
+    //         amountIn: result.amountIn,
+    //       }
+    //     } else if (currentBest.amountIn.gt(result.amountIn)) {
+    //       return {
+    //         bestRoute: routes[i],
+    //         amountIn: result.amountIn,
+    //       }
+    //     }
 
-    if (!bestRoute || !amountIn) {
-      return {
-        state: V3TradeState.NO_ROUTE_FOUND,
-        trade: null,
-      }
-    }
+    //     return currentBest
+    //   },
+    //   {
+    //     bestRoute: null,
+    //     amountIn: null,
+    //   }
+    // )
 
-    const isSyncing = quotesResults.some(({ syncing }) => syncing)
+    // if (!bestRoute || !amountIn) {
+    //   return {
+    //     state: V3TradeState.NO_ROUTE_FOUND,
+    //     trade: null,
+    //   }
+    // }
+
+    // const isSyncing = quotesResults.some(({ syncing }) => syncing)
 
     return {
-      state: isSyncing ? V3TradeState.SYNCING : V3TradeState.VALID,
+      // state: isSyncing ? V3TradeState.SYNCING : V3TradeState.VALID,
+      state: V3TradeState.VALID,
       trade: Trade.createUncheckedTrade({
-        route: bestRoute,
+        route: constantRoute,
         tradeType: TradeType.EXACT_OUTPUT,
-        inputAmount: CurrencyAmount.fromRawAmount(currencyIn, amountIn.toString()),
+        inputAmount: CurrencyAmount.fromRawAmount(currencyIn!, '2'.toString()),
         outputAmount: amountOut,
       }),
     }
-  }, [amountOut, currencyIn, quotesResults, routes, routesLoading])
+    // }, [amountOut, currencyIn, quotesResults, routes, routesLoading, pool])
+  }, [amountOut, currencyIn, pool])
 }

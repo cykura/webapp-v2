@@ -87,9 +87,7 @@ export default function AddLiquidity({
   const positionManager = useV3NFTPositionManagerContract()
 
   // check for existing position if tokenId in url
-  const { position: existingPositionDetails, loading: positionLoading } = useV3PositionFromTokenId(
-    tokenId ? BigNumber.from(tokenId) : undefined
-  )
+  const { position: existingPositionDetails, loading: positionLoading } = useV3PositionFromTokenId(tokenId ?? undefined)
   const hasExistingPosition = !!existingPositionDetails && !positionLoading
   const { position: existingPosition } = useDerivedPositionInfo(existingPositionDetails)
 
@@ -193,10 +191,6 @@ export default function AddLiquidity({
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
-  console.log(startPriceTypedValue)
-  console.log(+formattedAmounts[Field.CURRENCY_A] * 1e6)
-  console.log(+formattedAmounts?.[Field.CURRENCY_B] * 1e6)
-  console.log(ticks)
 
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
@@ -444,7 +438,7 @@ export default function AddLiquidity({
     const amount0Desired = new BN(0)
     const amount1Desired = new BN(1_000_000)
     const amount0Minimum = new BN(0)
-    const amount1Minimum = new BN(0)
+    const amount1Minimum = new BN(1_000_000)
     const deadline = new BN(Date.now() / 1000 + 10_000)
 
     // fetch observation accounts
