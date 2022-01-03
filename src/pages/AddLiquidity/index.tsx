@@ -191,6 +191,9 @@ export default function AddLiquidity({
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
+  console.log(ticks)
+  console.log('Amnt A', +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0))
+  console.log('Amnt B', +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0))
 
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
@@ -233,8 +236,7 @@ export default function AddLiquidity({
 
     // get init Price from UI - should encode into Q32.32
     // taken from test file
-    const initPrice = new BN(4297115210)
-    // const initPrice = new BN(startPriceTypedValue)
+    const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
 
     // taken as contants in test file
     // const tickLower = ticks.LOWER ?? 0
@@ -386,14 +388,6 @@ export default function AddLiquidity({
               systemProgram: SystemProgram.programId,
             },
           }),
-          // cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
-          //   accounts: {
-          //     signer: wallet?.publicKey,
-          //     poolState: poolState,
-          //     bitmapState: bitmapUpperState,
-          //     systemProgram: SystemProgram.programId,
-          //   },
-          // }),
           cyclosCore.instruction.initPositionAccount(corePositionBump, {
             accounts: {
               signer: wallet?.publicKey,
@@ -435,8 +429,14 @@ export default function AddLiquidity({
       wallet.publicKey
     )
 
-    const amount0Desired = new BN(0)
-    const amount1Desired = new BN(1_000_000)
+    // const amount0Desired = new BN(0)
+    // const amount1Desired = new BN(1_000_000)
+    const amount0Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    )
+    const amount1Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    )
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(1_000_000)
     const deadline = new BN(Date.now() / 1000 + 10_000)
@@ -509,80 +509,6 @@ export default function AddLiquidity({
       return
     }
   }
-
-  // replace this eventually with onAdd()
-  // async function onAdder() {
-  //   if (!chainId || !librarySol || !account) return
-
-  //   if (!positionManager || !currencyA || !currencyB) {
-  //     return
-  //   }
-
-  //   if (position && account && deadline) {
-  //     const useNative = currencyA.isNative ? currencyA : currencyB.isNative ? currencyB : undefined
-  //     const { calldata, value } =
-  //       hasExistingPosition && tokenId
-  //         ? NonfungiblePositionManager.addCallParameters(position, {
-  //             tokenId,
-  //             slippageTolerance: allowedSlippage,
-  //             deadline: deadline.toString(),
-  //             useNative,
-  //           })
-  //         : NonfungiblePositionManager.addCallParameters(position, {
-  //             slippageTolerance: allowedSlippage,
-  //             recipient: account,
-  //             deadline: deadline.toString(),
-  //             useNative,
-  //             createPool: noLiquidity,
-  //           })
-
-  //     const txn: { to: string; data: string; value: string } = {
-  //       to: NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
-  //       data: calldata,
-  //       value,
-  //     }
-
-  //     setAttemptingTxn(true)
-
-  //     librarySol
-  //       ?.getSigner()
-  //       .estimateGas(txn)
-  //       .then((estimate: BigNumber) => {
-  //         const newTxn = {
-  //           ...txn,
-  //           gasLimit: calculateGasMargin(estimate),
-  //         }
-
-  //         return librarySol
-  //           ?.getSigner()
-  //           .sendTransaction(newTxn)
-  //           .then((response: TransactionResponse) => {
-  //             setAttemptingTxn(false)
-  //             addTransaction(response, {
-  //               summary: noLiquidity
-  //                 ? t`Create pool and add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`
-  //                 : t`Add ${currencyA?.symbol}/${currencyB?.symbol} V3 liquidity`,
-  //             })
-  //             setTxHash(response.hash)
-  //             ReactGA.event({
-  //               category: 'Liquidity',
-  //               action: 'Add',
-  //               label: [currencies[Field.CURRENCY_A]?.symbol, currencies[Field.CURRENCY_B]?.symbol].join('/'),
-  //             })
-  //           })
-  //       })
-  //       .catch((error: any) => {
-  //         console.error('Failed to send transaction', error)
-  //         setAttemptingTxn(false)
-  //         // we only care if the error is something _other_ than the user rejected the tx
-  //         if (error?.code !== 4001) {
-  //           console.error(error)
-  //         }
-  //       })
-  //   } else {
-  //     return
-  //   }
-  // }
 
   const pendingText = `Supplying ${!depositADisabled ? parsedAmounts[Field.CURRENCY_A]?.toSignificant(6) : ''} ${
     !depositADisabled ? currencies[Field.CURRENCY_A]?.symbol : ''

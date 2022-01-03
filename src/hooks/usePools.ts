@@ -154,15 +154,13 @@ export function usePool(
 
         // console.log(poolState.toString())
         const slot0 = await cyclosCore.account.poolState.fetch(poolState)
-        pState = slot0
-      } catch (e) {
-        console.log('Somethign went wrong!')
-      }
 
-      // console.log(pState)
-      setPoolState(
-        new Pool(currencyA?.wrapped, currencyB?.wrapped, feeAmount, pState.sqrtPriceX32, pState.liquidity, pState.tick)
-      )
+        setPoolState(
+          new Pool(currencyA.wrapped, currencyB.wrapped, feeAmount, slot0.sqrtPriceX32, slot0.liquidity, slot0.tick)
+        )
+      } catch (e) {
+        console.log('Something went wrong!', e)
+      }
     })()
   }, [chainId, account, currencyA, currencyB, feeAmount])
 

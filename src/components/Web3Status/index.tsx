@@ -176,13 +176,11 @@ function Web3StatusInner() {
   ) : (
     <RowBetween>
       {ICON && (
-        <Text>
-          <IconWrapper size={24}>
-            {/* <img src={} alt={'WalletConnect'} /> */}
-            {/* {walletProviderInfo?.icon} */}
-            <ICON />
-          </IconWrapper>
-        </Text>
+        <IconWrapper size={24}>
+          {/* <img src={} alt={'WalletConnect'} /> */}
+          {/* {walletProviderInfo?.icon} */}
+          <ICON />
+        </IconWrapper>
       )}
       <StyledMenu ref={node as any}>
         <Web3StatusConnect id="connect-wallet" onClick={toggle} faded={true}>
