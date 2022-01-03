@@ -73,8 +73,8 @@ export function tryParseAmount<T extends Currency>(value?: string, currency?: T)
     return undefined
   }
   try {
-    const typedValueParsed = parseUnits(value, currency.decimals).toString()
-    if (typedValueParsed !== '0') {
+    const typedValueParsed = parseFloat(value) * Math.pow(10, currency?.decimals)
+    if (typeof value === 'string' && typedValueParsed != 0.0) {
       return CurrencyAmount.fromRawAmount(currency, JSBI.BigInt(typedValueParsed))
     }
   } catch (error) {
