@@ -191,9 +191,9 @@ export default function AddLiquidity({
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
-  console.log(ticks)
-  console.log('Amnt A', +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0))
-  console.log('Amnt B', +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0))
+  // console.log(ticks)
+  // console.log('Amnt A', +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0))
+  // console.log('Amnt B', +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0))
 
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
@@ -236,7 +236,8 @@ export default function AddLiquidity({
 
     // get init Price from UI - should encode into Q32.32
     // taken from test file
-    const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
+    // const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
+    const initPrice = new BN(4297115210)
 
     // taken as contants in test file
     // const tickLower = ticks.LOWER ?? 0
@@ -438,7 +439,7 @@ export default function AddLiquidity({
       +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
     )
     const amount0Minimum = new BN(0)
-    const amount1Minimum = new BN(1_000_000)
+    const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
 
     // fetch observation accounts

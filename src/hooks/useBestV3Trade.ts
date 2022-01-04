@@ -116,7 +116,6 @@ export function useBestV3TradeExactOut(
   if (pool && currencyIn && amountOut?.currency) {
     constantRoute = new Route([pool], currencyIn, amountOut?.currency)
   }
-  console.log(currencyIn, amountOut?.currency, pool)
 
   if (!pool) {
     poolLoading = true
