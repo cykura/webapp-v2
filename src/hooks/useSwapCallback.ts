@@ -1,15 +1,26 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { t } from '@lingui/macro'
-import { SwapRouter, Trade as V3Trade } from '@uniswap/v3-sdk'
-import { Currency, Percent, TradeType } from '@uniswap/sdk-core'
+import { SwapRouter, Trade as V3Trade, u32ToSeed } from '@uniswap/v3-sdk'
+import { Currency, Percent, TradeType, Token as UniToken } from '@uniswap/sdk-core'
+import * as anchor from '@project-serum/anchor'
+import idl from '../constants/cyclos-core.json'
 import { useMemo } from 'react'
-import { SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
+import { CyclosCore, IDL } from 'types/cyclos-core'
+import { PROGRAM_ID_STR, SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
 import { calculateGasMargin } from '../utils/calculateGasMargin'
 import { useTransactionAdder } from '../state/transactions/hooks'
 import { isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import useTransactionDeadline from './useTransactionDeadline'
+import { PublicKey } from '@solana/web3.js'
+import { CysTrade } from './useBestV3Trade'
+import { useSolana } from '@gokiprotocol/walletkit'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import { BN } from '@project-serum/anchor'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { u16ToSeed } from 'state/mint/v3/utils'
+import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED } from 'constants/tokens'
 
 enum SwapCallbackState {
   INVALID,
@@ -141,19 +152,170 @@ function swapErrorToUserReadableMessage(error: any): string {
 // returns a function that will execute a swap, if the parameters are all valid
 // and the user has approved the slippage adjusted input amount for the trade
 export function useSwapCallback(
-  trade: V3Trade<Currency, Currency, TradeType> | undefined, // trade to execute, required
+  trade: CysTrade, // trade to execute, required
   allowedSlippage: Percent, // in bips
   recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
-  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
+  // TODO fix output token address in trade- currently it's the same as input token address
+  console.log('building callback for', trade)
 
-  const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddress)
+  const { connection, wallet } = useSolana()
 
-  const addTransaction = useTransactionAdder()
+  if (!trade || !trade.route || !wallet?.publicKey) {
+    return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
+  }
 
-  const recipient = recipientAddress ?? account
+  const provider = new anchor.Provider(connection, wallet as Wallet, {
+    skipPreflight: true,
+  })
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+  const callback = async () => {
+    const signer = wallet.publicKey!
+    const pool = trade.route
 
-  return { state: SwapCallbackState.LOADING, callback: null, error: null }
+    const { observationIndex, observationCardinalityNext, tick, token0, token1 } =
+      await cyclosCore.account.poolState.fetch(pool)
+    console.log('token0', token0.toString(), 'token1', token1.toString())
+
+    console.log('input amount', trade?.inputAmount)
+    const amountIn = new BN(trade?.inputAmount.numerator[0])
+    console.log('amount in', amountIn.toNumber())
+    const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+
+    const minterWallet0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token0,
+      signer,
+      true
+    )
+    const minterWallet1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      signer,
+      true
+    )
+    const vault0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token0,
+      pool,
+      true
+    )
+    const vault1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      pool,
+      true
+    )
+
+    const wordPos = (tick / 10) >> 8
+
+    const latestObservationState = (
+      await PublicKey.findProgramAddress(
+        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(observationIndex)],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const nextObservationState = (
+      await PublicKey.findProgramAddress(
+        [
+          OBSERVATION_SEED,
+          token0.toBuffer(),
+          token1.toBuffer(),
+          u32ToSeed(500),
+          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+        ],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos + 1)],
+      cyclosCore.programId
+    )
+    console.log('bitmap upper', bitmapUpperState.toString())
+
+    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos)],
+      cyclosCore.programId
+    )
+    console.log('bitmap lower', bitmapLowerState.toString())
+
+    const [tickState, tickStateBump] = await PublicKey.findProgramAddress(
+      [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u32ToSeed(tick)],
+      cyclosCore.programId
+    )
+
+    const inputToken = new PublicKey((trade.inputAmount.currency as UniToken).address)
+    const [inputTokenAccount, outputTokenAccount, inputVault, outputVault] = inputToken.equals(token0)
+      ? [minterWallet0, minterWallet1, vault0, vault1]
+      : [minterWallet1, minterWallet0, vault1, vault0]
+
+    console.log('minter ac 0', minterWallet0.toString())
+    console.log('minter ac 1', minterWallet1.toString())
+    console.log('vault 0', vault0.toString())
+    console.log('vault 1', vault1.toString())
+    const deadline = new BN(Date.now() / 1000 + 100_000)
+    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([1]), {
+      accounts: {
+        signer,
+        factoryState,
+        inputTokenAccount,
+        coreProgram: cyclosCore.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      },
+      remainingAccounts: [
+        {
+          pubkey: pool,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: outputTokenAccount, // outputTokenAccount
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: inputVault, // input vault
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: outputVault, // output vault
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: latestObservationState,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: nextObservationState,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: bitmapLowerState,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: tickState,
+          isSigner: false,
+          isWritable: true,
+        },
+      ],
+    })
+
+    console.log('swap hash', hash)
+    return hash
+  }
+  return { state: SwapCallbackState.VALID, callback, error: null }
 
   // return useMemo(() => {
   //   if (!trade || !librarySol || !account || !chainId) {

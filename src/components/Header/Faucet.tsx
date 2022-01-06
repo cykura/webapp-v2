@@ -70,7 +70,7 @@ const USDT = {
   symbol: 'USDT',
   address: new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'),
   decimal: 6,
-  name: 'Theter USD',
+  name: 'Tether USD',
   logoURI:
     'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg',
 }

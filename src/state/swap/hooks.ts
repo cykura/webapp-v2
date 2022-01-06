@@ -1,7 +1,7 @@
 import { t } from '@lingui/macro'
 import JSBI from 'jsbi'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
-import { useBestV3TradeExactIn, useBestV3TradeExactOut, V3TradeState } from '../../hooks/useBestV3Trade'
+import { useBestV3TradeExactIn, V3TradeState } from '../../hooks/useBestV3Trade'
 import { parseUnits } from '@ethersproject/units'
 import { Currency, CurrencyAmount, Percent, TradeType } from '@uniswap/sdk-core'
 import { ParsedQs } from 'qs'
@@ -92,17 +92,17 @@ const BAD_RECIPIENT_ADDRESSES: { [address: string]: true } = {
 }
 
 // from the current swap inputs, compute the best trade and return it.
-export function useDerivedSwapInfo(): {
-  currencies: { [field in Field]?: Currency }
-  currencyBalances: { [field in Field]?: CurrencyAmount<Currency> }
-  parsedAmount: CurrencyAmount<Currency> | undefined
-  inputError?: string
-  v3TradeState: { trade: V3Trade<Currency, Currency, TradeType> | null; state: V3TradeState }
-  toggledTrade: V3Trade<Currency, Currency, TradeType> | undefined
-  allowedSlippage: Percent
-} {
+export function useDerivedSwapInfo() {
+  // : {
+  //   currencies: { [field in Field]?: Currency }
+  //   currencyBalances: { [field in Field]?: CurrencyAmount<Currency> }
+  //   parsedAmount: CurrencyAmount<Currency> | undefined
+  //   inputError?: string
+  //   // v3TradeState: { trade: V3Trade<Currency, Currency, TradeType> | null; state: V3TradeState }
+  //   // toggledTrade: V3Trade<Currency, Currency, TradeType> | undefined
+  //   allowedSlippage: Percent
+  // }
   const { account } = useActiveWeb3ReactSol()
-
   const {
     independentField,
     typedValue,
@@ -120,13 +120,14 @@ export function useDerivedSwapInfo(): {
     outputCurrency ?? undefined,
   ])
 
-  const isExactIn: boolean = independentField === Field.INPUT
-  const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
+  // const isExactIn: boolean = independentField === Field.INPUT
+  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
 
-  const bestV3TradeExactIn = useBestV3TradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
-  const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
+  const bestV3TradeExactIn = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
+  // const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
+  // const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
 
-  const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
+  const v3Trade = bestV3TradeExactIn
 
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],
@@ -161,7 +162,8 @@ export function useDerivedSwapInfo(): {
   }
 
   const toggledTrade = v3Trade?.trade ?? undefined
-  const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
+  // const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
+  const allowedSlippage = new Percent(10)
 
   // compare input balance to max input
   const balanceIn = currencyBalances[Field.INPUT]
@@ -175,7 +177,7 @@ export function useDerivedSwapInfo(): {
     currencyBalances,
     parsedAmount,
     inputError,
-    v3TradeState: v3Trade,
+    // v3TradeState: v3Trade,
     toggledTrade,
     allowedSlippage,
   }
