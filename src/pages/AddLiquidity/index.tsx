@@ -191,10 +191,6 @@ export default function AddLiquidity({
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
-  console.log(ticks)
-  console.log('Amnt A', +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0))
-  console.log('Amnt B', +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0))
-
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
 
@@ -203,8 +199,8 @@ export default function AddLiquidity({
     })
     const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
-    const fee = 500
-    const tickSpacing = 10
+    const fee = feeAmount ?? 500
+    const tickSpacing = fee / 50
 
     // Convinence helpers
     const tokenA = currencyA?.wrapped
@@ -236,13 +232,16 @@ export default function AddLiquidity({
 
     // get init Price from UI - should encode into Q32.32
     // taken from test file
+    // console.log(startPriceTypedValue.toString())
     const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
+    // const initPrice = new BN(4294967296)
+    // console.log(initPrice.toString())
 
     // taken as contants in test file
     // const tickLower = ticks.LOWER ?? 0
     // const tickUpper = ticks.UPPER ?? 10
     const tickLower = 0
-    const tickUpper = 10
+    const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
 
@@ -412,7 +411,6 @@ export default function AddLiquidity({
       }
     }
 
-    console.log('Not creating account and init pool')
     // Then finally mint the required position
     // Need to fix this wallet.publicKey is undefined
     const nftMintKeypair = new anchor.web3.Keypair()
@@ -429,16 +427,17 @@ export default function AddLiquidity({
       wallet.publicKey
     )
 
-    // const amount0Desired = new BN(0)
-    // const amount1Desired = new BN(1_000_000)
-    const amount0Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    )
-    const amount1Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    )
+    const amount0Desired = new BN(1_000_000)
+    const amount1Desired = new BN(1_000_000)
+    // const amount0DesiredInput = new BN(
+    //   +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    // )
+    // const amount1DesiredInput = new BN(
+    //   +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    // )
+    // console.log(amount0DesiredInput.toString(), amount1DesiredInput.toString())
     const amount0Minimum = new BN(0)
-    const amount1Minimum = new BN(1_000_000)
+    const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
 
     // fetch observation accounts
@@ -464,49 +463,95 @@ export default function AddLiquidity({
       )
     )[0]
 
-    try {
-      const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
-        tokenizedPositionBump,
-        amount0Desired,
-        amount1Desired,
-        amount0Minimum,
-        amount1Minimum,
-        deadline,
-        {
-          accounts: {
-            minter: wallet?.publicKey,
-            recipient: wallet?.publicKey,
-            factoryState,
-            nftMint: nftMintKeypair.publicKey,
-            nftAccount: positionNftAccount,
-            poolState: poolState,
-            corePositionState: corePositionState,
-            tickLowerState: tickLowerState,
-            tickUpperState: tickUpperState,
-            bitmapLowerState: bitmapLowerState,
-            bitmapUpperState: bitmapUpperState,
-            tokenAccount0: userATA0,
-            tokenAccount1: userATA1,
-            vault0: vault0,
-            vault1: vault1,
-            latestObservationState: latestObservationState,
-            nextObservationState: nextObservationState,
-            tokenizedPositionState: tokenizedPositionState,
-            coreProgram: cyclosCore.programId,
-            systemProgram: SystemProgram.programId,
-            rent: SYSVAR_RENT_PUBKEY,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          },
-          signers: [nftMintKeypair],
-        }
-      )
-      console.log(hashRes)
-    } catch (err: any) {
-      enqueueSnackbar(err?.message ?? 'Something went wrong', {
-        variant: 'error',
-      })
-      return
+    if (noLiquidity || !existingPosition) {
+      // Create new position
+      console.log('Creating new position')
+      try {
+        const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
+          tokenizedPositionBump,
+          amount0Desired,
+          amount1Desired,
+          amount0Minimum,
+          amount1Minimum,
+          deadline,
+          {
+            accounts: {
+              minter: wallet?.publicKey,
+              recipient: wallet?.publicKey,
+              factoryState,
+              nftMint: nftMintKeypair.publicKey,
+              nftAccount: positionNftAccount,
+              poolState: poolState,
+              corePositionState: corePositionState,
+              tickLowerState: tickLowerState,
+              tickUpperState: tickUpperState,
+              bitmapLowerState: bitmapLowerState,
+              bitmapUpperState: bitmapUpperState,
+              tokenAccount0: userATA0,
+              tokenAccount1: userATA1,
+              vault0: vault0,
+              vault1: vault1,
+              latestObservationState: latestObservationState,
+              nextObservationState: nextObservationState,
+              tokenizedPositionState: tokenizedPositionState,
+              coreProgram: cyclosCore.programId,
+              systemProgram: SystemProgram.programId,
+              rent: SYSVAR_RENT_PUBKEY,
+              tokenProgram: TOKEN_PROGRAM_ID,
+              associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            },
+            signers: [nftMintKeypair],
+          }
+        )
+        console.log(hashRes)
+        setTxHash(hashRes)
+      } catch (err: any) {
+        enqueueSnackbar(err?.message ?? 'Something went wrong', {
+          variant: 'error',
+        })
+        return
+      }
+    } else {
+      // Increase Liquidity
+      console.log('Increasing Liquidity to existing position')
+      try {
+        const hashRes = await cyclosCore.rpc.increaseLiquidity(
+          amount0Desired,
+          amount1Desired,
+          amount0Minimum,
+          amount1Minimum,
+          deadline,
+          {
+            accounts: {
+              payer: wallet?.publicKey,
+              factoryState,
+              poolState: poolState,
+              corePositionState: corePositionState,
+              tickLowerState: tickLowerState,
+              tickUpperState: tickUpperState,
+              bitmapLowerState: bitmapLowerState,
+              bitmapUpperState: bitmapUpperState,
+              tokenAccount0: userATA0,
+              tokenAccount1: userATA1,
+              vault0: vault0,
+              vault1: vault1,
+              latestObservationState: latestObservationState,
+              nextObservationState: nextObservationState,
+              tokenizedPositionState: tokenizedPositionState,
+              coreProgram: cyclosCore.programId,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            },
+          }
+        )
+        console.log(hashRes)
+        setTxHash(hashRes)
+      } catch (err: any) {
+        console.log(err)
+        enqueueSnackbar(err?.message ?? 'Something went wrong', {
+          variant: 'error',
+        })
+        return
+      }
     }
   }
 

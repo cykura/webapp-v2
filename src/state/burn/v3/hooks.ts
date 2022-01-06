@@ -3,7 +3,6 @@ import { Position } from '@uniswap/v3-sdk'
 import { usePool } from 'hooks/usePools'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useToken } from 'hooks/Tokens'
-import { useV3PositionFees } from 'hooks/useV3PositionFees'
 import { useCallback, useMemo } from 'react'
 import { PositionDetails } from 'types/position'
 
@@ -71,11 +70,9 @@ export function useDerivedV3BurnInfo(
       : undefined
 
   // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, position?.tokenId)
-  const t0 = token0 as Currency
-  const t1 = token1 as Currency
   const [feeValue0, feeValue1] = [
-    CurrencyAmount.fromRawAmount(t0, position?.tokensOwed0 ?? JSBI.BigInt(0)),
-    CurrencyAmount.fromRawAmount(t1, position?.tokensOwed1 ?? JSBI.BigInt(0)),
+    token0 ? CurrencyAmount.fromRawAmount(token0, position?.tokensOwed0 ?? JSBI.BigInt(0)) : undefined,
+    token1 ? CurrencyAmount.fromRawAmount(token1, position?.tokensOwed1 ?? JSBI.BigInt(0)) : undefined,
   ]
 
   const outOfRange =

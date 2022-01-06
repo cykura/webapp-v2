@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
-import { SOL_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
+import { BITMAP_SEED, OBSERVATION_SEED, SOL_LOCAL, TICK_SEED, POOL_SEED, POSITION_SEED } from '../../constants/tokens'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import AppBody from '../AppBody'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -28,13 +28,22 @@ import { TYPE } from 'theme'
 import { Wrapper, SmallMaxButton, ResponsiveHeaderText } from './styled'
 import Loader from 'components/Loader'
 import DoubleCurrencyLogo from 'components/DoubleLogo'
-import { NonfungiblePositionManager } from '@uniswap/v3-sdk'
+import { NonfungiblePositionManager, u32ToSeed } from '@uniswap/v3-sdk'
 import useTheme from 'hooks/useTheme'
 import { AddRemoveTabs } from 'components/NavigationTabs'
 import RangeBadge from 'components/Badge/RangeBadge'
 import Toggle from 'components/Toggle'
 import { t, Trans } from '@lingui/macro'
 import JSBI from 'jsbi'
+import * as anchor from '@project-serum/anchor'
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { PROGRAM_ID_STR } from '../../constants/addresses'
+import { CyclosCore, IDL } from 'types/cyclos-core'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import { u16ToSeed } from 'state/mint/v3/utils'
+import { useSnackbar } from 'notistack'
+import { useSolana } from '@saberhq/use-solana'
+import { useCurrency } from 'hooks/Tokens'
 
 const DEFAULT_REMOVE_V3_LIQUIDITY_SLIPPAGE_TOLERANCE = new Percent(5, 100)
 
@@ -63,6 +72,11 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
   const { position } = useV3PositionFromTokenId(tokenId)
   const theme = useTheme()
   const { account, chainId, librarySol } = useActiveWeb3ReactSol()
+  const { enqueueSnackbar } = useSnackbar()
+  const { wallet, connection, providerMut } = useSolana()
+
+  const { PublicKey } = anchor.web3
+  const { BN } = anchor
 
   // flag for receiving WETH
   const [receiveWETH, setReceiveWETH] = useState(false)
@@ -86,7 +100,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
   // boilerplate for the slider
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)
 
-  const deadline = useTransactionDeadline() // custom from users settings
+  // const deadline = useTransactionDeadline() // custom from users settings
+  const deadline = new BN(Date.now() / 1000 + 10_000)
   const allowedSlippage = useUserSlippageToleranceWithDefault(DEFAULT_REMOVE_V3_LIQUIDITY_SLIPPAGE_TOLERANCE) // custom from users
 
   const [showConfirm, setShowConfirm] = useState(false)
@@ -94,7 +109,27 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
   const [txnHash, setTxnHash] = useState<string | undefined>()
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
-  const burn = useCallback(async () => {
+
+  // Fetch tokens from position
+  const currencyA = useCurrency(position?.token0)
+  const currencyB = useCurrency(position?.token1)
+
+  async function OnBurn() {
+    // throw error here or handle this case in a better way?
+    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address || !position) return
+
+    const tokenA = currencyA?.wrapped
+    const tokenB = currencyB?.wrapped
+    const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+
+    const token1 = new anchor.web3.PublicKey(tk1.address)
+    const token2 = new anchor.web3.PublicKey(tk2.address)
+
+    const provider = new anchor.Provider(connection, wallet as Wallet, {
+      skipPreflight: false,
+    })
+    const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+
     setAttemptingTxn(true)
     if (
       !positionManager ||
@@ -106,75 +141,133 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       !feeValue0 ||
       !feeValue1 ||
       !positionSDK ||
-      !liquidityPercentage ||
-      !librarySol
+      !liquidityPercentage
     ) {
       return
     }
 
-    const { calldata, value } = NonfungiblePositionManager.removeCallParameters(positionSDK, {
-      tokenId: tokenId!.toString(),
-      liquidityPercentage,
-      slippageTolerance: allowedSlippage,
-      deadline: deadline.toString(),
-      collectOptions: {
-        expectedCurrencyOwed0: feeValue0,
-        expectedCurrencyOwed1: feeValue1,
-        recipient: account,
-      },
-    })
+    const fee = position?.fee ?? (500 as number)
+    const tickSpacing = fee ? fee / 50 : 10
 
-    const txn = {
-      to: positionManager.address,
-      data: calldata,
-      value,
-    }
+    const amount0Minimum = new BN(0)
+    const amount1Minimum = new BN(0)
 
-    librarySol
-      ?.getSigner()
-      .estimateGas(txn)
-      .then((estimate: any) => {
-        const newTxn = {
-          ...txn,
-          gasLimit: calculateGasMargin(estimate),
+    const tickLower = 0
+    const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
+    const wordPosLower = (tickLower / tickSpacing) >> 8
+    const wordPosUpper = (tickUpper / tickSpacing) >> 8
+
+    // create pool state
+    const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+      [POOL_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee)],
+      cyclosCore.programId
+    )
+
+    const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+
+    const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+      [
+        POSITION_SEED,
+        token1.toBuffer(),
+        token2.toBuffer(),
+        u32ToSeed(fee),
+        factoryState.toBuffer(),
+        u32ToSeed(tickLower),
+        u32ToSeed(tickUpper),
+      ],
+      cyclosCore.programId
+    )
+
+    const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
+      cyclosCore.programId
+    )
+
+    const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
+      cyclosCore.programId
+    )
+
+    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
+      cyclosCore.programId
+    )
+    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
+      cyclosCore.programId
+    )
+
+    const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
+
+    const latestObservationState = (
+      await PublicKey.findProgramAddress(
+        [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const nextObservationState = (
+      await PublicKey.findProgramAddress(
+        [
+          OBSERVATION_SEED,
+          token1.toBuffer(),
+          token2.toBuffer(),
+          u32ToSeed(fee),
+          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+        ],
+        cyclosCore.programId
+      )
+    )[0]
+
+    const nftMint = new PublicKey(position?.tokenId)
+
+    const positionNftAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      nftMint,
+      wallet.publicKey
+    )
+
+    const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+      [POSITION_SEED, nftMint.toBuffer()],
+      cyclosCore.programId
+    )
+
+    try {
+      const txHash = await cyclosCore.rpc.decreaseLiquidity(
+        new BN(1_000_000),
+        amount0Minimum,
+        amount1Minimum,
+        deadline,
+        {
+          accounts: {
+            ownerOrDelegate: wallet?.publicKey,
+            nftAccount: positionNftAccount,
+            tokenizedPositionState: tokenizedPositionState,
+            factoryState,
+            poolState: poolState,
+            corePositionState: corePositionState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            bitmapLowerState: bitmapLowerState,
+            bitmapUpperState: bitmapUpperState,
+            latestObservationState: latestObservationState,
+            nextObservationState: nextObservationState,
+            coreProgram: cyclosCore.programId,
+          },
         }
-
-        return librarySol
-          ?.getSigner()
-          .sendTransaction(newTxn)
-          .then((response: TransactionResponse) => {
-            ReactGA.event({
-              category: 'Liquidity',
-              action: 'RemoveV3',
-              label: [liquidityValue0.currency.symbol, liquidityValue1.currency.symbol].join('/'),
-            })
-            setTxnHash(response.hash)
-            setAttemptingTxn(false)
-            addTransaction(response, {
-              summary: t`Remove ${liquidityValue0.currency.symbol}/${liquidityValue1.currency.symbol} V3 liquidity`,
-            })
-          })
+      )
+      setTxnHash(txHash)
+      setAttemptingTxn(false)
+    } catch (err: any) {
+      console.log(err)
+      setAttemptingTxn(false)
+      enqueueSnackbar(err?.message ?? 'Something went wrong', {
+        variant: 'error',
       })
-      .catch((error: any) => {
-        setAttemptingTxn(false)
-        console.error(error)
-      })
-  }, [
-    tokenId,
-    liquidityValue0,
-    liquidityValue1,
-    deadline,
-    allowedSlippage,
-    account,
-    addTransaction,
-    positionManager,
-    chainId,
-    feeValue0,
-    feeValue1,
-    librarySol,
-    liquidityPercentage,
-    positionSDK,
-  ])
+      return
+    }
+  }
 
   const handleDismissConfirmation = useCallback(() => {
     setShowConfirm(false)
@@ -244,7 +337,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             </RowBetween>
           </>
         ) : null}
-        <ButtonPrimary mt="16px" onClick={burn}>
+        <ButtonPrimary mt="16px" onClick={OnBurn}>
           <Trans>Remove</Trans>
         </ButtonPrimary>
       </AutoColumn>

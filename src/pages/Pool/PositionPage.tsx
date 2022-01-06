@@ -358,12 +358,9 @@ export function PositionPage({
 
   // fees
   // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, positionDetails?.tokenId, receiveWETH)
-  // Neede for the first Initial loading - See how uni handles this?
-  const t0 = SOLUSDC_LOCAL || (token0 as Currency)
-  const t1 = SOLUSDT_LOCAL || (token1 as Currency)
   const [feeValue0, feeValue1] = [
-    CurrencyAmount.fromRawAmount(t0, positionDetails?.tokensOwed0 ?? JSBI.BigInt(0)),
-    CurrencyAmount.fromRawAmount(t1, positionDetails?.tokensOwed1 ?? JSBI.BigInt(0)),
+    token0 ? CurrencyAmount.fromRawAmount(token0, positionDetails?.tokensOwed0 ?? JSBI.BigInt(0)) : undefined,
+    token1 ? CurrencyAmount.fromRawAmount(token1, positionDetails?.tokensOwed1 ?? JSBI.BigInt(0)) : undefined,
   ]
 
   const [collecting, setCollecting] = useState<boolean>(false)

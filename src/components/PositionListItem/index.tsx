@@ -15,7 +15,7 @@ import { unwrappedToken } from 'utils/unwrappedToken'
 import RangeBadge from 'components/Badge/RangeBadge'
 import { RowFixed } from 'components/Row'
 import HoverInlineText from 'components/HoverInlineText'
-import { DAI, USDC, USDT, WBTC, WETH9_EXTENDED } from '../../constants/tokens'
+import { DAI, SOLUSDC_LOCAL, SOLUSDT_LOCAL, USDC, USDT, WBTC, WETH9_EXTENDED } from '../../constants/tokens'
 import { Trans } from '@lingui/macro'
 import JSBI from 'jsbi'
 
@@ -136,7 +136,7 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
   const token1 = position.amount1.currency
 
   // if token0 is a dollar-stable asset, set it as the quote token
-  const stables = [DAI, USDC, USDT]
+  const stables = [SOLUSDC_LOCAL]
   if (stables.some((stable) => stable.equals(token0))) {
     return {
       priceLower: position.token0PriceUpper.invert(),
@@ -147,15 +147,15 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
   }
 
   // if token1 is an ETH-/BTC-stable asset, set it as the base token
-  const bases = [...Object.values(WETH9_EXTENDED), WBTC]
-  if (bases.some((base) => base.equals(token1))) {
-    return {
-      priceLower: position.token0PriceUpper.invert(),
-      priceUpper: position.token0PriceLower.invert(),
-      quote: token0,
-      base: token1,
-    }
-  }
+  // const bases = [...Object.values(WETH9_EXTENDED), WBTC]
+  // if (bases.some((base) => base.equals(token1))) {
+  //   return {
+  //     priceLower: position.token0PriceUpper.invert(),
+  //     priceUpper: position.token0PriceLower.invert(),
+  //     quote: token0,
+  //     base: token1,
+  //   }
+  // }
 
   // if both prices are below 1, invert
   if (position.token0PriceUpper.lessThan(1)) {

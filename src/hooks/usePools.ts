@@ -138,11 +138,12 @@ export function usePool(
       if (!currencyA?.wrapped || !currencyB?.wrapped || !feeAmount) return
       if (currencyA?.wrapped.address == 'token 0' || currencyB?.wrapped.address == 'token 1') return
 
-      const [token0, token1] = currencyA?.wrapped.sortsBefore(currencyB?.wrapped)
-        ? [currencyA?.wrapped, currencyB?.wrapped]
-        : [currencyB?.wrapped, currencyA?.wrapped] // does safety checks
-
-      let pState: any
+      let [token0, token1] = [currencyA?.wrapped, currencyB?.wrapped]
+      if (currencyA?.wrapped.address !== currencyB?.wrapped.address) {
+        ;[token0, token1] = currencyA?.wrapped.sortsBefore(currencyB?.wrapped)
+          ? [currencyA?.wrapped, currencyB?.wrapped]
+          : [currencyB?.wrapped, currencyA?.wrapped] // does safety checks
+      }
       try {
         const tk0 = new anchor.web3.PublicKey(token0.address)
         const tk1 = new anchor.web3.PublicKey(token1.address)

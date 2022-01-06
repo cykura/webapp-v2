@@ -4176,9 +4176,9 @@
     base64-sol "1.0.1"
     hardhat-watcher "^2.1.1"
 
-"@uniswap/v3-sdk@github:cyclos-io/sdk#main":
+"@uniswap/v3-sdk@cyclos-io/sdk":
   version "3.7.1"
-  resolved "git+ssh://git@github.com/cyclos-io/sdk.git#1b7d5621b5c063f0c898eb8e0484ec92dcfe4a46"
+  resolved "git+ssh://git@github.com/cyclos-io/sdk.git#4672ab1fdb212c2609b5f8cdfdc78ea549a0f088"
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"

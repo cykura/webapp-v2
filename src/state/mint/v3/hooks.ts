@@ -171,8 +171,6 @@ export function useV3DerivedMintInfo(
     )
   }
 
-  // const noLiquidity = poolState === PoolState.NOT_EXISTS
-
   // note to parse inputs in reverse
   const invertPrice = Boolean(baseToken && token0 && !baseToken.equals(token0))
 
@@ -203,13 +201,13 @@ export function useV3DerivedMintInfo(
 
   // check for invalid price input (converts to invalid ratio)
   const invalidPrice = useMemo(() => {
-    const sqrtRatioX96 = price ? encodeSqrtRatioX32(price.numerator, price.denominator) : undefined
+    const sqrtRatioX32 = price ? encodeSqrtRatioX32(price.numerator, price.denominator) : undefined
     const invalid =
       price &&
-      sqrtRatioX96 &&
+      sqrtRatioX32 &&
       !(
-        JSBI.greaterThanOrEqual(sqrtRatioX96, TickMath.MIN_SQRT_RATIO) &&
-        JSBI.lessThan(sqrtRatioX96, TickMath.MAX_SQRT_RATIO)
+        JSBI.greaterThanOrEqual(sqrtRatioX32, TickMath.MIN_SQRT_RATIO) &&
+        JSBI.lessThan(sqrtRatioX32, TickMath.MAX_SQRT_RATIO)
       )
     return invalid
   }, [price])
@@ -407,12 +405,6 @@ export function useV3DerivedMintInfo(
     errorMessage = errorMessage ?? t`Invalid price input`
   }
 
-  // if (
-  //   (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled) ||
-  //   (!parsedAmounts[Field.CURRENCY_B] && !depositBDisabled)
-  // ) {
-  //   errorMessage = errorMessage ?? t`Enter an amount`
-  // }
   if (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled && !parsedAmounts[Field.CURRENCY_B] && !depositBDisabled) {
     errorMessage = errorMessage ?? t`Enter an amount`
   }
