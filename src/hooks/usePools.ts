@@ -149,7 +149,7 @@ export function usePool(
         const tk1 = new anchor.web3.PublicKey(token1.address)
 
         const [poolState, _] = await anchor.web3.PublicKey.findProgramAddress(
-          [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(500)],
+          [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
           cyclosCore.programId
         )
 

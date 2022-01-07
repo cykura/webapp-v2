@@ -431,8 +431,12 @@ export default function AddLiquidity({
 
     // const amount0Desired = new BN(1_000_000)
     // const amount1Desired = new BN(1_000_000)
-    const amount0Desired = new BN(+formattedAmounts[Field.CURRENCY_A])
-    const amount1Desired = new BN(+formattedAmounts[Field.CURRENCY_B])
+    const amount0Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    )
+    const amount1Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
+    )
     console.log(amount0Desired.toString(), amount1Desired.toString())
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)

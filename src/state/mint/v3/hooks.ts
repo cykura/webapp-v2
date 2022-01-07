@@ -306,13 +306,7 @@ export function useV3DerivedMintInfo(
       const dependentTokenAmount = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
         ? position.amount1
         : position.amount0
-      return (
-        dependentCurrency &&
-        CurrencyAmount.fromRawAmount(
-          dependentCurrency,
-          +dependentTokenAmount.quotient * Math.pow(10, dependentCurrency?.decimals ?? 0)
-        )
-      )
+      return dependentCurrency && CurrencyAmount.fromRawAmount(dependentCurrency, dependentTokenAmount.quotient)
     }
 
     return undefined
