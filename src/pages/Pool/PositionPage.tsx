@@ -324,13 +324,14 @@ export function PositionPage({
 
   // construct Position from details returned
   const pool = usePool(token0 ?? undefined, token1 ?? undefined, feeAmount)
+  console.log(pool)
   const position = useMemo(() => {
     if (pool && liquidity && typeof tickLower === 'number' && typeof tickUpper === 'number') {
       return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
     }
     return undefined
   }, [liquidity, pool, tickLower, tickUpper])
-
+  console.log(position)
   let { priceLower, priceUpper, base, quote } = getPriceOrderingFromPositionForUI(position)
   const [manuallyInverted, setManuallyInverted] = useState(false)
   // handle manual inversion

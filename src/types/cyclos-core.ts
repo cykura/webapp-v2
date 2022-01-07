@@ -439,23 +439,23 @@ export type CyclosCore = {
           isSigner: true
         },
         {
-          name: 'tokenAccount0'
-          isMut: false
+          name: 'inputTokenAccount'
+          isMut: true
           isSigner: false
         },
         {
-          name: 'tokenAccount1'
-          isMut: false
+          name: 'outputTokenAccount'
+          isMut: true
           isSigner: false
         },
         {
-          name: 'vault0'
-          isMut: false
+          name: 'inputVault'
+          isMut: true
           isSigner: false
         },
         {
-          name: 'vault1'
-          isMut: false
+          name: 'outputVault'
+          isMut: true
           isSigner: false
         },
         {
@@ -465,10 +465,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'exactInput'
-          type: 'bool'
-        },
         {
           name: 'amount0Delta'
           type: 'i64'
@@ -2661,23 +2657,23 @@ export const IDL: CyclosCore = {
           isSigner: true,
         },
         {
-          name: 'tokenAccount0',
-          isMut: false,
+          name: 'inputTokenAccount',
+          isMut: true,
           isSigner: false,
         },
         {
-          name: 'tokenAccount1',
-          isMut: false,
+          name: 'outputTokenAccount',
+          isMut: true,
           isSigner: false,
         },
         {
-          name: 'vault0',
-          isMut: false,
+          name: 'inputVault',
+          isMut: true,
           isSigner: false,
         },
         {
-          name: 'vault1',
-          isMut: false,
+          name: 'outputVault',
+          isMut: true,
           isSigner: false,
         },
         {
@@ -2687,10 +2683,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'exactInput',
-          type: 'bool',
-        },
         {
           name: 'amount0Delta',
           type: 'i64',

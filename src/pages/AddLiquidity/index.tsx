@@ -427,15 +427,15 @@ export default function AddLiquidity({
       wallet.publicKey
     )
 
-    const amount0Desired = new BN(1_000_000)
-    const amount1Desired = new BN(1_000_000)
-    // const amount0DesiredInput = new BN(
-    //   +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    // )
-    // const amount1DesiredInput = new BN(
-    //   +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    // )
-    // console.log(amount0DesiredInput.toString(), amount1DesiredInput.toString())
+    // const amount0Desired = new BN(1_000_000)
+    // const amount1Desired = new BN(1_000_000)
+    const amount0Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    )
+    const amount1Desired = new BN(
+      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
+    )
+    console.log(amount0Desired.toString(), amount1Desired.toString())
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
