@@ -191,6 +191,8 @@ export default function AddLiquidity({
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
 
+  // console.log(+formattedAmounts[Field.CURRENCY_A])
+  // console.log(+formattedAmounts[Field.CURRENCY_B])
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
 
@@ -429,12 +431,8 @@ export default function AddLiquidity({
 
     // const amount0Desired = new BN(1_000_000)
     // const amount1Desired = new BN(1_000_000)
-    const amount0Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    )
-    const amount1Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
-    )
+    const amount0Desired = new BN(+formattedAmounts[Field.CURRENCY_A])
+    const amount1Desired = new BN(+formattedAmounts[Field.CURRENCY_B])
     console.log(amount0Desired.toString(), amount1Desired.toString())
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)

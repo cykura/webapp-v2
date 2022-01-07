@@ -255,10 +255,10 @@ export function useV3DerivedMintInfo(
   // always returns the price with 0 as base token
   const pricesAtTicks = useMemo(() => {
     return {
-      [Bound.LOWER]: getTickToPrice(token0, token1, ticks[Bound.LOWER]),
-      [Bound.UPPER]: getTickToPrice(token0, token1, ticks[Bound.UPPER]),
+      [Bound.LOWER]: getTickToPrice(token0, token1, ticks[Bound.LOWER]) ?? price,
+      [Bound.UPPER]: getTickToPrice(token0, token1, ticks[Bound.UPPER]) ?? price,
     }
-  }, [token0, token1, ticks])
+  }, [token0, token1, ticks, price])
   const { [Bound.LOWER]: lowerPrice, [Bound.UPPER]: upperPrice } = pricesAtTicks
 
   // liquidity range warning
@@ -306,7 +306,13 @@ export function useV3DerivedMintInfo(
       const dependentTokenAmount = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
         ? position.amount1
         : position.amount0
-      return dependentCurrency && CurrencyAmount.fromRawAmount(dependentCurrency, dependentTokenAmount.quotient)
+      return (
+        dependentCurrency &&
+        CurrencyAmount.fromRawAmount(
+          dependentCurrency,
+          +dependentTokenAmount.quotient * Math.pow(10, dependentCurrency?.decimals ?? 0)
+        )
+      )
     }
 
     return undefined
