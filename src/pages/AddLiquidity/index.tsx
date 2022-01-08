@@ -324,22 +324,27 @@ export default function AddLiquidity({
       [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
+    // console.log(tickLowerState.toString(), ' tick lower state')
 
     const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
       [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
+    // console.log(tickUpperState.toString(), ' tick upper state')
 
     const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
+    // console.log(bitmapLowerState.toString(), ' bitmap lower state')
     const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
+    // console.log(bitmapUpperState.toString(), ' bitmap upper state')
 
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+    // console.log(factoryState.toString(), ' factory State')
 
     const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
       [
@@ -353,6 +358,7 @@ export default function AddLiquidity({
       ],
       cyclosCore.programId
     )
+    // console.log(corePositionState.toString(), ' core position State')
 
     const tickLowerStateInfo = await connection.getAccountInfo(tickLowerState)
     const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
@@ -361,7 +367,13 @@ export default function AddLiquidity({
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
     // Build the transaction
-    if (!corePositionStateInfo && !tickLowerStateInfo && !tickUpperStateInfo && !bitmapLowerStateInfo) {
+    if (
+      !corePositionStateInfo &&
+      !tickLowerStateInfo &&
+      !tickUpperStateInfo &&
+      !bitmapLowerStateInfo &&
+      !bitmapUpperStateInfo
+    ) {
       console.log('Creating all accounts')
       try {
         const tx = new Transaction()
@@ -391,14 +403,6 @@ export default function AddLiquidity({
               systemProgram: SystemProgram.programId,
             },
           }),
-          cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
-            accounts: {
-              signer: wallet?.publicKey,
-              poolState: poolState,
-              bitmapState: bitmapUpperState,
-              systemProgram: SystemProgram.programId,
-            },
-          }),
           cyclosCore.instruction.initPositionAccount(corePositionBump, {
             accounts: {
               signer: wallet?.publicKey,
@@ -411,6 +415,18 @@ export default function AddLiquidity({
             },
           }),
         ]
+        if (bitmapLowerState.toString() !== bitmapUpperState.toString()) {
+          tx.instructions.push(
+            cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
+              accounts: {
+                signer: wallet?.publicKey,
+                poolState: poolState,
+                bitmapState: bitmapUpperState,
+                systemProgram: SystemProgram.programId,
+              },
+            })
+          )
+        }
         tx.feePayer = wallet?.publicKey ?? undefined
         await wallet?.signTransaction(tx)
         const hash = await providerMut?.send(tx)
@@ -532,6 +548,30 @@ export default function AddLiquidity({
           [POSITION_SEED, new PublicKey(tokenId!).toBuffer()],
           cyclosCore.programId
         )
+
+        // refetch observation accounts
+        // for large time differences the oracle value can become stale
+        const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
+
+        const latestObservationState = (
+          await PublicKey.findProgramAddress(
+            [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+            cyclosCore.programId
+          )
+        )[0]
+
+        const nextObservationState = (
+          await PublicKey.findProgramAddress(
+            [
+              OBSERVATION_SEED,
+              token1.toBuffer(),
+              token2.toBuffer(),
+              u32ToSeed(fee),
+              u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+            ],
+            cyclosCore.programId
+          )
+        )[0]
 
         const hashRes = await cyclosCore.rpc.increaseLiquidity(
           amount0Desired,
