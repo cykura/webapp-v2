@@ -217,35 +217,37 @@ export default function AddLiquidity({
       [FEE_SEED, u32ToSeed(fee)],
       cyclosCore.programId
     )
-    console.log(`feeState -> ${feeState.toString()}`)
+    // console.log(`feeState -> ${feeState.toString()}`)
     // create pool state
     const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
       [POOL_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee)],
       cyclosCore.programId
     )
-    console.log(`poolState -> ${poolState.toString()}`)
+    // console.log(`poolState -> ${poolState.toString()}`)
 
     // create init Observation state
     const [initialObservationState, initialObservationBump] = await PublicKey.findProgramAddress(
       [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(0)],
       cyclosCore.programId
     )
-    console.log(`initialObservationState -> ${initialObservationState.toString()}`)
+    // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
     // get init Price from UI - should encode into Q32.32
     // taken from test file
     // console.log(startPriceTypedValue.toString())
     const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
+    console.log(`initial Price -> ${initPrice.toString()}`)
     // const initPrice = new BN(4294967296)
     // console.log(initPrice.toString())
 
     // taken as contants in test file
-    // const tickLower = ticks.LOWER ?? 0
-    // const tickUpper = ticks.UPPER ?? 10
-    const tickLower = 0
-    const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
+    const tickLower = ticks.LOWER ?? 0
+    const tickUpper = ticks.UPPER ?? 10
+    // const tickLower = 0
+    // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
+    // console.log(tickLower, tickUpper, wordPosLower, wordPosUpper)
 
     //fetch ATA of pool tokens
     const vault1 = await Token.getAssociatedTokenAddress(
@@ -255,7 +257,7 @@ export default function AddLiquidity({
       poolState,
       true
     )
-    console.log(`vault1 -> ${vault1.toString()}`)
+    // console.log(`vault1 -> ${vault1.toString()}`)
     const vault0 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -263,7 +265,7 @@ export default function AddLiquidity({
       poolState,
       true
     )
-    console.log(`vault0 -> ${vault0.toString()}`)
+    // console.log(`vault0 -> ${vault0.toString()}`)
 
     //fetch ATA of pool tokens
     const userATA0 = await Token.getAssociatedTokenAddress(
@@ -273,7 +275,7 @@ export default function AddLiquidity({
       wallet?.publicKey,
       true
     )
-    console.log(`user ATA 0 -> ${userATA0.toString()}`)
+    // console.log(`user ATA 0 -> ${userATA0.toString()}`)
     const userATA1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -281,7 +283,7 @@ export default function AddLiquidity({
       wallet?.publicKey,
       true
     )
-    console.log(`user ATA 1 -> ${userATA1.toString()}`)
+    // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
@@ -389,6 +391,14 @@ export default function AddLiquidity({
               systemProgram: SystemProgram.programId,
             },
           }),
+          cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
+            accounts: {
+              signer: wallet?.publicKey,
+              poolState: poolState,
+              bitmapState: bitmapUpperState,
+              systemProgram: SystemProgram.programId,
+            },
+          }),
           cyclosCore.instruction.initPositionAccount(corePositionBump, {
             accounts: {
               signer: wallet?.publicKey,
@@ -469,45 +479,65 @@ export default function AddLiquidity({
       // Create new position
       console.log('Creating new position')
       try {
-        const hashRes = await cyclosCore.rpc.mintTokenizedPosition(
-          tokenizedPositionBump,
-          amount0Desired,
-          amount1Desired,
-          amount0Minimum,
-          amount1Minimum,
-          deadline,
-          {
-            accounts: {
-              minter: wallet?.publicKey,
-              recipient: wallet?.publicKey,
-              factoryState,
-              nftMint: nftMintKeypair.publicKey,
-              nftAccount: positionNftAccount,
-              poolState: poolState,
-              corePositionState: corePositionState,
-              tickLowerState: tickLowerState,
-              tickUpperState: tickUpperState,
-              bitmapLowerState: bitmapLowerState,
-              bitmapUpperState: bitmapUpperState,
-              tokenAccount0: userATA0,
-              tokenAccount1: userATA1,
-              vault0: vault0,
-              vault1: vault1,
-              latestObservationState: latestObservationState,
-              nextObservationState: nextObservationState,
-              tokenizedPositionState: tokenizedPositionState,
-              coreProgram: cyclosCore.programId,
-              systemProgram: SystemProgram.programId,
-              rent: SYSVAR_RENT_PUBKEY,
-              tokenProgram: TOKEN_PROGRAM_ID,
-              associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            },
-            signers: [nftMintKeypair],
-          }
-        )
-        console.log(hashRes)
-        setTxHash(hashRes)
+        const tx = new Transaction()
+        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.instructions = [
+          cyclosCore.instruction.mintTokenizedPosition(
+            tokenizedPositionBump,
+            amount0Desired,
+            amount1Desired,
+            amount0Minimum,
+            amount1Minimum,
+            deadline,
+            {
+              accounts: {
+                minter: wallet?.publicKey,
+                recipient: wallet?.publicKey,
+                factoryState,
+                nftMint: nftMintKeypair.publicKey,
+                nftAccount: positionNftAccount,
+                poolState: poolState,
+                corePositionState: corePositionState,
+                tickLowerState: tickLowerState,
+                tickUpperState: tickUpperState,
+                bitmapLowerState: bitmapLowerState,
+                bitmapUpperState: bitmapUpperState,
+                tokenAccount0: userATA0,
+                tokenAccount1: userATA1,
+                vault0: vault0,
+                vault1: vault1,
+                latestObservationState: latestObservationState,
+                nextObservationState: nextObservationState,
+                tokenizedPositionState: tokenizedPositionState,
+                coreProgram: cyclosCore.programId,
+                systemProgram: SystemProgram.programId,
+                rent: SYSVAR_RENT_PUBKEY,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+              },
+              signers: [nftMintKeypair],
+            }
+          ),
+        ]
+        tx.feePayer = wallet?.publicKey ?? undefined
+        await wallet?.signTransaction(tx)
+        const hash = await providerMut?.send(tx, [nftMintKeypair])
+        console.log(hash, ' -> mintToken')
+
+        // console.log(hashRes)
+        const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
+        const pState = await cyclosCore.account.poolState.fetch(tokenizedPositionData.poolId)
+        console.log('pool created with')
+        console.log(pState.token0.toString())
+        console.log(pState.token1.toString())
+        console.log(pState.tick.toString())
+        console.log('position created with these')
+        console.log(tokenizedPositionData.liquidity.toString(), ' liquidity')
+        console.log(tokenizedPositionData.tickLower, ' tickLower')
+        console.log(tokenizedPositionData.tickUpper, ' tickUpper')
+        setTxHash(hash?.signature ?? '')
       } catch (err: any) {
+        console.log(err)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
         })

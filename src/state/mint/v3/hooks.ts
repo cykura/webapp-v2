@@ -16,7 +16,7 @@ import {
 } from '@uniswap/v3-sdk'
 import { Currency, Token, CurrencyAmount, Price, Rounding } from '@uniswap/sdk-core'
 import { useSolana } from '@saberhq/use-solana'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from '../../../hooks/web3'
 import { AppState } from '../../index'
 import { tryParseAmount } from '../../swap/hooks'
@@ -158,18 +158,23 @@ export function useV3DerivedMintInfo(
   // pool
   const pool = usePool(currencies[Field.CURRENCY_A], currencies[Field.CURRENCY_B], feeAmount)
 
-  if (!!token0 && !!token1 && !!feeAmount) {
-    const tk0 = new PublicKey(token0.address)
-    const tk1 = new PublicKey(token1.address)
+  useEffect(() => {
+    ;(async () => {
+      if (token0 && token1 && feeAmount) {
+        const tk0 = new PublicKey(token0.address)
+        const tk1 = new PublicKey(token1.address)
 
-    PublicKey.findProgramAddress([POOL_SEED, tk0?.toBuffer(), tk1?.toBuffer(), u32ToSeed(feeAmount)], PROGRAM_ID).then(
-      ([poolStatePDA, _]) => {
-        connection.getAccountInfo(poolStatePDA).then((info) => {
-          setNoLiquidity(!info)
+        PublicKey.findProgramAddress(
+          [POOL_SEED, tk0?.toBuffer(), tk1?.toBuffer(), u32ToSeed(feeAmount)],
+          PROGRAM_ID
+        ).then(([poolStatePDA, _]) => {
+          connection.getAccountInfo(poolStatePDA).then((info) => {
+            setNoLiquidity(!info)
+          })
         })
       }
-    )
-  }
+    })()
+  }, [token0, token1, feeAmount])
 
   // note to parse inputs in reverse
   const invertPrice = Boolean(baseToken && token0 && !baseToken.equals(token0))
@@ -255,8 +260,8 @@ export function useV3DerivedMintInfo(
   // always returns the price with 0 as base token
   const pricesAtTicks = useMemo(() => {
     return {
-      [Bound.LOWER]: getTickToPrice(token0, token1, ticks[Bound.LOWER]) ?? price,
-      [Bound.UPPER]: getTickToPrice(token0, token1, ticks[Bound.UPPER]) ?? price,
+      [Bound.LOWER]: getTickToPrice(token0, token1, ticks[Bound.LOWER]),
+      [Bound.UPPER]: getTickToPrice(token0, token1, ticks[Bound.UPPER]),
     }
   }, [token0, token1, ticks, price])
   const { [Bound.LOWER]: lowerPrice, [Bound.UPPER]: upperPrice } = pricesAtTicks
