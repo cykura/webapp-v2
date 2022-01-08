@@ -479,63 +479,43 @@ export default function AddLiquidity({
       // Create new position
       console.log('Creating new position')
       try {
-        const tx = new Transaction()
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        tx.instructions = [
-          cyclosCore.instruction.mintTokenizedPosition(
-            tokenizedPositionBump,
-            amount0Desired,
-            amount1Desired,
-            amount0Minimum,
-            amount1Minimum,
-            deadline,
-            {
-              accounts: {
-                minter: wallet?.publicKey,
-                recipient: wallet?.publicKey,
-                factoryState,
-                nftMint: nftMintKeypair.publicKey,
-                nftAccount: positionNftAccount,
-                poolState: poolState,
-                corePositionState: corePositionState,
-                tickLowerState: tickLowerState,
-                tickUpperState: tickUpperState,
-                bitmapLowerState: bitmapLowerState,
-                bitmapUpperState: bitmapUpperState,
-                tokenAccount0: userATA0,
-                tokenAccount1: userATA1,
-                vault0: vault0,
-                vault1: vault1,
-                latestObservationState: latestObservationState,
-                nextObservationState: nextObservationState,
-                tokenizedPositionState: tokenizedPositionState,
-                coreProgram: cyclosCore.programId,
-                systemProgram: SystemProgram.programId,
-                rent: SYSVAR_RENT_PUBKEY,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-              },
-              signers: [nftMintKeypair],
-            }
-          ),
-        ]
-        tx.feePayer = wallet?.publicKey ?? undefined
-        await wallet?.signTransaction(tx)
-        const hash = await providerMut?.send(tx, [nftMintKeypair])
-        console.log(hash, ' -> mintToken')
-
-        // console.log(hashRes)
-        const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
-        const pState = await cyclosCore.account.poolState.fetch(tokenizedPositionData.poolId)
-        console.log('pool created with')
-        console.log(pState.token0.toString())
-        console.log(pState.token1.toString())
-        console.log(pState.tick.toString())
-        console.log('position created with these')
-        console.log(tokenizedPositionData.liquidity.toString(), ' liquidity')
-        console.log(tokenizedPositionData.tickLower, ' tickLower')
-        console.log(tokenizedPositionData.tickUpper, ' tickUpper')
-        setTxHash(hash?.signature ?? '')
+        const txnHash = await cyclosCore.rpc.mintTokenizedPosition(
+          tokenizedPositionBump,
+          amount0Desired,
+          amount1Desired,
+          amount0Minimum,
+          amount1Minimum,
+          deadline,
+          {
+            accounts: {
+              minter: wallet?.publicKey,
+              recipient: wallet?.publicKey,
+              factoryState,
+              nftMint: nftMintKeypair.publicKey,
+              nftAccount: positionNftAccount,
+              poolState: poolState,
+              corePositionState: corePositionState,
+              tickLowerState: tickLowerState,
+              tickUpperState: tickUpperState,
+              bitmapLowerState: bitmapLowerState,
+              bitmapUpperState: bitmapUpperState,
+              tokenAccount0: userATA0,
+              tokenAccount1: userATA1,
+              vault0: vault0,
+              vault1: vault1,
+              latestObservationState: latestObservationState,
+              nextObservationState: nextObservationState,
+              tokenizedPositionState: tokenizedPositionState,
+              coreProgram: cyclosCore.programId,
+              systemProgram: SystemProgram.programId,
+              rent: SYSVAR_RENT_PUBKEY,
+              tokenProgram: TOKEN_PROGRAM_ID,
+              associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            },
+            signers: [nftMintKeypair],
+          }
+        )
+        setTxHash(txnHash)
       } catch (err: any) {
         console.log(err)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
@@ -547,6 +527,12 @@ export default function AddLiquidity({
       // Increase Liquidity
       console.log('Increasing Liquidity to existing position')
       try {
+        // handle for tokenID is undefined
+        const [nftMint, _] = await PublicKey.findProgramAddress(
+          [POSITION_SEED, new PublicKey(tokenId!).toBuffer()],
+          cyclosCore.programId
+        )
+
         const hashRes = await cyclosCore.rpc.increaseLiquidity(
           amount0Desired,
           amount1Desired,
@@ -569,7 +555,7 @@ export default function AddLiquidity({
               vault1: vault1,
               latestObservationState: latestObservationState,
               nextObservationState: nextObservationState,
-              tokenizedPositionState: tokenizedPositionState,
+              tokenizedPositionState: nftMint,
               coreProgram: cyclosCore.programId,
               tokenProgram: TOKEN_PROGRAM_ID,
             },
