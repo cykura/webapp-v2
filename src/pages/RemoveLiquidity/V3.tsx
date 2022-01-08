@@ -146,14 +146,14 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       return
     }
 
-    const fee = position?.fee ?? (500 as number)
-    const tickSpacing = fee ? fee / 50 : 10
+    const fee = position.fee
+    const tickSpacing = fee / 50
 
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
 
-    const tickLower = 0
-    const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
+    const tickLower = position.tickLower
+    const tickUpper = position.tickUpper
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
 
