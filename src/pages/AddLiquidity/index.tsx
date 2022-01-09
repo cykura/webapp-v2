@@ -241,8 +241,12 @@ export default function AddLiquidity({
     console.log(`initial SqrtPricex32 -> ${initPrice.toString()}`)
 
     // taken as contants in test file
-    const tickLower = ticks.LOWER ?? 0
-    const tickUpper = ticks.UPPER ?? 10
+    let tickLower = ticks.LOWER ?? 0
+    let tickUpper = ticks.UPPER ?? 10
+    // flipping ticks according to token sorted order
+    if (tokenA.sortsBefore(tokenB)) {
+      ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
+    }
     console.log('tick Lower ', tickLower, 'tick Upper ', tickUpper)
     // const tickLower = 0
     // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
