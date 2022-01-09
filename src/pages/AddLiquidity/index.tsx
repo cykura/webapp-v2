@@ -65,6 +65,8 @@ import { CyclosCore, IDL } from 'types/cyclos-core'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'
+import { sqrt } from '@uniswap/sdk-core'
+import JSBI from 'jsbi'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -234,15 +236,14 @@ export default function AddLiquidity({
 
     // get init Price from UI - should encode into Q32.32
     // taken from test file
-    // console.log(startPriceTypedValue.toString())
-    const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
-    console.log(`initial Price -> ${initPrice.toString()}`)
-    // const initPrice = new BN(4294967296)
-    // console.log(initPrice.toString())
+    // const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
+    const initPrice = new BN(sqrt(JSBI.BigInt(new BN((+startPriceTypedValue * Math.pow(2, 64)).toFixed(0)))).toString())
+    console.log(`initial SqrtPricex32 -> ${initPrice.toString()}`)
 
     // taken as contants in test file
     const tickLower = ticks.LOWER ?? 0
     const tickUpper = ticks.UPPER ?? 10
+    console.log('tick Lower ', tickLower, 'tick Upper ', tickUpper)
     // const tickLower = 0
     // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
     const wordPosLower = (tickLower / tickSpacing) >> 8
@@ -308,6 +309,8 @@ export default function AddLiquidity({
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           },
         })
+        const pState = await cyclosCore.account.poolState.fetch(poolState)
+        console.log(pState)
         console.log(createHash, ' txn hash for create Pool')
         enqueueSnackbar('Pool Created', {
           variant: 'success',
