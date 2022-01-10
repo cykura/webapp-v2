@@ -192,6 +192,8 @@ export default function AddLiquidity({
   // get value and prices at ticks
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
+  // console.log(priceLower?.toSignificant())
+  // console.log(priceUpper?.toSignificant())
 
   // console.log(+formattedAmounts[Field.CURRENCY_A])
   // console.log(+formattedAmounts[Field.CURRENCY_B])
@@ -210,6 +212,12 @@ export default function AddLiquidity({
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
     const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+
+    const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
+
+    console.log(
+      `POOL CREATION\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${tk1?.symbol}\ntoken2 ${tk2?.symbol}\ninvertPrice ${invertPrice}\nnew invert price ${newInvertPrice}`
+    )
 
     const token1 = new anchor.web3.PublicKey(tk1.address)
     const token2 = new anchor.web3.PublicKey(tk2.address)
@@ -237,17 +245,28 @@ export default function AddLiquidity({
     // get init Price from UI - should encode into Q32.32
     // taken from test file
     // const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
-    const initPrice = new BN(sqrt(JSBI.BigInt(new BN((+startPriceTypedValue * Math.pow(2, 64)).toFixed(0)))).toString())
-    console.log(`initial SqrtPricex32 -> ${initPrice.toString()}`)
+    const sqrtPriceX32 = new BN(
+      sqrt(
+        JSBI.BigInt(new BN(startPriceTypedValue).shln(64).muln(Math.pow(10, tk1?.decimals - tk2?.decimals)))
+      ).toString()
+    )
+    console.log('sqrtpricex32 -> ', sqrtPriceX32.toString())
 
     // taken as contants in test file
     let tickLower = ticks.LOWER ?? 0
     let tickUpper = ticks.UPPER ?? 10
     // flipping ticks according to token sorted order
-    if (tokenA.sortsBefore(tokenB)) {
+    if (!invertPrice && tickUpper && tickLower) {
+      console.log('Invert Price is true and hence we flip ticks?')
+      ;[tickLower, tickUpper] = [tickLower, tickUpper]
+      // console.log(`tickLower is ${tickLower} and tickUpper is ${tickUpper}`)
+    } else {
+      console.log('Invert Price is false and hence we negate ticks?')
       ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
     }
-    console.log('tick Lower ', tickLower, 'tick Upper ', tickUpper)
+    // tickLower should be less than tickUpper
+    ;[tickLower, tickUpper] = tickLower < tickUpper ? [tickLower, tickUpper] : [tickUpper, tickLower]
+    console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper)
     // const tickLower = 0
     // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
     const wordPosLower = (tickLower / tickSpacing) >> 8
@@ -297,7 +316,7 @@ export default function AddLiquidity({
     if (noLiquidity) {
       console.log('Creating and init pool')
       try {
-        const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, initPrice, {
+        const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, sqrtPriceX32, {
           accounts: {
             poolCreator: wallet?.publicKey,
             token0: token1,
@@ -315,6 +334,8 @@ export default function AddLiquidity({
         })
         const pState = await cyclosCore.account.poolState.fetch(poolState)
         console.log(pState)
+        console.log('Position created with tick', pState.tick.toString())
+        console.log('Position created with price', pState.sqrtPriceX32.toString())
         console.log(createHash, ' txn hash for create Pool')
         enqueueSnackbar('Pool Created', {
           variant: 'success',
@@ -373,62 +394,89 @@ export default function AddLiquidity({
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
+    console.log(
+      tickLowerStateInfo,
+      tickUpperStateInfo,
+      bitmapLowerStateInfo,
+      bitmapUpperStateInfo,
+      corePositionStateInfo
+    )
+
     // Build the transaction
     if (
-      !corePositionStateInfo &&
-      !tickLowerStateInfo &&
-      !tickUpperStateInfo &&
-      !bitmapLowerStateInfo &&
+      !corePositionStateInfo ||
+      !tickLowerStateInfo ||
+      !tickUpperStateInfo ||
+      !bitmapLowerStateInfo ||
       !bitmapUpperStateInfo
     ) {
-      console.log('Creating all accounts')
+      console.log('Creating accounts')
       try {
         const tx = new Transaction()
         tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        tx.instructions = [
-          cyclosCore.instruction.initTickAccount(tickLowerStateBump, tickLower, {
-            accounts: {
-              signer: wallet?.publicKey,
-              poolState: poolState,
-              tickState: tickLowerState,
-              systemProgram: SystemProgram.programId,
-            },
-          }),
-          cyclosCore.instruction.initTickAccount(tickUpperStateBump, tickUpper, {
-            accounts: {
-              signer: wallet?.publicKey,
-              poolState: poolState,
-              tickState: tickUpperState,
-              systemProgram: SystemProgram.programId,
-            },
-          }),
-          cyclosCore.instruction.initBitmapAccount(bitmapLowerBump, wordPosLower, {
-            accounts: {
-              signer: wallet?.publicKey,
-              poolState: poolState,
-              bitmapState: bitmapLowerState,
-              systemProgram: SystemProgram.programId,
-            },
-          }),
-          cyclosCore.instruction.initPositionAccount(corePositionBump, {
-            accounts: {
-              signer: wallet?.publicKey,
-              recipient: factoryState,
-              poolState: poolState,
-              tickLowerState: tickLowerState,
-              tickUpperState: tickUpperState,
-              positionState: corePositionState,
-              systemProgram: SystemProgram.programId,
-            },
-          }),
-        ]
+        if (!tickLowerStateInfo) {
+          console.log('Creating tickLowerState')
+          tx.instructions.push(
+            cyclosCore.instruction.initTickAccount(tickLowerStateBump, tickLower, {
+              accounts: {
+                signer: wallet?.publicKey,
+                poolState: poolState,
+                tickState: tickLowerState,
+                systemProgram: SystemProgram.programId,
+              },
+            })
+          )
+        }
+        if (!tickUpperStateInfo) {
+          console.log('Creating tickUpperState')
+          tx.instructions.push(
+            cyclosCore.instruction.initTickAccount(tickUpperStateBump, tickUpper, {
+              accounts: {
+                signer: wallet?.publicKey,
+                poolState: poolState,
+                tickState: tickUpperState,
+                systemProgram: SystemProgram.programId,
+              },
+            })
+          )
+        }
+        if (!bitmapLowerStateInfo) {
+          console.log('Creating tickbitMapLowerState')
+          tx.instructions.push(
+            cyclosCore.instruction.initBitmapAccount(bitmapLowerBump, wordPosLower, {
+              accounts: {
+                signer: wallet?.publicKey,
+                poolState: poolState,
+                bitmapState: bitmapLowerState,
+                systemProgram: SystemProgram.programId,
+              },
+            })
+          )
+        }
         if (bitmapLowerState.toString() !== bitmapUpperState.toString()) {
+          console.log('Creating tickbitMapUpperState')
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
               accounts: {
                 signer: wallet?.publicKey,
                 poolState: poolState,
                 bitmapState: bitmapUpperState,
+                systemProgram: SystemProgram.programId,
+              },
+            })
+          )
+        }
+        if (!corePositionStateInfo) {
+          console.log('Creating core Position')
+          tx.instructions.push(
+            cyclosCore.instruction.initPositionAccount(corePositionBump, {
+              accounts: {
+                signer: wallet?.publicKey,
+                recipient: factoryState,
+                poolState: poolState,
+                tickLowerState: tickLowerState,
+                tickUpperState: tickUpperState,
+                positionState: corePositionState,
                 systemProgram: SystemProgram.programId,
               },
             })
@@ -499,6 +547,13 @@ export default function AddLiquidity({
     )[0]
 
     if (noLiquidity || !existingPosition) {
+      console.log(
+        tickLowerState.toString(),
+        tickUpperState.toString(),
+        bitmapLowerState.toString(),
+        bitmapUpperState.toString(),
+        corePositionState.toString()
+      )
       // Create new position
       console.log('Creating new position')
       try {
@@ -538,6 +593,8 @@ export default function AddLiquidity({
             signers: [nftMintKeypair],
           }
         )
+        const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
+        console.log(tokenizedPositionData)
         setTxHash(txnHash)
       } catch (err: any) {
         console.log(err)

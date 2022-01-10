@@ -132,7 +132,6 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     setAttemptingTxn(true)
     if (
-      !positionManager ||
       !liquidityValue0 ||
       !liquidityValue1 ||
       !deadline ||
@@ -141,10 +140,15 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       !feeValue0 ||
       !feeValue1 ||
       !positionSDK ||
-      !liquidityPercentage
+      !liquidityPercentage ||
+      !tokenId
     ) {
       return
     }
+
+    const removeLiquidityAmount = new BN(
+      liquidityPercentage?.multiply(JSBI.BigInt(positionSDK?.liquidity)).divide(JSBI.BigInt(100)).quotient.toString()
+    )
 
     const fee = position.fee
     const tickSpacing = fee / 50
@@ -219,7 +223,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       )
     )[0]
 
-    const nftMint = new PublicKey(position?.tokenId)
+    const nftMint = new PublicKey(tokenId)
 
     const positionNftAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -235,7 +239,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     try {
       const txHash = await cyclosCore.rpc.decreaseLiquidity(
-        new BN(1_000_000),
+        removeLiquidityAmount,
         amount0Minimum,
         amount1Minimum,
         deadline,
@@ -257,6 +261,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
           },
         }
       )
+      console.log(txHash, ' removed liquidity hash')
       setTxnHash(txHash)
       setAttemptingTxn(false)
     } catch (err: any) {

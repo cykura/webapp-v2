@@ -14,7 +14,8 @@ export function tryParseTick(
   baseToken?: Token,
   quoteToken?: Token,
   feeAmount?: FeeAmount,
-  value?: string
+  value?: string,
+  invertPrice?: boolean
 ): number | undefined {
   if (!baseToken || !quoteToken || !feeAmount || !value) {
     return undefined
@@ -28,6 +29,51 @@ export function tryParseTick(
 
   // parse the typed value into a price
   const price = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
+  let modifiedPrice = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
+
+  if (baseToken.decimals == quoteToken.decimals) {
+    console.log('Goes here')
+    modifiedPrice = price
+  } else {
+    // check for different decimals
+    if (invertPrice) {
+      if (baseToken.decimals < quoteToken.decimals) {
+        // console.log('True and True')
+        modifiedPrice = new Price(
+          price.baseCurrency,
+          price.quoteCurrency,
+          JSBI.divide(price.numerator, JSBI.BigInt(1000)),
+          price.denominator
+        )
+      } else {
+        // console.log('True and False')
+        modifiedPrice = new Price(
+          price.baseCurrency,
+          price.quoteCurrency,
+          price.numerator,
+          JSBI.divide(price.denominator, JSBI.BigInt(1000))
+        )
+      }
+    } else {
+      if (baseToken.decimals < quoteToken.decimals) {
+        // console.log('False and True')
+        modifiedPrice = new Price(
+          price.quoteCurrency,
+          price.baseCurrency,
+          JSBI.divide(price.numerator, JSBI.BigInt(1000)),
+          price.denominator
+        )
+      } else {
+        // console.log('False and False')
+        modifiedPrice = new Price(
+          price.quoteCurrency,
+          price.baseCurrency,
+          JSBI.multiply(price.numerator, JSBI.BigInt(1000)),
+          price.denominator
+        )
+      }
+    }
+  }
 
   let tick: number
   // check price is within min/max bounds, if outside return min/max
@@ -39,8 +85,13 @@ export function tryParseTick(
     tick = TickMath.MIN_TICK
   } else {
     // this function is agnostic to the base, will always return the correct tick
-    tick = priceToClosestTick(price)
+    tick = priceToClosestTick(modifiedPrice)
   }
+  // console.log(
+  //   `TRY PARSE TICK CALC\nentered ${quoteToken?.symbol} is ${value.toString()}\n${baseToken?.symbol} is 1\n ${price
+  //     .quote(amountOne)
+  //     .toSignificant()}\ntick calcualted is ${tick.toString()}`
+  // )
 
   return nearestUsableTick(tick, TICK_SPACINGS[feeAmount])
 }

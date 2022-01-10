@@ -135,9 +135,12 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
   const token0 = position.amount0.currency
   const token1 = position.amount1.currency
 
+  // console.log(`GET PRICE FROM POSITION\ntoken0 is ${token0?.symbol}\ntoken1 is ${token1?.symbol}`)
+
   // if token0 is a dollar-stable asset, set it as the quote token
   const stables = [SOLUSDC_LOCAL]
   if (stables.some((stable) => stable.equals(token0))) {
+    // console.log('STABLE LOOP')
     return {
       priceLower: position.token0PriceUpper.invert(),
       priceUpper: position.token0PriceLower.invert(),
@@ -159,6 +162,7 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
 
   // if both prices are below 1, invert
   if (position.token0PriceUpper.lessThan(1)) {
+    // console.log('PRICES LESS THAN 1 LOOP')
     return {
       priceLower: position.token0PriceUpper.invert(),
       priceUpper: position.token0PriceLower.invert(),
@@ -167,6 +171,7 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
     }
   }
 
+  // console.log('NORMAL TAKEN')
   // otherwise, just return the default
   return {
     priceLower: position.token0PriceLower,
