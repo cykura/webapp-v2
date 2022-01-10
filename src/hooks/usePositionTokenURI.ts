@@ -1,8 +1,13 @@
+import { Position } from '@uniswap/v3-sdk'
+import { getPriceOrderingFromPositionForUI } from 'components/PositionListItem'
 import { BigNumber } from 'ethers'
 import JSBI from 'jsbi'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NEVER_RELOAD, useSingleCallResult } from '../state/multicall/hooks'
+import { useToken } from './Tokens'
 import { useV3NFTPositionManagerContract } from './useContract'
+import { usePool } from './usePools'
+import { useV3PositionFromTokenId } from './useV3Positions'
 
 type TokenId = number | JSBI | BigNumber | string | undefined
 
@@ -62,26 +67,50 @@ const useAsync = <T, E = string>(asyncFunction: () => Promise<T>, immediate = tr
 }
 
 export function usePositionTokenURI(tokenId: TokenId | undefined): UsePositionTokenURIResult {
+  const { position } = useV3PositionFromTokenId(tokenId as string)
+
+  const { token0, token1, fee, liquidity, tickLower, tickUpper } = position || {}
+
+  const tk0 = useToken(token0)
+  const tk1 = useToken(token1)
+
+  const pool = usePool(tk0 ?? undefined, tk1 ?? undefined, fee)
+  const below = pool && typeof tickLower === 'number' ? pool.tickCurrent < tickLower : undefined
+  const above = pool && typeof tickUpper === 'number' ? pool.tickCurrent >= tickUpper : undefined
+  const overRange = above ? -1 : below ? 1 : 0
+
+  const pst = useMemo(() => {
+    if (pool && liquidity && typeof tickLower === 'number' && typeof tickUpper === 'number') {
+      // console.log(
+      //   `POSITION PAGE\nprice is ${pool.sqrtRatioX32.toString()}\ntokenLower is ${tickLower}\ntokenUpper is ${tickUpper}`
+      // )
+      return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
+    }
+    return undefined
+  }, [liquidity, pool, tickLower, tickUpper])
+  const { priceLower, priceUpper, base, quote } = getPriceOrderingFromPositionForUI(pst)
+
   const fetchNFT = useCallback(async () => {
+    if (!base || !quote) {
+      throw 'no postion'
+    }
     const p = {
       mint: tokenId?.toString(),
-      qt: '0xwSol....',
-      bt: '0xUSDC....',
-      qts: 'wSOL',
-      bts: 'USDC',
-      pa: 'poolaAddress',
-      ft: '0.5%',
-      tl: 1.121,
-      tu: 2.34,
-      ts: 0.1,
-      or: 1,
+      qt: quote?.address,
+      bt: base?.address,
+      qts: quote?.symbol,
+      bts: base?.symbol,
+      ft: (fee ?? 500) / 10000,
+      tl: tickLower,
+      tu: tickUpper,
+      or: overRange,
     }
     const res = await fetch(
-      `https://asia-south1-cyclos-finance.cloudfunctions.net/getSVG?mint=${p.mint}&qt=${p.qt}&bt=${p.bt}&qts=${p.qts}&bts=${p.bts}&pa=${p.pa}&ft=${p.ft}&tl=${p.tl}&tu=${p.tu}&ts=${p.ts}&or=${p.or}`
+      `https://asia-south1-cyclos-finance.cloudfunctions.net/getSVG?mint=${p.mint}&qt=${p.qt}&bt=${p.bt}&qts=${p.qts}&bts=${p.bts}&ft=${p.ft}&tl=${p.tl}&tu=${p.tu}&or=${p.or}`
     )
     const body = await res.text()
     return body
-  }, [tokenId])
+  }, [tokenId, base, quote, tickLower, tickUpper, fee])
 
   const { status, value: result, error } = useAsync<string>(fetchNFT)
   const loading = status === 'pending'
