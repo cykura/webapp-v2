@@ -274,7 +274,8 @@ function NFT({ image, height: targetHeight }: { image: string; height: number })
       <NFTImage
         ref={imageRef}
         src={image}
-        hidden={!animate}
+        hidden={false}
+        // hidden={!animate}
         onLoad={() => {
           // snapshot for the canvas
           if (imageRef.current && canvasRef.current) {
