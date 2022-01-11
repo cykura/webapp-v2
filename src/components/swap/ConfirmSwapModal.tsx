@@ -80,12 +80,7 @@ export default function ConfirmSwapModal({
   }, [onConfirm, showAcceptChanges, swapErrorMessage, trade])
 
   // text to show while loading
-  const pendingText = (
-    <span>
-      Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
-      {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
-    </span>
-  )
+  const pendingText = <span>Swapping in progress</span>
 
   const confirmationContent = useCallback(
     () =>

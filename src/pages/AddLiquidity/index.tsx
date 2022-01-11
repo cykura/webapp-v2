@@ -199,6 +199,8 @@ export default function AddLiquidity({
   async function OnAdd() {
     if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
 
+    setAttemptingTxn(true)
+
     const provider = new anchor.Provider(connection, wallet as Wallet, {
       skipPreflight: false,
     })
@@ -340,6 +342,7 @@ export default function AddLiquidity({
           variant: 'success',
         })
       } catch (err: any) {
+        setAttemptingTxn(false)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
         })
@@ -452,7 +455,7 @@ export default function AddLiquidity({
             })
           )
         }
-        if (bitmapLowerState.toString() !== bitmapUpperState.toString()) {
+        if (!bitmapUpperStateInfo && bitmapLowerState.toString() !== bitmapUpperState.toString()) {
           console.log('Creating tickbitMapUpperState')
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(bitmapUpperBump, wordPosUpper, {
@@ -594,8 +597,10 @@ export default function AddLiquidity({
         )
         const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
         console.log(tokenizedPositionData)
+        setAttemptingTxn(true)
         setTxHash(txnHash)
       } catch (err: any) {
+        setAttemptingTxn(false)
         console.log(err)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
@@ -665,8 +670,10 @@ export default function AddLiquidity({
           }
         )
         console.log(hashRes)
+        setAttemptingTxn(true)
         setTxHash(hashRes)
       } catch (err: any) {
+        setAttemptingTxn(false)
         console.log(err)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
@@ -674,6 +681,7 @@ export default function AddLiquidity({
         return
       }
     }
+    setAttemptingTxn(false)
   }
 
   const pendingText = `Supplying ${!depositADisabled ? parsedAmounts[Field.CURRENCY_A]?.toSignificant(6) : ''} ${
