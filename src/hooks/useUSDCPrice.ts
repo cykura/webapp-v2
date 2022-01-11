@@ -15,31 +15,39 @@ const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
  * @param currency currency to compute the USDC price of
  */
 export default function useUSDCPrice(currency?: Currency): Price<Currency, Token> | undefined {
-  return undefined
-  // const { chainId } = useActiveWeb3ReactSol()
+  // return undefined
+  const { chainId } = useActiveWeb3ReactSol()
 
-  // const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
-  // const stablecoin = amountOut?.currency
+  const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
+  const stablecoin = amountOut?.currency
 
   // const v3USDCTrade = useBestV3TradeExactOut(currency, amountOut)
 
-  // return useMemo(() => {
-  //   if (!currency || !stablecoin) {
-  //     return undefined
-  //   }
+  return useMemo(() => {
+    if (!currency || !stablecoin) {
+      return undefined
+    }
 
-  //   // handle usdc
-  //   if (currency?.wrapped.equals(stablecoin)) {
-  //     return new Price(stablecoin, stablecoin, '1', '1')
-  //   }
+    // handle usdc
+    if (currency?.wrapped.equals(stablecoin)) {
+      // console.log('Fetching USDC price')
+      return new Price(stablecoin, stablecoin, '1', '1')
+    }
 
-  //   if (v3USDCTrade.trade) {
-  //     const { numerator, denominator } = v3USDCTrade.trade.route.midPrice
-  //     return new Price(currency, stablecoin, denominator, numerator)
-  //   }
+    //handle usdt
+    if (currency?.wrapped.symbol === 'USDT') {
+      // console.log('Fetching USDT price')
+      return new Price(currency?.wrapped, stablecoin, '1', '2')
+    }
 
-  //   return undefined
-  // }, [currency, stablecoin, v3USDCTrade.trade])
+    //handle wsol
+    if (currency?.wrapped.symbol === 'wSOL') {
+      // console.log('Fetching SOL price')
+      return new Price(currency?.wrapped, stablecoin, '1000', '170')
+    }
+
+    return undefined
+  }, [currency, stablecoin])
 }
 
 export function useUSDCValue(currencyAmount: CurrencyAmount<Currency> | undefined | null) {
