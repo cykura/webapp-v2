@@ -19,7 +19,7 @@ import Badge from 'components/Badge'
 import { ButtonConfirmed, ButtonPrimary, ButtonGray } from 'components/Button'
 import { DarkCard, LightCard } from 'components/Card'
 import CurrencyLogo from 'components/CurrencyLogo'
-import { Trans } from '@lingui/macro'
+
 import { currencyId } from 'utils/currencyId'
 import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
@@ -162,15 +162,15 @@ function CurrentPriceCard({
     <LightCard padding="12px ">
       <AutoColumn gap="8px" justify="center">
         <ExtentsText>
-          <Trans>Current price</Trans>
+          <span>Current price</span>
         </ExtentsText>
         <TYPE.mediumHeader textAlign="center">
           {(inverted ? pool.token1Price : pool.token0Price).toSignificant(6)}{' '}
         </TYPE.mediumHeader>
         <ExtentsText>
-          <Trans>
+          <span>
             {currencyQuote?.symbol} per {currencyBase?.symbol}
-          </Trans>
+          </span>
         </ExtentsText>
       </AutoColumn>
     </LightCard>
@@ -502,10 +502,10 @@ export function PositionPage({
           </AutoColumn>
         </LightCard>
         <TYPE.italic>
-          <Trans>Collecting fees will withdraw currently available fees for you.</Trans>
+          <span>Collecting fees will withdraw currently available fees for you.</span>
         </TYPE.italic>
         <ButtonPrimary onClick={collect}>
-          <Trans>Collect</Trans>
+          <span>Collect</span>
         </ButtonPrimary>
       </AutoColumn>
     )
@@ -545,18 +545,18 @@ export function PositionPage({
           hash={collectMigrationHash ?? ''}
           content={() => (
             <ConfirmationModalContent
-              title={<Trans>Claim fees</Trans>}
+              title={<span>Claim fees</span>}
               onDismiss={() => setShowConfirm(false)}
               topContent={modalHeader}
             />
           )}
-          pendingText={<Trans>Collecting fees</Trans>}
+          pendingText={<span>Collecting fees</span>}
         />
         <AutoColumn gap="md">
           <AutoColumn gap="sm">
             <Link style={{ textDecoration: 'none', width: 'fit-content', marginBottom: '0.5rem' }} to="/pool">
               <HoverText>
-                <Trans>← Back to Pools Overview</Trans>
+                <span>← Back to Pools Overview</span>
               </HoverText>
             </Link>
             <ResponsiveRow>
@@ -567,7 +567,7 @@ export function PositionPage({
                 </TYPE.label>
                 <Badge style={{ marginRight: '8px' }}>
                   <BadgeText>
-                    <Trans>{new Percent(feeAmount, 1_000_000).toSignificant()}%</Trans>
+                    <span>{new Percent(feeAmount, 1_000_000).toSignificant()}%</span>
                   </BadgeText>
                 </Badge>
                 <RangeBadge removed={removed} inRange={inRange} />
@@ -583,7 +583,7 @@ export function PositionPage({
                       $borderRadius="12px"
                       style={{ marginRight: '8px' }}
                     >
-                      <Trans>Increase Liquidity</Trans>
+                      <span>Increase Liquidity</span>
                     </ButtonGray>
                   ) : null}
                   {tokenId && !removed ? (
@@ -594,7 +594,7 @@ export function PositionPage({
                       padding="6px 8px"
                       $borderRadius="12px"
                     >
-                      <Trans>Remove Liquidity</Trans>
+                      <span>Remove Liquidity</span>
                     </ResponsiveButtonPrimary>
                   ) : null}
                 </RowFixed>
@@ -620,7 +620,7 @@ export function PositionPage({
                 </div>
                 {network && owner && !ownsNFT ? (
                   <ExternalLink href={getExplorerLink(network, owner, ExplorerDataType.ADDRESS)}>
-                    <Trans>Owner</Trans>
+                    <span>Owner</span>
                   </ExternalLink>
                 ) : null}
               </DarkCard>
@@ -641,15 +641,15 @@ export function PositionPage({
                 <AutoColumn gap="md" style={{ width: '100%' }}>
                   <AutoColumn gap="md">
                     <Label>
-                      <Trans>Liquidity</Trans>
+                      <span>Liquidity</span>
                     </Label>
                     {fiatValueOfLiquidity?.greaterThan(new Fraction(1, 100)) ? (
                       <TYPE.largeHeader fontSize="36px" fontWeight={500}>
-                        <Trans>${fiatValueOfLiquidity.toFixed(2, { groupSeparator: ',' })}</Trans>
+                        <span>${fiatValueOfLiquidity.toFixed(2, { groupSeparator: ',' })}</span>
                       </TYPE.largeHeader>
                     ) : (
                       <TYPE.largeHeader color={theme.text1} fontSize="36px" fontWeight={500}>
-                        <Trans>$-</Trans>
+                        <span>$-</span>
                       </TYPE.largeHeader>
                     )}
                   </AutoColumn>
@@ -664,7 +664,7 @@ export function PositionPage({
                           {typeof ratio === 'number' && !removed ? (
                             <Badge style={{ marginLeft: '10px' }}>
                               <TYPE.main fontSize={11}>
-                                <Trans>{inverted ? ratio : 100 - ratio}%</Trans>
+                                <span>{inverted ? ratio : 100 - ratio}%</span>
                               </TYPE.main>
                             </Badge>
                           ) : null}
@@ -679,7 +679,7 @@ export function PositionPage({
                           {typeof ratio === 'number' && !removed ? (
                             <Badge style={{ marginLeft: '10px' }}>
                               <TYPE.main color={theme.text2} fontSize={11}>
-                                <Trans>{inverted ? 100 - ratio : ratio}%</Trans>
+                                <span>{inverted ? 100 - ratio : ratio}%</span>
                               </TYPE.main>
                             </Badge>
                           ) : null}
@@ -695,15 +695,15 @@ export function PositionPage({
                     <RowBetween style={{ alignItems: 'flex-start' }}>
                       <AutoColumn gap="md">
                         <Label>
-                          <Trans>Unclaimed fees</Trans>
+                          <span>Unclaimed fees</span>
                         </Label>
                         {fiatValueOfFees?.greaterThan(new Fraction(1, 100)) ? (
                           <TYPE.largeHeader color={theme.green1} fontSize="36px" fontWeight={500}>
-                            <Trans>${fiatValueOfFees.toFixed(2, { groupSeparator: ',' })}</Trans>
+                            <span>${fiatValueOfFees.toFixed(2, { groupSeparator: ',' })}</span>
                           </TYPE.largeHeader>
                         ) : (
                           <TYPE.largeHeader color={theme.text1} fontSize="36px" fontWeight={500}>
-                            <Trans>$-</Trans>
+                            <span>$-</span>
                           </TYPE.largeHeader>
                         )}
                       </AutoColumn>
@@ -718,19 +718,19 @@ export function PositionPage({
                         >
                           {!!collectMigrationHash && !isCollectPending ? (
                             <TYPE.main color={theme.text1}>
-                              <Trans> Collected</Trans>
+                              <span> Collected</span>
                             </TYPE.main>
                           ) : isCollectPending || collecting ? (
                             <TYPE.main color={theme.text1}>
                               {' '}
                               <Dots>
-                                <Trans>Collecting</Trans>
+                                <span>Collecting</span>
                               </Dots>
                             </TYPE.main>
                           ) : (
                             <>
                               <TYPE.main color={theme.white}>
-                                <Trans>Collect fees</Trans>
+                                <span>Collect fees</span>
                               </TYPE.main>
                             </>
                           )}
@@ -772,7 +772,7 @@ export function PositionPage({
                     <AutoColumn gap="md">
                       <RowBetween>
                         <TYPE.main>
-                          <Trans>Collect as WETH</Trans>
+                          <span>Collect as WETH</span>
                         </TYPE.main>
                         <Toggle
                           id="receive-as-weth"
@@ -791,7 +791,7 @@ export function PositionPage({
               <RowBetween>
                 <RowFixed>
                   <Label display="flex" style={{ marginRight: '12px' }}>
-                    <Trans>Price range</Trans>
+                    <span>Price range</span>
                   </Label>
                   <HideExtraSmall>
                     <>
@@ -815,19 +815,19 @@ export function PositionPage({
                 <LightCard padding="12px" width="100%">
                   <AutoColumn gap="8px" justify="center">
                     <ExtentsText>
-                      <Trans>Min price</Trans>
+                      <span>Min price</span>
                     </ExtentsText>
                     <TYPE.mediumHeader textAlign="center">{priceLower?.toSignificant(5)}</TYPE.mediumHeader>
                     <ExtentsText>
                       {' '}
-                      <Trans>
+                      <span>
                         {currencyQuote?.symbol} per {currencyBase?.symbol}
-                      </Trans>
+                      </span>
                     </ExtentsText>
 
                     {inRange && (
                       <TYPE.small color={theme.text3}>
-                        <Trans>Your position will be 100% {currencyBase?.symbol} at this price.</Trans>
+                        <span>Your position will be 100% {currencyBase?.symbol} at this price.</span>
                       </TYPE.small>
                     )}
                   </AutoColumn>
@@ -837,19 +837,19 @@ export function PositionPage({
                 <LightCard padding="12px" width="100%">
                   <AutoColumn gap="8px" justify="center">
                     <ExtentsText>
-                      <Trans>Max price</Trans>
+                      <span>Max price</span>
                     </ExtentsText>
                     <TYPE.mediumHeader textAlign="center">{priceUpper?.toSignificant(5)}</TYPE.mediumHeader>
                     <ExtentsText>
                       {' '}
-                      <Trans>
+                      <span>
                         {currencyQuote?.symbol} per {currencyBase?.symbol}
-                      </Trans>
+                      </span>
                     </ExtentsText>
 
                     {inRange && (
                       <TYPE.small color={theme.text3}>
-                        <Trans>Your position will be 100% {currencyQuote?.symbol} at this price.</Trans>
+                        <span>Your position will be 100% {currencyQuote?.symbol} at this price.</span>
                       </TYPE.small>
                     )}
                   </AutoColumn>

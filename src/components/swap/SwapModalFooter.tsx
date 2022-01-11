@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { Currency, TradeType } from '@uniswap/sdk-core'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
 
@@ -28,7 +27,7 @@ export default function SwapModalFooter({
           id="confirm-swap-or-send"
         >
           <Text fontSize={20} fontWeight={500}>
-            <Trans>Confirm Swap</Trans>
+            <span>Confirm Swap</span>
           </Text>
         </ButtonError>
 

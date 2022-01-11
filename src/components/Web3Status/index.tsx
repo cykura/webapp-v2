@@ -1,7 +1,7 @@
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana, useConnectedWallet } from '@saberhq/use-solana'
 import { darken } from 'polished'
-import { Trans } from '@lingui/macro'
+
 import styled, { css } from 'styled-components/macro'
 import { ButtonSecondary } from '../Button'
 import { RowBetween } from '../Row'
@@ -170,7 +170,7 @@ function Web3StatusInner() {
   return !connected ? (
     <Web3StatusConnect id="connect-wallet" onClick={connect} faded={false}>
       <Text>
-        <Trans>Connect</Trans>
+        <span>Connect</span>
       </Text>
     </Web3StatusConnect>
   ) : (
@@ -185,9 +185,9 @@ function Web3StatusInner() {
       <StyledMenu ref={node as any}>
         <Web3StatusConnect id="connect-wallet" onClick={toggle} faded={true}>
           <Text>
-            <Trans>
+            <span>
               {wallet?.publicKey?.toString().slice(0, 4) ?? ''}...{wallet?.publicKey?.toString().slice(-4) ?? ''}
-            </Trans>
+            </span>
           </Text>
         </Web3StatusConnect>
 
@@ -196,13 +196,13 @@ function Web3StatusInner() {
             <MenuItem onClick={disconnect}>
               <LogOut size={14} />
               <div>
-                <Trans>Disconnect</Trans>
+                <span>Disconnect</span>
               </div>
             </MenuItem>
             <MenuItem onClick={() => copyToClipboard(wallet?.publicKey.toString() ?? '')}>
               <Clipboard size={14} />
               <div>
-                <Trans>Copy Address</Trans>
+                <span>Copy Address</span>
               </div>
             </MenuItem>
           </MenuFlyout>

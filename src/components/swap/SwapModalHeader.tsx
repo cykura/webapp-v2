@@ -14,7 +14,6 @@ import { FiatValue } from '../CurrencyInputPanel/FiatValue'
 import CurrencyLogo from '../CurrencyLogo'
 import { RowBetween, RowFixed } from '../Row'
 import { TruncatedText, SwapShowAcceptChanges } from './styleds'
-import { Trans } from '@lingui/macro'
 
 import { AdvancedSwapDetails } from './AdvancedSwapDetails'
 import { LightCard } from '../Card'
@@ -65,7 +64,7 @@ export default function SwapModalHeader({
         <AutoColumn gap={'8px'}>
           <RowBetween>
             <TYPE.body color={theme.text3} fontWeight={500} fontSize={14}>
-              <Trans>From</Trans>
+              <span>From</span>
             </TYPE.body>
             <FiatValue fiatValue={fiatValueInput} />
           </RowBetween>
@@ -95,7 +94,7 @@ export default function SwapModalHeader({
         <AutoColumn gap={'8px'}>
           <RowBetween>
             <TYPE.body color={theme.text3} fontWeight={500} fontSize={14}>
-              <Trans>To</Trans>
+              <span>To</span>
             </TYPE.body>
             <TYPE.body fontSize={14} color={theme.text3}>
               <FiatValue
@@ -121,7 +120,7 @@ export default function SwapModalHeader({
       </LightCard>
       <RowBetween style={{ marginTop: '0.25rem', padding: '0 1rem' }}>
         <TYPE.body color={theme.text2} fontWeight={500} fontSize={14}>
-          <Trans>Price</Trans>
+          <span>Price</span>
         </TYPE.body>
         <TradePrice price={trade.executionPrice} showInverted={showInverted} setShowInverted={setShowInverted} />
       </RowBetween>
@@ -136,14 +135,14 @@ export default function SwapModalHeader({
             <RowFixed>
               <AlertTriangle size={20} style={{ marginRight: '8px', minWidth: 24 }} />
               <TYPE.main color={theme.primary1}>
-                <Trans>Price Updated</Trans>
+                <span>Price Updated</span>
               </TYPE.main>
             </RowFixed>
             <ButtonPrimary
               style={{ padding: '.5rem', width: 'fit-content', fontSize: '0.825rem', borderRadius: '12px' }}
               onClick={onAcceptChanges}
             >
-              <Trans>Accept</Trans>
+              <span>Accept</span>
             </ButtonPrimary>
           </RowBetween>
         </SwapShowAcceptChanges>
@@ -152,33 +151,33 @@ export default function SwapModalHeader({
       <AutoColumn justify="flex-start" gap="sm" style={{ padding: '.75rem 1rem' }}>
         {trade.tradeType === TradeType.EXACT_INPUT ? (
           <TYPE.italic fontWeight={400} textAlign="left" style={{ width: '100%' }}>
-            <Trans>
+            <span>
               Output is estimated. You will receive at least{' '}
               <b>
                 {trade.minimumAmountOut(allowedSlippage).toSignificant(6)} {trade.outputAmount.currency.symbol}
               </b>{' '}
               or the transaction will revert.
-            </Trans>
+            </span>
           </TYPE.italic>
         ) : (
           <TYPE.italic fontWeight={400} textAlign="left" style={{ width: '100%' }}>
-            <Trans>
+            <span>
               Input is estimated. You will sell at most{' '}
               <b>
                 {trade.maximumAmountIn(allowedSlippage).toSignificant(6)} {trade.inputAmount.currency.symbol}
               </b>{' '}
               or the transaction will revert.
-            </Trans>
+            </span>
           </TYPE.italic>
         )}
       </AutoColumn>
       {recipient !== null ? (
         <AutoColumn justify="flex-start" gap="sm" style={{ padding: '12px 0 0 0px' }}>
           <TYPE.main>
-            <Trans>
+            <span>
               Output will be sent to{' '}
               <b title={recipient}>{isAddress(recipient) ? shortenAddress(recipient) : recipient}</b>
-            </Trans>
+            </span>
           </TYPE.main>
         </AutoColumn>
       ) : null}

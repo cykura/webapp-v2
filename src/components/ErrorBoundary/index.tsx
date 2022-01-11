@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import React, { ErrorInfo } from 'react'
 import store, { AppState } from '../../state'
 import { ExternalLink, TYPE } from '../../theme'
@@ -74,7 +73,7 @@ export default class ErrorBoundary extends React.Component<unknown, ErrorBoundar
             <AutoColumn gap={'md'}>
               <SomethingWentWrongWrapper>
                 <TYPE.label fontSize={24} fontWeight={600}>
-                  <Trans>Something went wrong</Trans>
+                  <span>Something went wrong</span>
                 </TYPE.label>
               </SomethingWentWrongWrapper>
               <CodeBlockWrapper>
@@ -92,7 +91,7 @@ export default class ErrorBoundary extends React.Component<unknown, ErrorBoundar
                     target="_blank"
                   >
                     <TYPE.link fontSize={16}>
-                      <Trans>Create an issue on GitHub</Trans>
+                      <span>Create an issue on GitHub</span>
                       <span>↗</span>
                     </TYPE.link>
                   </ExternalLink>
@@ -100,7 +99,7 @@ export default class ErrorBoundary extends React.Component<unknown, ErrorBoundar
                 <LinkWrapper>
                   <ExternalLink id="get-support-on-discord" href="https://discord.gg/FCfyBSbCU5" target="_blank">
                     <TYPE.link fontSize={16}>
-                      <Trans>Get support on Discord</Trans>
+                      <span>Get support on Discord</span>
                       <span>↗</span>
                     </TYPE.link>
                   </ExternalLink>

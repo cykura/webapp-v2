@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { Text } from 'rebass'
 import { Currency } from '@uniswap/sdk-core'
 import styled from 'styled-components/macro'
@@ -42,9 +41,9 @@ export default function CommonBases({
     <AutoColumn gap="md">
       <AutoRow>
         <Text fontWeight={500} fontSize={14}>
-          <Trans>Common bases</Trans>
+          <span>Common bases</span>
         </Text>
-        <QuestionHelper text={<Trans>These tokens are commonly paired with other tokens.</Trans>} />
+        <QuestionHelper text={<span>These tokens are commonly paired with other tokens.</span>} />
       </AutoRow>
       <AutoRow gap="4px">
         {bases.map((currency: Currency) => {

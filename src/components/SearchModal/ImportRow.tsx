@@ -8,7 +8,6 @@ import ListLogo from 'components/ListLogo'
 import useTheme from 'hooks/useTheme'
 import styled from 'styled-components/macro'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
-import { Trans } from '@lingui/macro'
 
 const TokenSection = styled.div<{ dim?: boolean }>`
   padding: 4px 20px;
@@ -47,7 +46,7 @@ export default function ImportRow({ token, style, dim }: { token: Token; style?:
         {list && list.logoURI && (
           <RowFixed>
             <TYPE.small mr="4px" color={theme.text3}>
-              <Trans>via {list.name} </Trans>
+              <span>via {list.name} </span>
             </TYPE.small>
             <ListLogo logoURI={list.logoURI} size="12px" />
           </RowFixed>

@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { useMemo } from 'react'
 import ReactGA from 'react-ga'
 import { useLocation } from 'react-router'
@@ -38,7 +37,7 @@ export function SwitchLocaleLink() {
 
     return (
       <Container>
-        <Trans>
+        <span>
           Uniswap available in:{' '}
           {
             <StyledInternalLink
@@ -54,7 +53,7 @@ export function SwitchLocaleLink() {
               {LOCALE_LABEL[targetLocale]}
             </StyledInternalLink>
           }
-        </Trans>
+        </span>
       </Container>
     )
   }

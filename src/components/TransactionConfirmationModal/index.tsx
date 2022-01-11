@@ -11,7 +11,7 @@ import { AlertTriangle, ArrowUpCircle, CheckCircle } from 'react-feather'
 import { ButtonPrimary, ButtonLight } from '../Button'
 import { AutoColumn, ColumnCenter } from '../Column'
 import Circle from '../../assets/images/blue-loader.svg'
-import { Trans } from '@lingui/macro'
+
 import { Network } from '@saberhq/solana-contrib'
 import { useSolana } from '@gokiprotocol/walletkit'
 
@@ -61,7 +61,7 @@ function ConfirmationPendingContent({
         </ConfirmedIcon>
         <AutoColumn gap="12px" justify={'center'}>
           <Text fontWeight={500} fontSize={20} textAlign="center">
-            <Trans>Waiting For Confirmation</Trans>
+            <span>Waiting For Confirmation</span>
           </Text>
           <AutoColumn gap="12px" justify={'center'}>
             <Text fontWeight={600} fontSize={14} color="" textAlign="center">
@@ -69,7 +69,7 @@ function ConfirmationPendingContent({
             </Text>
           </AutoColumn>
           <Text fontSize={12} color="#565A69" textAlign="center" marginBottom={12}>
-            <Trans>Confirm this transaction in your wallet</Trans>
+            <span>Confirm this transaction in your wallet</span>
           </Text>
         </AutoColumn>
       </AutoColumn>
@@ -106,18 +106,18 @@ function TransactionSubmittedContent({
         </ConfirmedIcon>
         <AutoColumn gap="12px" justify={'center'}>
           <Text fontWeight={500} fontSize={20} textAlign="center">
-            <Trans>Transaction Submitted</Trans>
+            <span>Transaction Submitted</span>
           </Text>
           {network && hash && (
             <ExternalLink href={getExplorerLink(network, hash, ExplorerDataType.TRANSACTION)}>
               <Text fontWeight={500} fontSize={14} color={theme.primary1}>
-                <Trans>View on Explorer</Trans>
+                <span>View on Explorer</span>
               </Text>
             </ExternalLink>
           )}
           <ButtonPrimary onClick={onDismiss} style={{ margin: '20px 0 0 0' }}>
             <Text fontWeight={500} fontSize={20}>
-              {inline ? <Trans>Return</Trans> : <Trans>Close</Trans>}
+              {inline ? <span>Return</span> : <span>Close</span>}
             </Text>
           </ButtonPrimary>
         </AutoColumn>
@@ -160,7 +160,7 @@ export function TransactionErrorContent({ message, onDismiss }: { message: React
       <Section>
         <RowBetween>
           <Text fontWeight={500} fontSize={20}>
-            <Trans>Error</Trans>
+            <span>Error</span>
           </Text>
           <CloseIcon onClick={onDismiss} />
         </RowBetween>
@@ -178,7 +178,7 @@ export function TransactionErrorContent({ message, onDismiss }: { message: React
       </Section>
       <BottomSection gap="12px">
         <ButtonPrimary onClick={onDismiss}>
-          <Trans>Dismiss</Trans>
+          <span>Dismiss</span>
         </ButtonPrimary>
       </BottomSection>
     </Wrapper>

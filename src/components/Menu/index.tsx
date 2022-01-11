@@ -6,7 +6,7 @@ import { ReactComponent as MenuIcon } from '../../assets/images/menu.svg'
 import { useOnClickOutside } from '../../hooks/useOnClickOutside'
 import { ApplicationModal } from '../../state/application/actions'
 import { useModalOpen, useToggleModal } from '../../state/application/hooks'
-import { Trans } from '@lingui/macro'
+
 import { ExternalLink } from '../../theme'
 
 export enum FlyoutAlignment {
@@ -129,31 +129,31 @@ export default function Menu() {
           <MenuItem href="https://uniswap.org/">
             <Info size={14} />
             <div>
-              <Trans>About</Trans>
+              <span>About</span>
             </div>
           </MenuItem>
           <MenuItem href="https://docs.uniswap.org/">
             <BookOpen size={14} />
             <div>
-              <Trans>Docs</Trans>
+              <span>Docs</span>
             </div>
           </MenuItem>
           <MenuItem href={CODE_LINK}>
             <Code size={14} />
             <div>
-              <Trans>Code</Trans>
+              <span>Code</span>
             </div>
           </MenuItem>
           <MenuItem href="https://discord.gg/FCfyBSbCU5">
             <MessageCircle size={14} />
             <div>
-              <Trans>Discord</Trans>
+              <span>Discord</span>
             </div>
           </MenuItem>
           <MenuItem href="https://info.uniswap.org/">
             <PieChart size={14} />
             <div>
-              <Trans>Analytics</Trans>
+              <span>Analytics</span>
             </div>
           </MenuItem>
         </MenuFlyout>

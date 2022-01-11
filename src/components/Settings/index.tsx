@@ -1,4 +1,3 @@
-import { t, Trans } from '@lingui/macro'
 import { useContext, useRef, useState } from 'react'
 import { Settings, X } from 'react-feather'
 import ReactGA from 'react-ga'
@@ -139,34 +138,34 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
             <RowBetween style={{ padding: '0 2rem' }}>
               <div />
               <Text fontWeight={500} fontSize={20}>
-                <Trans>Are you sure?</Trans>
+                <span>Are you sure?</span>
               </Text>
               <StyledCloseIcon onClick={() => setShowConfirmation(false)} />
             </RowBetween>
             <Break />
             <AutoColumn gap="lg" style={{ padding: '0 2rem' }}>
               <Text fontWeight={500} fontSize={20}>
-                <Trans>
+                <span>
                   Expert mode turns off the confirm transaction prompt and allows high slippage trades that often result
                   in bad rates and lost funds.
-                </Trans>
+                </span>
               </Text>
               <Text fontWeight={600} fontSize={20}>
-                <Trans>ONLY USE THIS MODE IF YOU KNOW WHAT YOU ARE DOING.</Trans>
+                <span>ONLY USE THIS MODE IF YOU KNOW WHAT YOU ARE DOING.</span>
               </Text>
               <ButtonError
                 error={true}
                 padding={'12px'}
                 onClick={() => {
-                  const confirmWord = t`confirm`
-                  if (window.prompt(t`Please type the word "${confirmWord}" to enable expert mode.`) === confirmWord) {
+                  const confirmWord = 'confirm'
+                  if (window.prompt(`Please type the word "${confirmWord}" to enable expert mode.`) === confirmWord) {
                     toggleExpertMode()
                     setShowConfirmation(false)
                   }
                 }}
               >
                 <Text fontSize={20} fontWeight={500} id="confirm-expert-mode">
-                  <Trans>Turn On Expert Mode</Trans>
+                  <span>Turn On Expert Mode</span>
                 </Text>
               </ButtonError>
             </AutoColumn>
@@ -187,21 +186,19 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
         <MenuFlyout>
           <AutoColumn gap="md" style={{ padding: '1rem' }}>
             <Text fontWeight={600} fontSize={14}>
-              <Trans>Transaction Settings</Trans>
+              <span>Transaction Settings</span>
             </Text>
             <TransactionSettings placeholderSlippage={placeholderSlippage} />
             <Text fontWeight={600} fontSize={14}>
-              <Trans>Interface Settings</Trans>
+              <span>Interface Settings</span>
             </Text>
             <RowBetween>
               <RowFixed>
                 <TYPE.black fontWeight={400} fontSize={14} color={theme.text2}>
-                  <Trans>Toggle Expert Mode</Trans>
+                  <span>Toggle Expert Mode</span>
                 </TYPE.black>
                 <QuestionHelper
-                  text={
-                    <Trans>Allow high price impact trades and skip the confirm screen. Use at your own risk.</Trans>
-                  }
+                  text={<span>Allow high price impact trades and skip the confirm screen. Use at your own risk.</span>}
                 />
               </RowFixed>
               <Toggle
@@ -223,9 +220,9 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
             <RowBetween>
               <RowFixed>
                 <TYPE.black fontWeight={400} fontSize={14} color={theme.text2}>
-                  <Trans>Disable Multihops</Trans>
+                  <span>Disable Multihops</span>
                 </TYPE.black>
-                <QuestionHelper text={<Trans>Restricts swaps to direct pairs only.</Trans>} />
+                <QuestionHelper text={<span>Restricts swaps to direct pairs only.</span>} />
               </RowFixed>
               <Toggle
                 id="toggle-disable-multihop-button"

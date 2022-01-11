@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { Currency, Percent, TradeType } from '@uniswap/sdk-core'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
 import { ReactNode, useCallback, useMemo } from 'react'
@@ -82,10 +81,10 @@ export default function ConfirmSwapModal({
 
   // text to show while loading
   const pendingText = (
-    <Trans>
+    <span>
       Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
       {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
-    </Trans>
+    </span>
   )
 
   const confirmationContent = useCallback(
@@ -94,7 +93,7 @@ export default function ConfirmSwapModal({
         <TransactionErrorContent onDismiss={onDismiss} message={swapErrorMessage} />
       ) : (
         <ConfirmationModalContent
-          title={<Trans>Confirm Swap</Trans>}
+          title={<span>Confirm Swap</span>}
           onDismiss={onDismiss}
           topContent={modalHeader}
           bottomContent={modalBottom}

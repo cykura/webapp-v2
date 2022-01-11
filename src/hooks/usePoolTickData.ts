@@ -4,11 +4,11 @@ import JSBI from 'jsbi'
 import { PoolState, usePool } from './usePools'
 import { useEffect, useMemo, useState } from 'react'
 import computeSurroundingTicks from 'utils/computeSurroundingTicks'
-import { useAllV3TicksQuery } from 'state/data/enhanced'
+// import { useAllV3TicksQuery } from 'state/data/enhanced'
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import ms from 'ms.macro'
 import cloneDeep from 'lodash/cloneDeep'
-import { AllV3TicksQuery } from 'state/data/generated'
+// import { AllV3TicksQuery } from 'state/data/generated'
 
 const PRICE_FIXED_DIGITS = 8
 
@@ -34,20 +34,20 @@ export function useAllV3Ticks(
     Pool.getAddress(currencyA?.wrapped, currencyB?.wrapped, feeAmount).then((address) => {
       setPoolAddress(address)
     })
-  } 
+  }
 
   //TODO(judo): determine if pagination is necessary for this query
-  const { isLoading, isError, data } = useAllV3TicksQuery(
-    poolAddress ? { poolAddress: poolAddress?.toLowerCase(), skip: 0 } : skipToken,
-    {
-      pollingInterval: ms`2m`,
-    }
-  )
+  // const { isLoading, isError, data } = useAllV3TicksQuery(
+  //   poolAddress ? { poolAddress: poolAddress?.toLowerCase(), skip: 0 } : skipToken,
+  //   {
+  //     pollingInterval: ms`2m`,
+  //   }
+  // )
 
   return {
-    isLoading,
-    isError,
-    ticks: data?.ticks,
+    isLoading: false,
+    isError: false,
+    ticks: [],
   }
 }
 
@@ -79,13 +79,13 @@ export function usePoolActiveLiquidity(
     const token0 = currencyA?.wrapped
     const token1 = currencyB?.wrapped
 
-    const sortedTickData = cloneDeep(ticks as AllV3TicksQuery['ticks'])
-    sortedTickData.sort((a, b) => a.tickIdx - b.tickIdx)
+    const sortedTickData = cloneDeep(ticks as any['ticks'])
+    sortedTickData.sort((a: { tickIdx: number }, b: { tickIdx: number }) => a.tickIdx - b.tickIdx)
 
     // find where the active tick would be to partition the array
     // if the active tick is initialized, the pivot will be an element
     // if not, take the previous tick as pivot
-    const pivot = sortedTickData.findIndex(({ tickIdx }) => tickIdx > activeTick) - 1
+    const pivot = sortedTickData.findIndex(({ tickIdx }: any) => tickIdx > activeTick) - 1
 
     if (pivot < 0) {
       // consider setting a local error

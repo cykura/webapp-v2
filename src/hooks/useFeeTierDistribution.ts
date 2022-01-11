@@ -1,12 +1,12 @@
 import { FeeAmount } from '@uniswap/v3-sdk'
 import { Token } from '@uniswap/sdk-core'
-import { useFeeTierDistributionQuery } from 'state/data/enhanced'
+// import { useFeeTierDistributionQuery } from 'state/data/enhanced'
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import { reduce } from 'lodash'
 import { useBlockNumber } from 'state/application/hooks'
 import ReactGA from 'react-ga'
 import { useMemo } from 'react'
-import { FeeTierDistributionQuery } from 'state/data/generated'
+// import { FeeTierDistributionQuery } from 'state/data/generated'
 import ms from 'ms.macro'
 
 // maximum number of blocks past which we consider the data stale
@@ -65,14 +65,19 @@ export function useFeeTierDistribution(token0: Token | undefined, token1: Token 
 function usePoolTVL(token0: Token | undefined, token1: Token | undefined) {
   const latestBlock = useBlockNumber()
 
-  const { isLoading, isFetching, isUninitialized, isError, data } = useFeeTierDistributionQuery(
-    token0 && token1 ? { token0: token0.address.toLowerCase(), token1: token1.address.toLowerCase() } : skipToken,
-    {
-      pollingInterval: ms`2m`,
-    }
-  )
+  // const { isLoading, isFetching, isUninitialized, isError, data } = useFeeTierDistributionQuery(
+  //   token0 && token1 ? { token0: token0.address.toLowerCase(), token1: token1.address.toLowerCase() } : skipToken,
+  //   {
+  //     pollingInterval: ms`2m`,
+  //   }
+  // )
+  const isLoading = false
+  const isFetching = false
+  const isUninitialized = false
+  const isError = false
+  const data = null
 
-  const { asToken0, asToken1, _meta } = (data as FeeTierDistributionQuery) ?? {}
+  const { asToken0, asToken1, _meta } = (data as any) ?? {}
 
   return useMemo(() => {
     if (!latestBlock || !_meta || !asToken0 || !asToken1) {
@@ -100,18 +105,19 @@ function usePoolTVL(token0: Token | undefined, token1: Token | undefined) {
     const all = asToken0.concat(asToken1)
 
     // sum tvl for token0 and token1 by fee tier
-    const tvlByFeeTer = all.reduce<{ [feeAmount: number]: [number | undefined, number | undefined] }>(
-      (acc, value) => {
-        acc[value.feeTier][0] = (acc[value.feeTier][0] ?? 0) + Number(value.totalValueLockedToken0)
-        acc[value.feeTier][1] = (acc[value.feeTier][1] ?? 0) + Number(value.totalValueLockedToken1)
-        return acc
-      },
-      {
-        [FeeAmount.LOW]: [undefined, undefined],
-        [FeeAmount.MEDIUM]: [undefined, undefined],
-        [FeeAmount.HIGH]: [undefined, undefined],
-      }
-    )
+    // const tvlByFeeTer = all.reduce<{ [feeAmount: number]: [number | undefined, number | undefined] }>(
+    //   (acc: { [x: string]: any[] }, value: { feeTier: string | number; totalValueLockedToken0: any; totalValueLockedToken1: any }) => {
+    //     acc[value.feeTier][0] = (acc[value.feeTier][0] ?? 0) + Number(value.totalValueLockedToken0)
+    //     acc[value.feeTier][1] = (acc[value.feeTier][1] ?? 0) + Number(value.totalValueLockedToken1)
+    //     return acc
+    //   },
+    //   {
+    //     [FeeAmount.LOW]: [undefined, undefined],
+    //     [FeeAmount.MEDIUM]: [undefined, undefined],
+    //     [FeeAmount.HIGH]: [undefined, undefined],
+    //   }
+    // )
+    const tvlByFeeTer = all
 
     // sum total tvl for token0 and token1
     const [sumToken0Tvl, sumToken1Tvl] = reduce(

@@ -4,7 +4,6 @@ import useTheme from '../../hooks/useTheme'
 import { TYPE } from '../../theme'
 import { warningSeverity } from '../../utils/prices'
 import HoverInlineText from 'components/HoverInlineText'
-import { Trans } from '@lingui/macro'
 
 export function FiatValue({
   fiatValue,
@@ -26,16 +25,16 @@ export function FiatValue({
   return (
     <TYPE.body fontSize={14} color={fiatValue ? theme.text2 : theme.text4}>
       {fiatValue ? (
-        <Trans>
+        <span>
           ~$ <HoverInlineText text={fiatValue?.toSignificant(6, { groupSeparator: ',' })} />
-        </Trans>
+        </span>
       ) : (
         ''
       )}
       {priceImpact ? (
         <span style={{ color: priceImpactColor }}>
           {' '}
-          (<Trans>{priceImpact.multiply(-1).toSignificant(3)}%</Trans>)
+          (<span>{priceImpact.multiply(-1).toSignificant(3)}%</span>)
         </span>
       ) : null}
     </TYPE.body>

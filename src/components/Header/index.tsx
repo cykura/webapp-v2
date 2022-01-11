@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import useScrollPosition from '@react-hook/window-scroll'
 import { useConnectedWallet, useSolana } from '@saberhq/use-solana'
 import { darken } from 'polished'
@@ -248,7 +247,7 @@ export default function Header() {
       </HeaderRow>
       <HeaderLinks>
         <StyledNavLink id={`swap-nav-link`} to={'/swap'}>
-          <Trans>Swap</Trans>
+          <span>Swap</span>
         </StyledNavLink>
         <StyledNavLink
           id={`pool-nav-link`}
@@ -261,7 +260,7 @@ export default function Header() {
             pathname.startsWith('/find')
           }
         >
-          <Trans>Pool</Trans>
+          <span>Pool</span>
         </StyledNavLink>
       </HeaderLinks>
       <HeaderControls>
@@ -275,7 +274,7 @@ export default function Header() {
             {wallet?.connected ? (
               // <Tooltip text="Refresh Balance" show={true}>
               <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
-                <Trans>{solBalance.toFixed(3) ?? 0} SOL</Trans>
+                <span>{solBalance.toFixed(3) ?? 0} SOL</span>
               </BalanceText>
             ) : // </Tooltip>
             null}

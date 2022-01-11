@@ -1,7 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import JSBI from 'jsbi'
 
-
 //Needs some modifications to suit types
 export interface PositionDetails {
   nonce: string

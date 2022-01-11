@@ -2,7 +2,6 @@ import Badge, { BadgeVariant } from 'components/Badge'
 import styled from 'styled-components/macro'
 
 import { MouseoverTooltip } from '../../components/Tooltip'
-import { Trans } from '@lingui/macro'
 import { AlertCircle } from 'react-feather'
 
 const BadgeWrapper = styled.div`
@@ -34,43 +33,41 @@ export default function RangeBadge({
   return (
     <BadgeWrapper>
       {removed ? (
-        <MouseoverTooltip text={<Trans>Your position has 0 liquidity, and is not earning fees.</Trans>}>
+        <MouseoverTooltip text={<span>Your position has 0 liquidity, and is not earning fees.</span>}>
           <Badge variant={BadgeVariant.DEFAULT}>
             <AlertCircle width={14} height={14} />
             &nbsp;
             <BadgeText>
-              <Trans>Closed</Trans>
+              <span>Closed</span>
             </BadgeText>
           </Badge>
         </MouseoverTooltip>
       ) : inRange ? (
         <MouseoverTooltip
           text={
-            <Trans>
-              The price of this pool is within your selected range. Your position is currently earning fees.
-            </Trans>
+            <span>The price of this pool is within your selected range. Your position is currently earning fees.</span>
           }
         >
           <Badge variant={BadgeVariant.DEFAULT}>
             <ActiveDot /> &nbsp;
             <BadgeText>
-              <Trans>In range</Trans>
+              <span>In range</span>
             </BadgeText>
           </Badge>
         </MouseoverTooltip>
       ) : (
         <MouseoverTooltip
           text={
-            <Trans>
+            <span>
               The price of this pool is outside of your selected range. Your position is not currently earning fees.
-            </Trans>
+            </span>
           }
         >
           <Badge variant={BadgeVariant.WARNING}>
             <AlertCircle width={14} height={14} />
             &nbsp;
             <BadgeText>
-              <Trans>Out of range</Trans>
+              <span>Out of range</span>
             </BadgeText>
           </Badge>
         </MouseoverTooltip>

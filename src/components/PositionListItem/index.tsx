@@ -16,7 +16,7 @@ import RangeBadge from 'components/Badge/RangeBadge'
 import { RowFixed } from 'components/Row'
 import HoverInlineText from 'components/HoverInlineText'
 import { DAI, SOLUSDC_LOCAL, SOLUSDT_LOCAL, USDC, USDT, WBTC, WETH9_EXTENDED } from '../../constants/tokens'
-import { Trans } from '@lingui/macro'
+
 import JSBI from 'jsbi'
 
 const LinkRow = styled(Link)`
@@ -231,7 +231,7 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
           &nbsp;
           <Badge>
             <BadgeText>
-              <Trans>{new Percent(feeAmount, 1_000_000).toSignificant()}%</Trans>
+              <span>{new Percent(feeAmount, 1_000_000).toSignificant()}%</span>
             </BadgeText>
           </Badge>
         </PrimaryPositionIdData>
@@ -242,12 +242,12 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
         <RangeLineItem>
           <RangeText>
             <ExtentsText>
-              <Trans>Min: </Trans>
+              <span>Min: </span>
             </ExtentsText>
-            <Trans>
+            <span>
               {formatPrice(priceLower, 5)} <HoverInlineText text={currencyQuote?.symbol} /> per{' '}
               <HoverInlineText text={currencyBase?.symbol ?? ''} />
-            </Trans>
+            </span>
           </RangeText>{' '}
           <HideSmall>
             <DoubleArrow>⟷</DoubleArrow>{' '}
@@ -257,12 +257,12 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
           </SmallOnly>
           <RangeText>
             <ExtentsText>
-              <Trans>Max:</Trans>
+              <span>Max:</span>
             </ExtentsText>
-            <Trans>
+            <span>
               {formatPrice(priceUpper, 5)} <HoverInlineText text={currencyQuote?.symbol} /> per{' '}
               <HoverInlineText maxCharacters={10} text={currencyBase?.symbol} />
-            </Trans>
+            </span>
           </RangeText>
         </RangeLineItem>
       ) : (

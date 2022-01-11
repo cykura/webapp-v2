@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
 import { Currency, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
@@ -293,7 +292,7 @@ export default function Swap({ history }: RouteComponentProps) {
           <AutoColumn gap={'md'}>
             <div style={{ display: 'relative' }}>
               <CurrencyInputPanel
-                label={independentField === Field.OUTPUT ? <Trans>From (at most)</Trans> : null}
+                label={independentField === Field.OUTPUT ? <span>From (at most)</span> : null}
                 value={formattedAmounts[Field.INPUT]}
                 showMaxButton={showMaxButton}
                 currency={currencies[Field.INPUT]}
@@ -315,7 +314,7 @@ export default function Swap({ history }: RouteComponentProps) {
               <CurrencyInputPanel
                 value={formattedAmounts[Field.OUTPUT]}
                 onUserInput={handleTypeOutput}
-                label={independentField === Field.INPUT ? <Trans>To (at least)</Trans> : null}
+                label={independentField === Field.INPUT ? <span>To (at least)</span> : null}
                 showMaxButton={false}
                 hideBalance={false}
                 fiatValue={fiatValueOutput ?? undefined}
@@ -335,7 +334,7 @@ export default function Swap({ history }: RouteComponentProps) {
                     <ArrowDown size="16" color={theme.text2} />
                   </ArrowWrapper>
                   <LinkStyledButton id="remove-recipient-button" onClick={() => onChangeRecipient(null)}>
-                    <Trans>- Remove send</Trans>
+                    <span>- Remove send</span>
                   </LinkStyledButton>
                 </AutoRow>
                 <AddressInputPanel id="recipient" value={recipient} onChange={onChangeRecipient} />
@@ -362,19 +361,19 @@ export default function Swap({ history }: RouteComponentProps) {
             <div>
               {!connected ? (
                 <ButtonLight onClick={connect}>
-                  <Trans>Connect Wallet</Trans>
+                  <span>Connect Wallet</span>
                 </ButtonLight>
               ) : routeNotFound && userHasSpecifiedInputOutput ? (
                 <GreyCard style={{ textAlign: 'center' }}>
                   <TYPE.main mb="4px">
                     {isLoadingRoute ? (
                       <Dots>
-                        <Trans>Loading</Trans>
+                        <span>Loading</span>
                       </Dots>
                     ) : singleHopOnly ? (
-                      <Trans>Insufficient liquidity for this trade. Try enabling multi-hop trades.</Trans>
+                      <span>Insufficient liquidity for this trade. Try enabling multi-hop trades.</span>
                     ) : (
-                      <Trans>Insufficient liquidity for this trade.</Trans>
+                      <span>Insufficient liquidity for this trade.</span>
                     )}
                   </TYPE.main>
                 </GreyCard>
@@ -382,7 +381,6 @@ export default function Swap({ history }: RouteComponentProps) {
                 <ButtonError
                   onClick={() => {
                     handleSwap()
-                    
                     // if (isExpertMode) {
                     //   handleSwap()
                     // } else {
@@ -405,10 +403,10 @@ export default function Swap({ history }: RouteComponentProps) {
                       swapInputError
                     ) : (
                       // ) : priceImpactTooHigh ? (
-                      //   <Trans>Price Impact Too High</Trans>
+                      //   <span>Price Impact Too High</span>
                       // ) : priceImpactSeverity > 2 ? (
-                      //   <Trans>Swap Anyway</Trans>
-                      <Trans>Swap</Trans>
+                      //   <span>Swap Anyway</span>
+                      <span>Swap</span>
                     )}
                   </Text>
                 </ButtonError>
