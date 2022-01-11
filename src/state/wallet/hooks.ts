@@ -81,8 +81,10 @@ export function useTokenBalancesWithLoadingIndicator(
 
   // Store all spl token balances here
   useEffect(() => {
+    if (!address) return
+
     connection
-      .getParsedTokenAccountsByOwner(new PublicKey(address ?? '8AH4pCW88KxSRTzQe3dkEsLCDvjHJJJ5usiPcbkaGA3M'), {
+      .getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
       })
       .then((tokensInfo) => {
@@ -153,12 +155,12 @@ export function useCurrencyBalances(
   account?: string,
   currencies?: (Currency | undefined)[]
 ): (CurrencyAmount<Currency> | undefined)[] {
-  const tokens = useMemo(
-    () => currencies?.filter((currency): currency is Token => currency?.isToken ?? false) ?? [],
-    [currencies]
-  )
+  // TODO: Fetches all token balances here, Need to do something more efficient here.
+  const allTokens = useAllTokens()
+  const arrAllTokens = Object.keys(allTokens).map((a) => allTokens[a])
+  const allTokenBalances = useTokenBalances(account, arrAllTokens)
 
-  const tokenBalances = useTokenBalances(account, tokens)
+  // const tokenBalances = useTokenBalances(account, tokens)
   const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
   const ethBalance = useETHBalances(containsETH ? [account] : [])
 
@@ -166,11 +168,11 @@ export function useCurrencyBalances(
     () =>
       currencies?.map((currency) => {
         if (!account || !currency) return undefined
-        if (currency.isToken) return tokenBalances[currency.address]
+        if (currency.isToken) return allTokenBalances[currency.address]
         if (currency.isNative) return ethBalance[account]
         return undefined
       }) ?? [],
-    [account, currencies, ethBalance, tokenBalances]
+    [account, currencies, ethBalance, allTokenBalances]
   )
 }
 

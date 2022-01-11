@@ -166,8 +166,10 @@ export function useDerivedSwapInfo() {
 
   // compare input balance to max input
   const balanceIn = currencyBalances[Field.INPUT]
+  // console.log(parsedAmount?.toSignificant(), balanceIn?.toSignificant())
 
-  if (balanceIn) {
+  // TODO: Check later while checking swap
+  if (parsedAmount && balanceIn && +parsedAmount?.toSignificant().toString() > +balanceIn?.toSignificant().toString()) {
     inputError = `Insufficient ${balanceIn.currency.symbol} balance`
   }
 

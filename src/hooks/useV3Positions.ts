@@ -111,12 +111,11 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
 
   useEffect(() => {
     ;(async () => {
-      const { value } = await connection.getParsedTokenAccountsByOwner(
-        new PublicKey(account ?? '8AH4pCW88KxSRTzQe3dkEsLCDvjHJJJ5usiPcbkaGA3M'),
-        {
-          programId: TOKEN_PROGRAM_ID,
-        }
-      )
+      if (!account) return
+
+      const { value } = await connection.getParsedTokenAccountsByOwner(new PublicKey(account), {
+        programId: TOKEN_PROGRAM_ID,
+      })
 
       // console.log('All tokens')
       // value.forEach((v) => {

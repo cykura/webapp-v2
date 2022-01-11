@@ -56,13 +56,13 @@ export function useAllV3Routes(
 
   // return Cyclos liquidity pool addresses
   const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
-  console.log('fetched pools', pools)
+  // console.log('fetched pools', pools)
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
   return useMemo(() => {
     if (poolsLoading || !chainId || !pools || !currencyIn || !currencyOut) return { loading: true, routes: [] }
-    console.log('fetched pools', pools)
+    // console.log('fetched pools', pools)
     return { loading: false, routes: [pools[0]] }
     // const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
     // return { loading: false, routes }

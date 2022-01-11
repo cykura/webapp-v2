@@ -40,8 +40,8 @@ export function useBestV3TradeExactIn(
   currencyOut?: Currency
   // ): { state: V3TradeState; trade: Trade<Currency, Currency, TradeType.EXACT_INPUT> | null } {
 ): CyclosTrade {
-  console.log('input token', amountIn?.currency)
-  console.log('output token', currencyOut)
+  // console.log('input token', amountIn?.currency)
+  // console.log('output token', currencyOut)
   // const quoter = useV3Quoter()
   const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
 

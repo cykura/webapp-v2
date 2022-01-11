@@ -119,32 +119,23 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
   const { chainId } = useActiveWeb3ReactSol()
   const tokens = useAllTokens()
 
-  const address = tokenAddress
-
-  const tokenContract = useTokenContract(address ? address : undefined, false)
-  const token: Token | undefined | any = address ? tokens[address] : undefined
-
-  const tokenName = tokenContract.name
-  const symbol = tokenContract.symbol
-  const decimals = tokenContract.decimals
+  const token: Token | undefined | any = tokenAddress ? tokens[tokenAddress] : undefined
 
   return useMemo(() => {
-    if (token) return token
-    if (!chainId || !address) return undefined
+    if (!chainId || !tokenAddress || !token) return undefined
+
+    const tokenName = token.name
+    const symbol = token.symbol
+    const decimals = token.decimals
+
     if (decimals) {
-      return new Token(chainId, address, decimals, symbol ?? 'XXX', tokenName ?? 'UNKNOW TOKEN')
+      return new Token(chainId, tokenAddress, decimals, symbol ?? 'XXX', tokenName ?? 'UNKNOW TOKEN')
     }
     return undefined
-  }, [address, chainId, token, tokenName, symbol])
+  }, [chainId, tokenAddress])
 }
 
 export function useCurrency(currencyId: string | undefined): Currency | null | undefined {
-  const { chainId } = useActiveWeb3ReactSol()
-  const isSol = currencyId?.toUpperCase() === 'WSOL'
-  const token = useToken(isSol ? SOL_LOCAL.address : currencyId)
-  // const extendedEther = useMemo(() => (chainId ? SOL_LOCAL : undefined), [chainId])
-  // const weth = chainId ? SOL_LOCAL : undefined
-  // if (weth?.address?.toLowerCase() === currencyId?.toLowerCase()) return weth
-  // return isETH ? extendedEther : token
+  const token = useToken(currencyId)
   return token
 }

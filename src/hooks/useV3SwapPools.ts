@@ -42,7 +42,6 @@ export function useV3SwapPools(
         console.log('generated address', generatedAddr.toString())
         try {
           const poolInfo = await connection.getAccountInfo(generatedAddr)
-          console.log('got pool info', poolInfo)
           if (poolInfo) {
             setAddr(generatedAddr)
           }

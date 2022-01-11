@@ -417,6 +417,7 @@ export default function Swap({ history }: RouteComponentProps) {
                     // }
                   }}
                   id="swap-button"
+                  disabled={!isValid}
                   // disabled={!isValid || priceImpactTooHigh || !!swapCallbackError}
                   // error={isValid && priceImpactSeverity > 2 && !swapCallbackError}
                 >

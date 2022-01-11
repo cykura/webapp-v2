@@ -156,7 +156,7 @@ export function useSwapCallback(
   recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
   // TODO fix output token address in trade- currently it's the same as input token address
-  console.log('building callback for', trade)
+  // console.log('building callback for', trade)
 
   const { connection, wallet } = useSolana()
 
