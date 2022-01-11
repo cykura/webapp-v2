@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useUserSingleHopOnly } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
 import { useV3SwapPools } from './useV3SwapPools'
+import { PublicKey } from '@solana/web3.js'
 
 function computeAllRoutes(
   currencyIn: Currency,
@@ -50,16 +51,20 @@ function computeAllRoutes(
 export function useAllV3Routes(
   currencyIn?: Currency,
   currencyOut?: Currency
-): { loading: boolean; routes: Route<Currency, Currency>[] } {
+): { loading: boolean; routes: PublicKey[] } {
   const { chainId } = useActiveWeb3ReactSol()
+
+  // return Cyclos liquidity pool addresses
   const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
+  console.log('fetched pools', pools)
 
   const [singleHopOnly] = useUserSingleHopOnly()
 
   return useMemo(() => {
     if (poolsLoading || !chainId || !pools || !currencyIn || !currencyOut) return { loading: true, routes: [] }
-
-    const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
-    return { loading: false, routes }
-  }, [chainId, currencyIn, currencyOut, pools, poolsLoading, singleHopOnly])
+    console.log('fetched pools', pools)
+    return { loading: false, routes: [pools[0]] }
+    // const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
+    // return { loading: false, routes }
+  }, [chainId, currencyIn, currencyOut, pools, singleHopOnly])
 }
