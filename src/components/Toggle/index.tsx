@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { darken } from 'polished'
 import { ReactNode } from 'react'
 import styled from 'styled-components/macro'
@@ -42,8 +41,8 @@ export default function Toggle({
   id,
   isActive,
   toggle,
-  checked = <Trans>On</Trans>,
-  unchecked = <Trans>Off</Trans>,
+  checked = <span>On</span>,
+  unchecked = <span>Off</span>,
 }: ToggleProps) {
   return (
     <StyledToggle id={id} isActive={isActive} onClick={toggle}>

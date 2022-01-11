@@ -11,7 +11,7 @@ import { TYPE } from '../../theme'
 import { Input as NumericalInput } from '../NumericalInput'
 import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
-import { Trans } from '@lingui/macro'
+
 import useTheme from '../../hooks/useTheme'
 import { Lock } from 'react-feather'
 import { AutoColumn } from 'components/Column'
@@ -200,7 +200,7 @@ export default function CurrencyInputPanel({
           <AutoColumn gap="sm" justify="center">
             <Lock />
             <TYPE.label fontSize="12px" textAlign="center" padding="0 12px">
-              <Trans>The market price is outside your specified price range. Single-asset deposit only.</Trans>
+              <span>The market price is outside your specified price range. Single-asset deposit only.</span>
             </TYPE.label>
           </AutoColumn>
         </FixedContainer>
@@ -225,7 +225,7 @@ export default function CurrencyInputPanel({
                     ? currency.symbol.slice(0, 4) +
                       '...' +
                       currency.symbol.slice(currency.symbol.length - 5, currency.symbol.length)
-                    : currency?.symbol) || <Trans>Select a token</Trans>}
+                    : currency?.symbol) || <span>Select a token</span>}
                 </StyledTokenName>
               </RowFixed>
               {onCurrencySelect && <StyledDropDown selected={!!currency} />}
@@ -259,15 +259,15 @@ export default function CurrencyInputPanel({
                       renderBalance ? (
                         renderBalance(selectedCurrencyBalance)
                       ) : (
-                        <Trans>
+                        <span>
                           Balance: {formatCurrencyAmount(selectedCurrencyBalance, 4)} {currency.symbol}
-                        </Trans>
+                        </span>
                       )
                     ) : null}
                   </TYPE.body>
                   {showMaxButton && selectedCurrencyBalance ? (
                     <StyledBalanceMax onClick={onMax}>
-                      <Trans>(Max)</Trans>
+                      <span>(Max)</span>
                     </StyledBalanceMax>
                   ) : null}
                 </RowFixed>

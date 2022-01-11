@@ -10,7 +10,6 @@ import { AppState } from '../../index'
 import { selectPercent } from './actions'
 import { unwrappedToken } from 'utils/unwrappedToken'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
-import { t } from '@lingui/macro'
 import JSBI from 'jsbi'
 
 export function useBurnV3State(): AppState['burnV3'] {
@@ -80,10 +79,10 @@ export function useDerivedV3BurnInfo(
 
   let error: string | undefined
   if (!account) {
-    error = t`Connect Wallet`
+    error = 'Connect Wallet'
   }
   if (percent === 0) {
-    error = error ?? t`Enter a percent`
+    error = error ?? 'Enter a percent'
   }
   return {
     position: positionSDK,

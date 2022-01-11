@@ -1,6 +1,6 @@
 import styled from 'styled-components/macro'
 import { darken } from 'polished'
-import { Trans } from '@lingui/macro'
+
 import { NavLink, Link as HistoryLink, useLocation } from 'react-router-dom'
 import { Percent } from '@uniswap/sdk-core'
 
@@ -61,10 +61,10 @@ export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' }) {
   return (
     <Tabs style={{ marginBottom: '20px', display: 'none', padding: '1rem 1rem 0 1rem' }}>
       <StyledNavLink id={`swap-nav-link`} to={'/swap'} isActive={() => active === 'swap'}>
-        <Trans>Swap</Trans>
+        <span>Swap</span>
       </StyledNavLink>
       <StyledNavLink id={`pool-nav-link`} to={'/pool'} isActive={() => active === 'pool'}>
-        <Trans>Pool</Trans>
+        <span>Pool</span>
       </StyledNavLink>
     </Tabs>
   )
@@ -78,7 +78,7 @@ export function FindPoolTabs({ origin }: { origin: string }) {
           <StyledArrowLeft />
         </HistoryLink>
         <ActiveText>
-          <Trans>Import V2 Pool</Trans>
+          <span>Import V2 Pool</span>
         </ActiveText>
       </RowBetween>
     </Tabs>
@@ -120,13 +120,7 @@ export function AddRemoveTabs({
           <StyledArrowLeft stroke={theme.text2} />
         </HistoryLink>
         <TYPE.mediumHeader fontWeight={500} fontSize={20}>
-          {creating ? (
-            <Trans>Create a pair</Trans>
-          ) : adding ? (
-            <Trans>Add Liquidity</Trans>
-          ) : (
-            <Trans>Remove Liquidity</Trans>
-          )}
+          {creating ? <span>Create a pair</span> : adding ? <span>Add Liquidity</span> : <span>Remove Liquidity</span>}
         </TYPE.mediumHeader>
         <SettingsTab placeholderSlippage={defaultSlippage} />
       </RowBetween>

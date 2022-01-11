@@ -1,6 +1,6 @@
 import PositionListItem from 'components/PositionListItem'
 import React from 'react'
-import { Trans } from '@lingui/macro'
+
 import styled from 'styled-components/macro'
 import { MEDIA_WIDTHS } from 'theme'
 import { PositionDetails } from 'types/position'
@@ -43,15 +43,15 @@ export default function PositionList({ positions }: PositionListProps) {
     <>
       <DesktopHeader>
         <div>
-          <Trans>Your positions</Trans>
+          <span>Your positions</span>
           {positions && ' (' + positions.length + ')'}
         </div>
         <div>
-          <Trans>Price range</Trans>
+          <span>Price range</span>
         </div>
       </DesktopHeader>
       <MobileHeader>
-        <Trans>Your positions</Trans>
+        <span>Your positions</span>
       </MobileHeader>
       {positions.map((p) => {
         return <PositionListItem key={p.tokenId.toString()} positionDetails={p} />

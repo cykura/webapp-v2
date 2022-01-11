@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, CHAIN_TAG } from 'state/data/enhanced'
+// import { api, CHAIN_TAG } from 'state/data/enhanced'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { supportedChainId } from 'utils/supportedChainId'
 import useDebounce from '../../hooks/useDebounce'
@@ -11,9 +11,9 @@ function useQueryCacheInvalidator() {
   const chainId = useAppSelector((state) => state.application.chainId)
   const dispatch = useAppDispatch()
 
-  useEffect(() => {
-    dispatch(api.util.invalidateTags([CHAIN_TAG]))
-  }, [chainId, dispatch])
+  // useEffect(() => {
+  //   dispatch(api.util.invalidateTags([CHAIN_TAG]))
+  // }, [chainId, dispatch])
 }
 
 export default function Updater(): null {

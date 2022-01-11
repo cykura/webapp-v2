@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { FeeAmount } from '@uniswap/v3-sdk'
 import { Token } from '@uniswap/sdk-core'
-import { Trans } from '@lingui/macro'
+
 import { AutoColumn } from 'components/Column'
 import { DynamicSection } from 'pages/AddLiquidity/styled'
 import { TYPE } from 'theme'
@@ -46,15 +46,15 @@ const FocusedOutlineCard = styled(Card)<{ pulsing: boolean }>`
 const FeeAmountLabel = {
   [FeeAmount.LOW]: {
     label: '0.05',
-    description: <Trans>Best for stable pairs.</Trans>,
+    description: <span>Best for stable pairs.</span>,
   },
   [FeeAmount.MEDIUM]: {
     label: '0.3',
-    description: <Trans>Best for most pairs.</Trans>,
+    description: <span>Best for most pairs.</span>,
   },
   [FeeAmount.HIGH]: {
     label: '1',
-    description: <Trans>Best for exotic pairs.</Trans>,
+    description: <span>Best for exotic pairs.</span>,
   },
 }
 
@@ -62,7 +62,7 @@ const FeeTierPercentageBadge = ({ percentage }: { percentage: number | undefined
   return (
     <Badge>
       <TYPE.label fontSize={12}>
-        {Boolean(percentage) ? <Trans>{percentage?.toFixed(0)}% select</Trans> : <Trans>Not created</Trans>}
+        {Boolean(percentage) ? <span>{percentage?.toFixed(0)}% select</span> : <span>Not created</span>}
       </TYPE.label>
     </Badge>
   )
@@ -141,16 +141,16 @@ export default function FeeSelector({
               {!feeAmount ? (
                 <>
                   <TYPE.label>
-                    <Trans>Fee tier</Trans>
+                    <span>Fee tier</span>
                   </TYPE.label>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
-                    <Trans>The % you will earn in fees.</Trans>
+                    <span>The % you will earn in fees.</span>
                   </TYPE.main>
                 </>
               ) : (
                 <>
                   <TYPE.label>
-                    <Trans>{FeeAmountLabel[feeAmount].label}% fee tier</Trans>
+                    <span>{FeeAmountLabel[feeAmount].label}% fee tier</span>
                   </TYPE.label>
                   <Box style={{ width: 'fit-content', marginTop: '8px' }}>
                     {distributions && feeAmount && <FeeTierPercentageBadge percentage={distributions[feeAmount]} />}
@@ -160,7 +160,7 @@ export default function FeeSelector({
             </AutoColumn>
 
             <ButtonGray onClick={() => setShowOptions(!showOptions)} width="auto" padding="4px" $borderRadius="6px">
-              {showOptions ? <Trans>Hide</Trans> : <Trans>Edit</Trans>}
+              {showOptions ? <span>Hide</span> : <span>Edit</span>}
             </ButtonGray>
           </RowBetween>
         </FocusedOutlineCard>
@@ -175,10 +175,10 @@ export default function FeeSelector({
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">
                   <ResponsiveText>
-                    <Trans>0.05% fee</Trans>
+                    <span>0.05% fee</span>
                   </ResponsiveText>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
-                    <Trans>Best for stable pairs.</Trans>
+                    <span>Best for stable pairs.</span>
                   </TYPE.main>
                 </AutoColumn>
 
@@ -193,10 +193,10 @@ export default function FeeSelector({
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">
                   <ResponsiveText>
-                    <Trans>0.3% fee</Trans>
+                    <span>0.3% fee</span>
                   </ResponsiveText>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
-                    <Trans>Best for most pairs.</Trans>
+                    <span>Best for most pairs.</span>
                   </TYPE.main>
                 </AutoColumn>
 
@@ -211,10 +211,10 @@ export default function FeeSelector({
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">
                   <ResponsiveText>
-                    <Trans>1% fee</Trans>
+                    <span>1% fee</span>
                   </ResponsiveText>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
-                    <Trans>Best for exotic pairs.</Trans>
+                    <span>Best for exotic pairs.</span>
                   </TYPE.main>
                 </AutoColumn>
 

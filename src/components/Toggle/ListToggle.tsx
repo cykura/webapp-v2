@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import styled from 'styled-components/macro'
 import { TYPE } from '../../theme'
 
@@ -42,13 +41,13 @@ export default function ListToggle({ id, isActive, bgColor, toggle }: ToggleProp
     <Wrapper id={id} isActive={isActive} onClick={toggle}>
       {isActive && (
         <StatusText fontWeight="600" margin="0 6px" isActive={true}>
-          <Trans>ON</Trans>
+          <span>ON</span>
         </StatusText>
       )}
       <ToggleElement isActive={isActive} bgColor={bgColor} />
       {!isActive && (
         <StatusText fontWeight="600" margin="0 6px" isActive={false}>
-          <Trans>OFF</Trans>
+          <span>OFF</span>
         </StatusText>
       )}
     </Wrapper>

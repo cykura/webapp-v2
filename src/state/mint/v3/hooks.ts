@@ -1,4 +1,3 @@
-import { t } from '@lingui/macro'
 import { BIG_INT_ZERO } from '../../../constants/misc'
 import { getTickToPrice } from 'utils/getTickToPrice'
 import JSBI from 'jsbi'
@@ -486,25 +485,25 @@ export function useV3DerivedMintInfo(
 
   let errorMessage: string | undefined
   if (!account) {
-    errorMessage = t`Connect Eth Wallet`
+    errorMessage = 'Connect Eth Wallet'
   }
 
   if (invalidPrice) {
-    errorMessage = errorMessage ?? t`Invalid price input`
+    errorMessage = errorMessage ?? 'Invalid price input'
   }
 
   if (!parsedAmounts[Field.CURRENCY_A] && !depositADisabled && !parsedAmounts[Field.CURRENCY_B] && !depositBDisabled) {
-    errorMessage = errorMessage ?? t`Enter an amount`
+    errorMessage = errorMessage ?? 'Enter an amount'
   }
 
   const { [Field.CURRENCY_A]: currencyAAmount, [Field.CURRENCY_B]: currencyBAmount } = parsedAmounts
 
   if (currencyAAmount && currencyBalances?.[Field.CURRENCY_A]?.lessThan(currencyAAmount)) {
-    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_A]?.symbol} balance here`
+    errorMessage = `Insufficient ${currencies[Field.CURRENCY_A]?.symbol} balance here`
   }
 
   if (currencyBAmount && currencyBalances?.[Field.CURRENCY_B]?.lessThan(currencyBAmount)) {
-    errorMessage = t`Insufficient ${currencies[Field.CURRENCY_B]?.symbol} balance here`
+    errorMessage = `Insufficient ${currencies[Field.CURRENCY_B]?.symbol} balance here`
   }
 
   // Need to change theses

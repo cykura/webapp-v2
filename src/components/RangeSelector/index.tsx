@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { Currency, Price, Token } from '@uniswap/sdk-core'
 import StepCounter from 'components/InputStepCounter/InputStepCounter'
 import { RowBetween } from 'components/Row'
@@ -46,7 +45,7 @@ export default function RangeSelector({
         increment={isSorted ? getIncrementLower : getDecrementUpper}
         feeAmount={feeAmount}
         label={leftPrice ? `${currencyB?.symbol}` : '-'}
-        title={<Trans>Min Price</Trans>}
+        title={<span>Min Price</span>}
         tokenA={currencyA?.symbol}
         tokenB={currencyB?.symbol}
       />
@@ -60,7 +59,7 @@ export default function RangeSelector({
         label={rightPrice ? `${currencyB?.symbol}` : '-'}
         tokenA={currencyA?.symbol}
         tokenB={currencyB?.symbol}
-        title={<Trans>Max Price</Trans>}
+        title={<span>Max Price</span>}
       />
     </RowBetween>
   )

@@ -1,4 +1,3 @@
-import { t } from '@lingui/macro'
 import JSBI from 'jsbi'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
 import { useBestV3TradeExactIn, V3TradeState } from '../../hooks/useBestV3Trade'
@@ -141,23 +140,23 @@ export function useDerivedSwapInfo() {
 
   let inputError: string | undefined
   if (!account) {
-    inputError = t`Connect Ethereum Wallet`
+    inputError = 'Connect Ethereum Wallet'
   }
 
   if (!parsedAmount) {
-    inputError = inputError ?? t`Enter an amount`
+    inputError = inputError ?? 'Enter an amount'
   }
 
   if (!currencies[Field.INPUT] || !currencies[Field.OUTPUT]) {
-    inputError = inputError ?? t`Select a token`
+    inputError = inputError ?? 'Select a tokent'
   }
 
   const formattedTo = isAddress(to)
   if (!to || !formattedTo) {
-    inputError = inputError ?? t`Enter a recipient`
+    inputError = inputError ?? 'Enter a recipient'
   } else {
     if (BAD_RECIPIENT_ADDRESSES[formattedTo]) {
-      inputError = inputError ?? t`Invalid recipient`
+      inputError = inputError ?? 'Invalid recipient'
     }
   }
 
@@ -169,7 +168,7 @@ export function useDerivedSwapInfo() {
   const balanceIn = currencyBalances[Field.INPUT]
 
   if (balanceIn) {
-    inputError = t`Insufficient ${balanceIn.currency.symbol} balance`
+    inputError = `Insufficient ${balanceIn.currency.symbol} balance`
   }
 
   return {

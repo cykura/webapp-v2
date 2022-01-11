@@ -7,7 +7,6 @@ import ReactDOM from 'react-dom'
 import ReactGA from 'react-ga'
 import { Provider } from 'react-redux'
 import { HashRouter } from 'react-router-dom'
-import { LanguageProvider } from './i18n'
 import App from './pages/App'
 import store from './state'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration'
@@ -87,15 +86,13 @@ ReactDOM.render(
         }}
       >
         <HashRouter>
-          <LanguageProvider>
-            <Updaters />
-            <ThemeProvider>
-              <SnackbarProvider>
-                <ThemedGlobalStyle />
-                <App />
-              </SnackbarProvider>
-            </ThemeProvider>
-          </LanguageProvider>
+          <Updaters />
+          <ThemeProvider>
+            <SnackbarProvider>
+              <ThemedGlobalStyle />
+              <App />
+            </SnackbarProvider>
+          </ThemeProvider>
         </HashRouter>
       </WalletKitProvider>
     </Provider>

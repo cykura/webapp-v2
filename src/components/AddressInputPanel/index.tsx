@@ -1,4 +1,3 @@
-import { t, Trans } from '@lingui/macro'
 import { useContext, useCallback, ReactNode } from 'react'
 import styled, { ThemeContext } from 'styled-components/macro'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
@@ -101,14 +100,14 @@ export default function AddressInputPanel({
           <AutoColumn gap="md">
             <RowBetween>
               <TYPE.black color={theme.text2} fontWeight={500} fontSize={14}>
-                {label ?? <Trans>Recipient</Trans>}
+                {label ?? <span>Recipient</span>}
               </TYPE.black>
               {value && chainId && (
                 <ExternalLink
                   href={getExplorerLink(chainId, value, ExplorerDataType.ADDRESS)}
                   style={{ fontSize: '14px' }}
                 >
-                  <Trans>(View on Explorer)</Trans>
+                  <span>(View on Explorer)</span>
                 </ExternalLink>
               )}
             </RowBetween>
@@ -119,7 +118,7 @@ export default function AddressInputPanel({
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
-              placeholder={placeholder ?? t`Wallet Address`}
+              placeholder={placeholder ?? 'Wallet Address'}
               pattern="^(0x[a-fA-F0-9]{40})$"
               onChange={handleInput}
               value={value}

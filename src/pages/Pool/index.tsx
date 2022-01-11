@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
 import { ButtonGray, ButtonPrimary } from 'components/Button'
@@ -128,7 +127,7 @@ export default function Pool() {
       content: (
         <MenuItem>
           <PlusCircle size={16} style={{ marginRight: '12px' }} />
-          <Trans>Create a pool</Trans>
+          <span>Create a pool</span>
         </MenuItem>
       ),
       link: '/add/wSOL',
@@ -138,10 +137,10 @@ export default function Pool() {
       content: (
         <MenuItem>
           <BookOpen size={16} style={{ marginRight: '12px' }} />
-          <Trans>Learn</Trans>
+          <span>Learn</span>
         </MenuItem>
       ),
-      link: 'https://docs.uniswap.org/',
+      link: 'https://cyclos.io/',
       external: true,
     },
   ]
@@ -155,25 +154,25 @@ export default function Pool() {
             <TitleRow style={{ padding: '0 0.5em', marginTop: '1rem' }}>
               <HideSmall>
                 <TYPE.largeHeader>
-                  <Trans>Pools Overview</Trans>
+                  <span>Pools Overview</span>
                 </TYPE.largeHeader>
               </HideSmall>
               <ButtonRow>
                 <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/wSOL">
-                  + <Trans>New Position</Trans>
+                  + <span>New Position</span>
                 </ResponsiveButtonPrimary>
                 <Menu
                   content={
                     <ShowInactiveToggle>
                       <TYPE.small>
-                        <Trans>Closed positions</Trans>
+                        <span>Closed positions</span>
                       </TYPE.small>
                       <Toggle
                         id="small"
                         isActive={!userHideClosedPositions}
                         toggle={() => setUserHideClosedPositions(!userHideClosedPositions)}
-                        checked={<Trans>Show</Trans>}
-                        unchecked={<Trans>Hide</Trans>}
+                        checked={<span>Show</span>}
+                        unchecked={<span>Hide</span>}
                       />
                     </ShowInactiveToggle>
                   }
@@ -212,12 +211,12 @@ export default function Pool() {
                   <TYPE.mediumHeader color={theme.text3} textAlign="center">
                     <Inbox size={48} strokeWidth={1} style={{ marginBottom: '.5rem' }} />
                     <div>
-                      <Trans>Your liquidity positions will appear here.</Trans>
+                      <span>Your liquidity positions will appear here.</span>
                     </div>
                   </TYPE.mediumHeader>
                   {!connected && (
                     <ButtonPrimary style={{ marginTop: '2em', padding: '8px 16px' }} onClick={connect}>
-                      <Trans>Connect a wallet</Trans>
+                      <span>Connect a wallet</span>
                     </ButtonPrimary>
                   )}
                 </NoLiquidity>

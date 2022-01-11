@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import React, { ErrorInfo } from 'react'
 import store, { AppState } from '../../state'
 import { ExternalLink, TYPE } from '../../theme'
@@ -74,7 +73,7 @@ export default class ErrorBoundary extends React.Component<unknown, ErrorBoundar
             <AutoColumn gap={'md'}>
               <SomethingWentWrongWrapper>
                 <TYPE.label fontSize={24} fontWeight={600}>
-                  <Trans>Something went wrong</Trans>
+                  <span>Something went wrong</span>
                 </TYPE.label>
               </SomethingWentWrongWrapper>
               <CodeBlockWrapper>
@@ -84,23 +83,9 @@ export default class ErrorBoundary extends React.Component<unknown, ErrorBoundar
               </CodeBlockWrapper>
               <AutoRow>
                 <LinkWrapper>
-                  <ExternalLink
-                    id="create-github-issue-link"
-                    href={`https://github.com/Uniswap/uniswap-interface/issues/new?assignees=&labels=bug&body=${encodedBody}&title=${encodeURIComponent(
-                      `Crash report: \`${error.name}${error.message && `: ${error.message}`}\``
-                    )}`}
-                    target="_blank"
-                  >
+                  <ExternalLink id="get-support-on-discord" href="https://discord.gg/vpbTxzHWYg" target="_blank">
                     <TYPE.link fontSize={16}>
-                      <Trans>Create an issue on GitHub</Trans>
-                      <span>↗</span>
-                    </TYPE.link>
-                  </ExternalLink>
-                </LinkWrapper>
-                <LinkWrapper>
-                  <ExternalLink id="get-support-on-discord" href="https://discord.gg/FCfyBSbCU5" target="_blank">
-                    <TYPE.link fontSize={16}>
-                      <Trans>Get support on Discord</Trans>
+                      <span>Get support on Discord</span>
                       <span>↗</span>
                     </TYPE.link>
                   </ExternalLink>

@@ -1,7 +1,6 @@
 import { Currency, Token } from '@uniswap/sdk-core'
 import { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactGA from 'react-ga'
-import { t, Trans } from '@lingui/macro'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import { ExtendedEther } from '../../constants/tokens'
@@ -137,7 +136,7 @@ export function CurrencySearch({
       <PaddedColumn gap="16px">
         <RowBetween>
           <Text fontWeight={500} fontSize={16}>
-            <Trans>Select a tokens</Trans>
+            <span>Select a tokens</span>
           </Text>
           <CloseIcon onClick={onDismiss} />
         </RowBetween>
@@ -145,7 +144,7 @@ export function CurrencySearch({
           <SearchInput
             type="text"
             id="token-search-input"
-            placeholder={t`Search name or paste address`}
+            placeholder={'Search name or paste address'}
             autoComplete="off"
             value={searchQuery}
             ref={inputRef as RefObject<HTMLInputElement>}
@@ -181,7 +180,7 @@ export function CurrencySearch({
       ) : (
         <Column style={{ padding: '20px', height: '100%' }}>
           <TYPE.main color={theme.text3} textAlign="center" mb="20px">
-            <Trans>No results found.</Trans>
+            <span>No results found.</span>
           </TYPE.main>
         </Column>
       )}

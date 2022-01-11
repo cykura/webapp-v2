@@ -1,4 +1,3 @@
-import { Trans } from '@lingui/macro'
 import { ButtonGray, ButtonOutlined } from 'components/Button'
 import styled from 'styled-components/macro'
 import { useConnectedWallet, useSolana } from '@saberhq/use-solana'
@@ -170,7 +169,7 @@ function Faucet() {
   return (
     <StyledMenuButton onClick={() => requestAirdrop()}>
       <Text>
-        <Trans>Faucet</Trans>
+        <span>Faucet</span>
       </Text>
     </StyledMenuButton>
   )

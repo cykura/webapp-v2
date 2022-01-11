@@ -5,7 +5,6 @@ import { abi as MulticallABI } from '@uniswap/v3-periphery/artifacts/contracts/l
 import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, QUOTER_ADDRESSES, MULTICALL_ADDRESS } from 'constants/addresses'
 import { abi as NFTPositionManagerABI } from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import { useMemo } from 'react'
-import { Quoter, NonfungiblePositionManager, UniswapInterfaceMulticall } from 'types/v3'
 import { getContract } from 'utils'
 import { useActiveWeb3ReactSol } from './web3'
 import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOL_LOCAL } from '../constants/tokens'
@@ -44,17 +43,13 @@ export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: b
 }
 
 export function useMulticall2Contract() {
-  return useContract<UniswapInterfaceMulticall>(MULTICALL_ADDRESS, MulticallABI, false) as UniswapInterfaceMulticall
+  return useContract(MULTICALL_ADDRESS, MulticallABI, false)
 }
 
-export function useV3NFTPositionManagerContract(withSignerIfPossible?: boolean): NonfungiblePositionManager | null {
-  return useContract<NonfungiblePositionManager>(
-    NONFUNGIBLE_POSITION_MANAGER_ADDRESSES,
-    NFTPositionManagerABI,
-    withSignerIfPossible
-  )
+export function useV3NFTPositionManagerContract(withSignerIfPossible?: boolean) {
+  return useContract(NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, NFTPositionManagerABI, withSignerIfPossible)
 }
 
 export function useV3Quoter() {
-  return useContract<Quoter>(QUOTER_ADDRESSES, QuoterABI)
+  return useContract(QUOTER_ADDRESSES, QuoterABI)
 }

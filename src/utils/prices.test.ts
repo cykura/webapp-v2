@@ -2,7 +2,6 @@ import { Percent } from '@uniswap/sdk-core'
 import { computeRealizedLPFeeAmount, warningSeverity } from './prices'
 
 describe('prices', () => {
-
   describe('#computeRealizedLPFeeAmount', () => {
     it('returns undefined for undefined', () => {
       expect(computeRealizedLPFeeAmount(undefined)).toEqual(undefined)
