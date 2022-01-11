@@ -82,10 +82,11 @@ export default function ConfirmSwapModal({
 
   // text to show while loading
   const pendingText = (
-    <Trans>
-      Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
-      {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
-    </Trans>
+    // <Trans>
+    //   Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
+    //   {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
+    // </Trans>
+    <Trans>Swapping in progress</Trans>
   )
 
   const confirmationContent = useCallback(

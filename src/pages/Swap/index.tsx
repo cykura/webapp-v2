@@ -166,9 +166,30 @@ export default function Swap({ history }: RouteComponentProps) {
         return
       }
       try {
+        setSwapState({
+          attemptingTxn: true,
+          tradeToConfirm: undefined,
+          showConfirm: true,
+          swapErrorMessage: undefined,
+          txHash: undefined,
+        })
         const hash = await swapCallback()
+        setSwapState({
+          attemptingTxn: false,
+          tradeToConfirm: undefined,
+          showConfirm: true,
+          swapErrorMessage: undefined,
+          txHash: hash,
+        })
         console.log('swapped!')
       } catch (error) {
+        setSwapState({
+          attemptingTxn: false,
+          tradeToConfirm: undefined,
+          showConfirm: false,
+          swapErrorMessage: undefined,
+          txHash: undefined,
+        })
         console.log(error)
       }
     }
@@ -276,9 +297,9 @@ export default function Swap({ history }: RouteComponentProps) {
       <AppBody>
         <SwapHeader allowedSlippage={allowedSlippage} />
         <Wrapper id="swap-page">
-          {/* <ConfirmSwapModal
+          <ConfirmSwapModal
             isOpen={showConfirm}
-            trade={trade}
+            trade={undefined}
             originalTrade={tradeToConfirm}
             onAcceptChanges={handleAcceptChanges}
             attemptingTxn={attemptingTxn}
@@ -288,7 +309,7 @@ export default function Swap({ history }: RouteComponentProps) {
             onConfirm={handleSwap}
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
-          /> */}
+          />
 
           <AutoColumn gap={'md'}>
             <div style={{ display: 'relative' }}>
@@ -382,7 +403,7 @@ export default function Swap({ history }: RouteComponentProps) {
                 <ButtonError
                   onClick={() => {
                     handleSwap()
-                    
+
                     // if (isExpertMode) {
                     //   handleSwap()
                     // } else {
