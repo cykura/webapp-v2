@@ -109,7 +109,7 @@ const InternalMenuItem = styled(Link)`
   }
 `
 
-const CODE_LINK = 'https://github.com/Uniswap/uniswap-interface'
+const CODE_LINK = 'https://github.com/cyclos-io'
 
 export default function Menu() {
   const node = useRef<HTMLDivElement>()
@@ -126,13 +126,13 @@ export default function Menu() {
 
       {open && (
         <MenuFlyout>
-          <MenuItem href="https://uniswap.org/">
+          <MenuItem href="https://cyclos.io/">
             <Info size={14} />
             <div>
               <span>About</span>
             </div>
           </MenuItem>
-          <MenuItem href="https://docs.uniswap.org/">
+          <MenuItem href="https://cyclos.io/">
             <BookOpen size={14} />
             <div>
               <span>Docs</span>
@@ -144,13 +144,13 @@ export default function Menu() {
               <span>Code</span>
             </div>
           </MenuItem>
-          <MenuItem href="https://discord.gg/FCfyBSbCU5">
+          <MenuItem href="https://discord.gg/vpbTxzHWYg">
             <MessageCircle size={14} />
             <div>
               <span>Discord</span>
             </div>
           </MenuItem>
-          <MenuItem href="https://info.uniswap.org/">
+          <MenuItem href="https://cyclos.io/">
             <PieChart size={14} />
             <div>
               <span>Analytics</span>

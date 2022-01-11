@@ -935,11 +935,11 @@ export default function AddLiquidity({
                             style={{ marginBottom: 8, fontWeight: 500, opacity: 0.8 }}
                             textAlign="center"
                           >
-                            You are the first liquidity provider for this Uniswap V3 pool.
+                            You are the first liquidity provider for this pool.
                           </TYPE.body>
 
                           <TYPE.body fontWeight={500} textAlign="center" fontSize={14} style={{ opacity: 0.8 }}>
-                            The transaction cost will be much higher as it includes the gas to create the pool.
+                            The transaction cost will be much higher as it includes the rent to create the pool.
                           </TYPE.body>
                         </BlueCard>
                       </AutoColumn>
@@ -974,10 +974,7 @@ export default function AddLiquidity({
                     <TYPE.main fontSize={14} fontWeight={400} style={{ marginBottom: '.5rem', lineHeight: '125%' }}>
                       <span>
                         Your liquidity will only earn fees when the market price of the pair is within your range.{' '}
-                        <ExternalLink
-                          href={'https://docs.uniswap.org/concepts/introduction/liquidity-user-guide#4-set-price-range'}
-                          style={{ fontSize: '14px' }}
-                        >
+                        <ExternalLink href={'https://discord.gg/vpbTxzHWYg'} style={{ fontSize: '14px' }}>
                           Need help picking a range?
                         </ExternalLink>
                       </span>

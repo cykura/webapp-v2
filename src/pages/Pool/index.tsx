@@ -140,7 +140,7 @@ export default function Pool() {
           <span>Learn</span>
         </MenuItem>
       ),
-      link: 'https://docs.uniswap.org/',
+      link: 'https://cyclos.io/',
       external: true,
     },
   ]
