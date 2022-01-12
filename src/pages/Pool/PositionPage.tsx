@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { NonfungiblePositionManager, Pool, Position } from '@uniswap/v3-sdk'
+import { NonfungiblePositionManager, Pool, Position, u32ToSeed } from '@uniswap/v3-sdk'
 
 import { PoolState, usePool } from 'hooks/usePools'
 import { useToken } from 'hooks/Tokens'
@@ -49,6 +49,9 @@ import { useSolana } from '@saberhq/use-solana'
 import idl from '../../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TICK_SEED, POOL_SEED } from 'constants/tokens'
+
+const { BN } = anchor
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -312,6 +315,10 @@ export function PositionPage({
     tickLower,
     tickUpper,
     tokenId,
+    feeGrowthInside0LastX128,
+    feeGrowthInside1LastX128,
+    tokensOwed0,
+    tokensOwed1,
   } = positionDetails || {}
 
   const removed = JSBI.EQ(liquidity, 0)
@@ -377,7 +384,28 @@ export function PositionPage({
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
   const collect = useCallback(async () => {
-    if (!network || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
+    console.log('collect called')
+    if (
+      !network ||
+      // !feeValue0 ||
+      // !feeValue1 ||
+      // !positionManager ||
+      !account ||
+      !tokenId ||
+      // !librarySol ||
+      !pool ||
+      !tickLower ||
+      !tickUpper ||
+      !token0 ||
+      !token1 ||
+      !feeAmount ||
+      !liquidity ||
+      // !tokensOwed0 ||
+      // !tokensOwed1 ||
+      !feeGrowthInside0LastX128 ||
+      !feeGrowthInside1LastX128
+    )
+      return
 
     setCollecting(true)
 
@@ -386,6 +414,81 @@ export function PositionPage({
     })
     const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
 
+    const current_above_lower = pool.tickCurrent >= tickLower
+    const current_below_upper = pool.tickCurrent < tickUpper
+    let feeGrowthBelowX: anchor.BN
+    let feeGrowthBelowY: anchor.BN
+    let feeGrowthAboveX: anchor.BN
+    let feeGrowthAboveY: anchor.BN
+
+    const token0Add = new anchor.web3.PublicKey(token0?.address)
+    const token1Add = new anchor.web3.PublicKey(token1?.address)
+
+    const [tickLowerState, tickLowerStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickLower)],
+      cyclosCore.programId
+    )
+
+    const [tickUpperState, tickUpperStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickUpper)],
+      cyclosCore.programId
+    )
+
+    const [poolState, poolStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [POOL_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount)],
+      cyclosCore.programId
+    )
+
+    const tickLowerStateData = await cyclosCore.account.tickState.fetch(tickLowerState)
+    const tickUpperStateData = await cyclosCore.account.tickState.fetch(tickUpperState)
+
+    const poolStateData = await cyclosCore.account.poolState.fetch(poolState)
+
+    const { feeGrowthOutside0X32: outside0Lower, feeGrowthOutside1X32: outside1Lower } = tickLowerStateData
+    const { feeGrowthOutside0X32: outside0Upper, feeGrowthOutside1X32: outside1Upper } = tickUpperStateData
+    const { feeGrowthGlobal0X32, feeGrowthGlobal1X32 } = poolStateData
+
+    console.log(JSON.stringify(tickLowerStateData, null, 2))
+    console.log(JSON.stringify(tickUpperStateData, null, 2))
+    console.log(JSON.stringify(poolStateData, null, 2))
+
+    // console.log('tickLowerStateData', outside0Lower.toString(), outside1Lower.toString())
+    // console.log('tickUpperStateData', outside0Upper.toString(), outside1Upper.toString())
+    // console.log('poolStateData', feeGrowthGlobal0X32.toString(), feeGrowthGlobal1X32.toString())
+
+    // calculate fee growth below
+    // if (current_above_lower) {
+    //   feeGrowthBelowX = tickLowerStateData.feeGrowthOutside0X32
+    // } else {
+    //   feeGrowthBelowX = poolStateData.feeGrowthGlobal0X32.sub(tickLowerStateData.feeGrowthOutside0X32)
+    // }
+    // if (current_above_lower) {
+    //   feeGrowthBelowY = tickLowerStateData.feeGrowthOutside1X32
+    // } else {
+    //   feeGrowthBelowY = poolStateData.feeGrowthGlobal1X32.sub(tickLowerStateData.feeGrowthOutside1X32)
+    // }
+
+    // // calculate fee growth above
+    // if (current_below_upper) {
+    //   feeGrowthAboveX = tickUpperStateData.feeGrowthOutside0X32
+    // } else {
+    //   feeGrowthAboveX = poolStateData.feeGrowthGlobal0X32.sub(tickUpperStateData.feeGrowthOutside0X32)
+    // }
+    // if (current_below_upper) {
+    //   feeGrowthAboveY = tickUpperStateData.feeGrowthOutside1X32
+    // } else {
+    //   feeGrowthAboveY = poolStateData.feeGrowthGlobal1X32.sub(tickUpperStateData.feeGrowthOutside1X32)
+    // }
+
+    // // // calculate fee growth inside
+    // const feeGrowthInsideX = poolStateData.feeGrowthGlobal0X32.sub(feeGrowthInside0LastX128.sub(feeGrowthAboveX))
+    // const feeGrowthInsideY = poolStateData.feeGrowthGlobal1X32.sub(feeGrowthInside0LastY128.sub(feeGrowthAboveY))
+
+    // const tokensOwedX = liquidity.mul(feeGrowthInsideX.sub(feeGrowthInside0LastX128)).div(10e6)
+    // const tokensOwedY = liquidity.mul(feeGrowthInsideY.sub(feeGrowthInside0LastY128)).div(10e6)
+    // const tokensOwedXTotal = tokensOwedX.v.add(tokensOwedX)
+    // const tokensOwedYTotal = tokensOwedY.v.add(tokensOwedY)
+    // const [finalAmt0, finalAmt1] = [tokensOwedXTotal, tokensOwedYTotal]
     // calling the contract
     try {
       setCollecting(false)
@@ -419,50 +522,50 @@ export function PositionPage({
       console.log(e)
     }
 
-    const { calldata, value } = NonfungiblePositionManager.collectCallParameters({
-      tokenId: tokenId.toString(),
-      expectedCurrencyOwed0: feeValue0,
-      expectedCurrencyOwed1: feeValue1,
-      recipient: account,
-    })
+    // const { calldata, value } = NonfungiblePositionManager.collectCallParameters({
+    //   tokenId: tokenId.toString(),
+    //   expectedCurrencyOwed0: feeValue0,
+    //   expectedCurrencyOwed1: feeValue1,
+    //   recipient: account,
+    // })
 
-    const txn = {
-      to: positionManager.address,
-      data: calldata,
-      value,
-    }
+    // const txn = {
+    //   to: positionManager.address,
+    //   data: calldata,
+    //   value,
+    // }
 
-    librarySol
-      ?.getSigner()
-      .estimateGas(txn)
-      .then((estimate: any) => {
-        const newTxn = {
-          ...txn,
-          gasLimit: calculateGasMargin(estimate),
-        }
+    // librarySol
+    //   ?.getSigner()
+    //   .estimateGas(txn)
+    //   .then((estimate: any) => {
+    //     const newTxn = {
+    //       ...txn,
+    //       gasLimit: calculateGasMargin(estimate),
+    //     }
 
-        return librarySol
-          ?.getSigner()
-          .sendTransaction(newTxn)
-          .then((response: TransactionResponse) => {
-            setCollectMigrationHash(response.hash)
-            setCollecting(false)
+    //     return librarySol
+    //       ?.getSigner()
+    //       .sendTransaction(newTxn)
+    //       .then((response: TransactionResponse) => {
+    //         setCollectMigrationHash(response.hash)
+    //         setCollecting(false)
 
-            ReactGA.event({
-              category: 'Liquidity',
-              action: 'CollectV3',
-              label: [feeValue0.currency.symbol, feeValue1.currency.symbol].join('/'),
-            })
+    //         ReactGA.event({
+    //           category: 'Liquidity',
+    //           action: 'CollectV3',
+    //           label: [feeValue0.currency.symbol, feeValue1.currency.symbol].join('/'),
+    //         })
 
-            addTransaction(response, {
-              summary: `Collect ${feeValue0.currency.symbol}/${feeValue1.currency.symbol} fees`,
-            })
-          })
-      })
-      .catch((error: any) => {
-        setCollecting(false)
-        console.error(error)
-      })
+    //         addTransaction(response, {
+    //           summary: `Collect ${feeValue0.currency.symbol}/${feeValue1.currency.symbol} fees`,
+    //         })
+    //       })
+    //   })
+    //   .catch((error: any) => {
+    //     setCollecting(false)
+    //     console.error(error)
+    //   })
   }, [network, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
   // const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
