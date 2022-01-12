@@ -43,6 +43,7 @@ import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'
 import { useSolana } from '@saberhq/use-solana'
 import { useCurrency } from 'hooks/Tokens'
+import { Transaction } from '@solana/web3.js'
 
 const DEFAULT_REMOVE_V3_LIQUIDITY_SLIPPAGE_TOLERANCE = new Percent(5, 100)
 
@@ -145,9 +146,11 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       return
     }
 
-    const removeLiquidityAmount = new BN(
-      liquidityPercentage?.multiply(JSBI.BigInt(positionSDK?.liquidity)).divide(JSBI.BigInt(100)).quotient.toString()
+    const removeLiquidityAmount = liquidityPercentage?.multiply(
+      JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100))
     )
+
+    // console.log(liquidityPercentage?.multiply())
 
     const fee = position.fee
     const tickSpacing = fee / 50
@@ -235,14 +238,71 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       [POSITION_SEED, nftMint.toBuffer()],
       cyclosCore.programId
     )
+    const vault0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      poolState,
+      true
+    )
+
+    const vault1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token2,
+      poolState,
+      true
+    )
+
+    //fetch ATA of pool tokens
+    const userATA0 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token1,
+      wallet?.publicKey,
+      true
+    )
+    // console.log(`user ATA 0 -> ${userATA0.toString()}`)
+    const userATA1 = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      token2,
+      wallet?.publicKey,
+      true
+    )
+
+    const MaxU64 = new BN(2).pow(new BN(64)).subn(1)
 
     try {
-      const txHash = await cyclosCore.rpc.decreaseLiquidity(
-        removeLiquidityAmount,
-        amount0Minimum,
-        amount1Minimum,
-        deadline,
-        {
+      const tx = new Transaction()
+      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+      tx.add(
+        cyclosCore.instruction.decreaseLiquidity(
+          new BN(removeLiquidityAmount.toSignificant()),
+          amount0Minimum,
+          amount1Minimum,
+          deadline,
+          {
+            accounts: {
+              ownerOrDelegate: wallet?.publicKey,
+              nftAccount: positionNftAccount,
+              tokenizedPositionState: tokenizedPositionState,
+              factoryState,
+              poolState: poolState,
+              corePositionState: corePositionState,
+              tickLowerState: tickLowerState,
+              tickUpperState: tickUpperState,
+              bitmapLowerState: bitmapLowerState,
+              bitmapUpperState: bitmapUpperState,
+              latestObservationState: latestObservationState,
+              nextObservationState: nextObservationState,
+              coreProgram: cyclosCore.programId,
+            },
+          }
+        )
+      )
+      tx.add(
+        cyclosCore.instruction.collectFromTokenized(MaxU64, MaxU64, {
           accounts: {
             ownerOrDelegate: wallet?.publicKey,
             nftAccount: positionNftAccount,
@@ -257,11 +317,19 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             latestObservationState: latestObservationState,
             nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
+            vault0: vault0,
+            vault1: vault1,
+            recipientWallet0: userATA0,
+            recipientWallet1: userATA1,
+            tokenProgram: TOKEN_PROGRAM_ID,
           },
-        }
+        })
       )
-      console.log(txHash, ' removed liquidity hash')
-      setTxnHash(txHash)
+      tx.feePayer = wallet?.publicKey ?? undefined
+      await wallet?.signTransaction(tx)
+      const hash = await providerMut?.send(tx)
+      console.log(hash, ' -> remove position')
+      setTxnHash(hash?.signature)
       setAttemptingTxn(false)
     } catch (err: any) {
       console.log(err)
