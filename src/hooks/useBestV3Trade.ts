@@ -1,11 +1,10 @@
 import { PublicKey } from '@solana/web3.js'
-import { Currency, CurrencyAmount, TradeType } from '@uniswap/sdk-core'
+import JSBI from 'jsbi'
+import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@uniswap/sdk-core'
 import { encodeRouteToPath, FeeAmount, Route, Trade } from '@uniswap/v3-sdk'
-import { BigNumber } from 'ethers'
 import { useMemo } from 'react'
 import { useSingleContractMultipleData } from '../state/multicall/hooks'
 import { useAllV3Routes } from './useAllV3Routes'
-import { useV3Quoter } from './useContract'
 import { usePool } from './usePools'
 
 export enum V3TradeState {
@@ -45,6 +44,10 @@ export function useBestV3TradeExactIn(
   // const quoter = useV3Quoter()
   const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
 
+  // Hacky solution to find output amount based on current pool price
+  // TODO build quoter on client side to find price impact
+  // TODO support routing across all fee tiers. Currently only done across the 0.01% pool
+  const pool = usePool(amountIn?.currency, currencyOut, 500)
   // const quoteExactInInputs = useMemo(() => {
   //   return routes.map((route) => [
   //     encodeRouteToPath(route, false),
@@ -55,7 +58,7 @@ export function useBestV3TradeExactIn(
   // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
 
   return useMemo(() => {
-    if (!amountIn || !currencyOut) {
+    if (!amountIn || !currencyOut || !pool) {
       return {
         state: V3TradeState.INVALID,
         trade: null,
@@ -102,14 +105,20 @@ export function useBestV3TradeExactIn(
 
     // const isSyncing = quotesResults.some(({ syncing }) => syncing)
 
-    const amountOut = amountIn
+    const MaxU32 = JSBI.BigInt('0xffffffff')
+    const factor =
+      (amountIn.currency as UniToken).address === pool.token0.address
+        ? new Fraction(pool.sqrtRatioX32, MaxU32)
+        : new Fraction(MaxU32, pool.sqrtRatioX32)
+    console.log('price factor', factor.quotient)
+    const amountOut = amountIn.multiply(factor)
 
     return {
       state: V3TradeState.VALID,
       trade: {
         route: routes[0],
         inputAmount: amountIn,
-        outputAmount: amountIn,
+        outputAmount: amountOut,
       },
       // trade: Trade.createUncheckedTrade({
       //   route: bestRoute,
@@ -118,7 +127,7 @@ export function useBestV3TradeExactIn(
       //   outputAmount: CurrencyAmount.fromRawAmount(currencyOut, amountOut.toString()),
       // }),
     }
-  }, [amountIn, currencyOut, routes, routesLoading])
+  }, [amountIn, currencyOut, routes, routesLoading, pool])
 }
 
 // /**
