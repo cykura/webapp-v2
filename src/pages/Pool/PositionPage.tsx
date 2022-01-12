@@ -42,9 +42,13 @@ import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
 import Toggle from 'components/Toggle'
 import { Network } from '@saberhq/solana-contrib'
-import { useSolana } from '@gokiprotocol/walletkit'
 import JSBI from 'jsbi'
-import { SOLUSDC_LOCAL, SOLUSDT_LOCAL } from 'constants/tokens'
+import { PROGRAM_ID_STR } from 'constants/addresses'
+import * as anchor from '@project-serum/anchor'
+import { useSolana } from '@saberhq/use-solana'
+import idl from '../../constants/cyclos-core.json'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -361,47 +365,59 @@ export function PositionPage({
   }, [inverted, pool, priceLower, priceUpper])
 
   // fees
-  // const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, positionDetails?.tokenId, receiveWETH)
-  const [feeValue0, feeValue1] = [
-    token0 ? CurrencyAmount.fromRawAmount(token0, positionDetails?.tokensOwed0 ?? JSBI.BigInt(0)) : undefined,
-    token1 ? CurrencyAmount.fromRawAmount(token1, positionDetails?.tokensOwed1 ?? JSBI.BigInt(0)) : undefined,
-  ]
+  const [feeValue0, feeValue1] = useV3PositionFees(pool ?? undefined, parsedTokenId ?? undefined, receiveWETH)
 
   const [collecting, setCollecting] = useState<boolean>(false)
   const [collectMigrationHash, setCollectMigrationHash] = useState<string | null>(null)
   const isCollectPending = useIsTransactionPending(collectMigrationHash ?? undefined)
   const [showConfirm, setShowConfirm] = useState(false)
 
+  const { connection, wallet } = useSolana()
+
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
-  const collect = useCallback(() => {
+  const collect = useCallback(async () => {
     if (!network || !feeValue0 || !feeValue1 || !positionManager || !account || !tokenId || !librarySol) return
 
     setCollecting(true)
 
+    const provider = new anchor.Provider(connection, wallet as Wallet, {
+      skipPreflight: false,
+    })
+    const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+
     // calling the contract
-    // coreProgram.rpc.collectFromTokenized(amount0Max, amount1Max, {
-    //   accounts: {
-    //     ownerOrDelegate: owner,
-    //     nftAccount: positionANftAccount,
-    //     tokenizedPositionState: tokenizedPositionAState,
-    //     factoryState,
-    //     poolState: poolAState,
-    //     corePositionState: corePositionAState,
-    //     tickLowerState: tickLowerAState,
-    //     tickUpperState: tickUpperAState,
-    //     bitmapLowerState: bitmapLowerAState,
-    //     bitmapUpperState: bitmapUpperAState,
-    //     latestObservationState: latestObservationAState,
-    //     nextObservationState: nextObservationAState,
-    //     coreProgram: coreProgram.programId,
-    //     vault0: vaultA0,
-    //     vault1: vaultA1,
-    //     recipientWallet0: feeRecipientWallet0,
-    //     recipientWallet1: feeRecipientWallet1,
-    //     tokenProgram: TOKEN_PROGRAM_ID,
-    //   },
-    // })
+    try {
+      setCollecting(false)
+
+      // const txHash = await cyclosCore.rpc.collectFromTokenized(amount0Max, amount1Max, {
+      //   accounts: {
+      //     ownerOrDelegate: owner,
+      //     nftAccount: positionANftAccount,
+      //     tokenizedPositionState: tokenizedPositionAState,
+      //     factoryState,
+      //     poolState: poolAState,
+      //     corePositionState: corePositionAState,
+      //     tickLowerState: tickLowerAState,
+      //     tickUpperState: tickUpperAState,
+      //     bitmapLowerState: bitmapLowerAState,
+      //     bitmapUpperState: bitmapUpperAState,
+      //     latestObservationState: latestObservationAState,
+      //     nextObservationState: nextObservationAState,
+      //     coreProgram: cyclosCore.programId,
+      //     vault0: vaultA0,
+      //     vault1: vaultA1,
+      //     recipientWallet0: feeRecipientWallet0,
+      //     recipientWallet1: feeRecipientWallet1,
+      //     tokenProgram: TOKEN_PROGRAM_ID,
+      //   },
+      // })
+      setCollectMigrationHash('Enter Hash here')
+    } catch (e) {
+      setCollecting(false)
+
+      console.log(e)
+    }
 
     const { calldata, value } = NonfungiblePositionManager.collectCallParameters({
       tokenId: tokenId.toString(),
@@ -449,7 +465,8 @@ export function PositionPage({
       })
   }, [network, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
-  const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
+  // const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]
+  const owner = account ?? undefined
   const ownsNFT = positionDetails?.operator === account
 
   // usdc prices always in terms of tokens
@@ -620,7 +637,7 @@ export function PositionPage({
                 </div>
                 {network && owner && !ownsNFT ? (
                   <ExternalLink href={getExplorerLink(network, owner, ExplorerDataType.ADDRESS)}>
-                    <span>Owner</span>
+                    <span>Something went wrong. You dont own this position</span>
                   </ExternalLink>
                 ) : null}
               </DarkCard>

@@ -287,9 +287,9 @@ export function useV3DerivedMintInfo(
       // if (invertPrice) {
       //   currentTick = currentTick * -1
       // }
-      console.log('calculated tick ', currentTick.toString())
+      // console.log('calculated tick ', currentTick.toString())
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
-      console.log('calculated price ', currentSqrt.toString())
+      // console.log('calculated price ', currentSqrt.toString())
       return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick, [])
     } else {
       return undefined
@@ -328,9 +328,9 @@ export function useV3DerivedMintInfo(
   }, [existingPosition, feeAmount, invertPrice, leftRangeTypedValue, rightRangeTypedValue, token0, token1])
 
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks || {}
-  console.log(
-    `Current Tick is ${poolForPosition?.tickCurrent.toString()}\nTick lower is ${tickLower?.toString()}\nTick upper is ${tickUpper?.toString()}`
-  )
+  // console.log(
+  //   `Current Tick is ${poolForPosition?.tickCurrent.toString()}\nTick lower is ${tickLower?.toString()}\nTick upper is ${tickUpper?.toString()}`
+  // )
 
   // mark invalid range
   const invalidRange = Boolean(typeof tickLower === 'number' && typeof tickUpper === 'number' && tickLower >= tickUpper)
@@ -344,9 +344,9 @@ export function useV3DerivedMintInfo(
   }, [token0, token1, ticks, price])
   const { [Bound.LOWER]: lowerPrice, [Bound.UPPER]: upperPrice } = pricesAtTicks
 
-  console.log(
-    `Current Price is ${price?.toSignificant()}\nPrice lower is ${lowerPrice?.toSignificant()}\nPrice upper is ${upperPrice?.toSignificant()}`
-  )
+  // console.log(
+  //   `Current Price is ${price?.toSignificant()}\nPrice lower is ${lowerPrice?.toSignificant()}\nPrice upper is ${upperPrice?.toSignificant()}`
+  // )
 
   // liquidity range warning
   const outOfRange = Boolean(
