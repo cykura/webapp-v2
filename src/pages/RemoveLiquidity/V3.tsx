@@ -543,25 +543,6 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
                   ) : null}
                 </AutoColumn>
               </LightCard>
-
-              {liquidityValue0?.currency &&
-              liquidityValue1?.currency &&
-              (liquidityValue0.currency.isNative ||
-                liquidityValue1.currency.isNative ||
-                liquidityValue0.currency.wrapped.equals(SOLCYS_LOCAL) ||
-                liquidityValue1.currency.wrapped.equals(SOLCYS_LOCAL)) ? (
-                <RowBetween>
-                  <TYPE.main>
-                    <span>Collect as WETH</span>
-                  </TYPE.main>
-                  <Toggle
-                    id="receive-as-weth"
-                    isActive={receiveWETH}
-                    toggle={() => setReceiveWETH((receiveWETH) => !receiveWETH)}
-                  />
-                </RowBetween>
-              ) : null}
-
               <div style={{ display: 'flex' }}>
                 <AutoColumn gap="12px" style={{ flex: '1' }}>
                   <ButtonConfirmed

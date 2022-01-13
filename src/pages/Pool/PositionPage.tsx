@@ -690,15 +690,6 @@ export function PositionPage({
     )
   }
 
-  const showCollectAsWeth = Boolean(
-    ownsNFT &&
-      (feeValue0?.greaterThan(0) || feeValue1?.greaterThan(0)) &&
-      currency0 &&
-      currency1 &&
-      (currency0.isNative || currency1.isNative) &&
-      !collectMigrationHash
-  )
-
   return loading || !pool || !feeAmount ? (
     <LoadingRows>
       <div />
@@ -947,20 +938,6 @@ export function PositionPage({
                       </RowBetween>
                     </AutoColumn>
                   </LightCard>
-                  {showCollectAsWeth && (
-                    <AutoColumn gap="md">
-                      <RowBetween>
-                        <TYPE.main>
-                          <span>Collect as WETH</span>
-                        </TYPE.main>
-                        <Toggle
-                          id="receive-as-weth"
-                          isActive={receiveWETH}
-                          toggle={() => setReceiveWETH((receiveWETH) => !receiveWETH)}
-                        />
-                      </RowBetween>
-                    </AutoColumn>
-                  )}
                 </AutoColumn>
               </DarkCard>
             </AutoColumn>
