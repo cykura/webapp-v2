@@ -107,7 +107,7 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
   })
   const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
 
-  const [positionDetails, setpositionDetails] = useState<PositionDetails[] | undefined>(undefined)
+  const [positionDetails, setpositionDetails] = useState<any>(undefined)
 
   useEffect(() => {
     ;(async () => {
@@ -163,26 +163,13 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
           } catch (e) {
             console.log(value)
             console.log('ERROR ', e)
-            return {
-              nonce: '1',
-              tokenId: 'dummy',
-              operator: 'null',
-              token0: 'token0',
-              token1: 'token1',
-              fee: 1,
-              tickLower: 0,
-              tickUpper: 1,
-              liquidity: JSBI.BigInt(10),
-              feeGrowthInside0LastX128: JSBI.BigInt(100),
-              feeGrowthInside1LastX128: JSBI.BigInt(200),
-              tokensOwed0: JSBI.BigInt(10),
-              tokensOwed1: JSBI.BigInt(20),
-            }
           }
+          return null
         })
       )
       // console.log(positionList)
-      setpositionDetails(positionList)
+      const posList = positionList.filter((v) => v != null)
+      setpositionDetails(posList)
     })()
   }, [chainId, account])
 

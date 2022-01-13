@@ -39,6 +39,7 @@ type PositionListProps = React.PropsWithChildren<{
 }>
 
 export default function PositionList({ positions }: PositionListProps) {
+  console.log(positions)
   return (
     <>
       <DesktopHeader>

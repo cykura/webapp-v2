@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
-import { BITMAP_SEED, OBSERVATION_SEED, SOL_LOCAL, TICK_SEED, POOL_SEED, POSITION_SEED } from '../../constants/tokens'
+import {
+  BITMAP_SEED,
+  OBSERVATION_SEED,
+  SOLCYS_LOCAL,
+  TICK_SEED,
+  POOL_SEED,
+  POSITION_SEED,
+} from '../../constants/tokens'
 import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import AppBody from '../AppBody'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -541,8 +548,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
               liquidityValue1?.currency &&
               (liquidityValue0.currency.isNative ||
                 liquidityValue1.currency.isNative ||
-                liquidityValue0.currency.wrapped.equals(SOL_LOCAL) ||
-                liquidityValue1.currency.wrapped.equals(SOL_LOCAL)) ? (
+                liquidityValue0.currency.wrapped.equals(SOLCYS_LOCAL) ||
+                liquidityValue1.currency.wrapped.equals(SOLCYS_LOCAL)) ? (
                 <RowBetween>
                   <TYPE.main>
                     <span>Collect as WETH</span>

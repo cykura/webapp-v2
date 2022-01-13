@@ -8,6 +8,7 @@ import { useActiveWeb3ReactSol } from './web3'
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
   101: CurrencyAmount.fromRawAmount(SOLUSDC, 10e6),
   104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
+  103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
 }
 
 /**
@@ -45,7 +46,11 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
       // console.log('Fetching SOL price')
       return new Price(currency?.wrapped, stablecoin, '1000', '170')
     }
-
+    //handle cys
+    if (currency?.wrapped.symbol === 'CYS') {
+      // console.log('Fetching CYS price')
+      return new Price(currency?.wrapped, stablecoin, '1', '3')
+    }
     return undefined
   }, [currency, stablecoin])
 }

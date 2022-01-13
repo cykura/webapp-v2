@@ -169,15 +169,18 @@ export const SOLUSDT = new Token(103, '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB
 
 // LOCALNET TOKENS
 
-export const SOLUSDC_LOCAL = new Token(104, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
-export const SOLUSDT_LOCAL = new Token(104, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
-export const SOL_LOCAL = new Token(104, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')
+export const SOLUSDC_LOCAL = new Token(103, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
+export const SOLUSDT_LOCAL = new Token(103, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
+export const SOL_LOCAL = new Token(103, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')
+export const SOLCYS_LOCAL = new Token(103, 'cxWg5RTK5AiSbBZh7NRg5btsbSrc8ETLXGf7tk3MUez', 6, 'CYS', 'Cyclos')
 
 export const USDC_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
 export const USDT_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg'
 export const SOL_ICON = 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png'
+export const CYS_ICON =
+  'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg/logo.svg'
 
 // TOKEN BUMPS
 

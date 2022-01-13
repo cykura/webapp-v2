@@ -1,5 +1,5 @@
 import { Currency } from '@uniswap/sdk-core'
-import { SOL_ICON, USDC_ICON, USDT_ICON } from 'constants/tokens'
+import { SOL_ICON, CYS_ICON, USDC_ICON, USDT_ICON } from 'constants/tokens'
 import React, { useMemo } from 'react'
 import styled from 'styled-components/macro'
 import EthereumLogo from '../../assets/images/ethereum-logo.png'
@@ -53,7 +53,7 @@ export default function CurrencyLogo({
   if (currency?.isNative) {
     return <StyledEthereumLogo src={EthereumLogo} size={size} style={style} {...rest} />
   }
-  const logo = currency?.symbol === 'USDC' ? USDC_ICON : currency?.symbol === 'USDT' ? USDT_ICON : SOL_ICON
+  const logo = currency?.symbol === 'USDC' ? USDC_ICON : currency?.symbol === 'USDT' ? USDT_ICON : CYS_ICON
 
   return <StyledLogo size={size} srcs={[logo]} alt={`${currency?.symbol ?? 'token'} logo`} style={style} {...rest} />
 }

@@ -15,7 +15,7 @@ import { useCurrencyBalances } from '../wallet/hooks'
 import { Field, replaceSwapState, selectCurrency, setRecipient, switchCurrencies, typeInput } from './actions'
 import { SwapState } from './reducer'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
-import { SOL_LOCAL } from 'constants/tokens'
+import { SOLCYS_LOCAL } from 'constants/tokens'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -33,7 +33,7 @@ export function useSwapActionHandlers(): {
       dispatch(
         selectCurrency({
           field,
-          currencyId: currency.isToken ? currency.address : currency.isNative ? SOL_LOCAL.address : '',
+          currencyId: currency.isToken ? currency.address : currency.isNative ? SOLCYS_LOCAL.address : '',
         })
       )
     },
@@ -188,7 +188,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'wSOL') return SOL_LOCAL.address
+    if (urlParam.toUpperCase() === 'wSOL') return SOLCYS_LOCAL.address
   }
   return ''
 }
@@ -206,7 +206,7 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
   let outputCurrency = parseCurrencyFromURLParameter(parsedQs.outputCurrency)
   if (inputCurrency === '' && outputCurrency === '') {
     // default to wSOL input
-    inputCurrency = SOL_LOCAL.address
+    inputCurrency = SOLCYS_LOCAL.address
   } else if (inputCurrency === outputCurrency) {
     // clear output if identical
     outputCurrency = ''
