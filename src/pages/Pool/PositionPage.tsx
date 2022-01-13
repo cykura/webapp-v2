@@ -48,10 +48,12 @@ import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
 import idl from '../../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { TICK_SEED, POOL_SEED } from 'constants/tokens'
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token as SPLToken } from '@solana/spl-token'
+import { TICK_SEED, POOL_SEED, POSITION_SEED, BITMAP_SEED, OBSERVATION_SEED } from 'constants/tokens'
+import { u16ToSeed } from 'state/mint/v3/utils'
 
-const { BN } = anchor
+const { BN, web3 } = anchor
+const { PublicKey } = web3
 
 const PageWrapper = styled.div`
   min-width: 800px;
@@ -383,15 +385,18 @@ export function PositionPage({
 
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
+
   const collect = useCallback(async () => {
     console.log('collect called')
     if (
       !network ||
-      // !feeValue0 ||
-      // !feeValue1 ||
+      !feeValue0 ||
+      !feeValue1 ||
       // !positionManager ||
+      !wallet ||
       !account ||
       !tokenId ||
+      !parsedTokenId ||
       // !librarySol ||
       !pool ||
       !tickLower ||
@@ -409,113 +414,167 @@ export function PositionPage({
 
     setCollecting(true)
 
-    const provider = new anchor.Provider(connection, wallet as Wallet, {
-      skipPreflight: false,
-    })
-    const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
-
-    const current_above_lower = pool.tickCurrent >= tickLower
-    const current_below_upper = pool.tickCurrent < tickUpper
-    let feeGrowthBelowX: anchor.BN
-    let feeGrowthBelowY: anchor.BN
-    let feeGrowthAboveX: anchor.BN
-    let feeGrowthAboveY: anchor.BN
-
-    const token0Add = new anchor.web3.PublicKey(token0?.address)
-    const token1Add = new anchor.web3.PublicKey(token1?.address)
-
-    const [tickLowerState, tickLowerStateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickLower)],
-      cyclosCore.programId
-    )
-
-    const [tickUpperState, tickUpperStateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickUpper)],
-      cyclosCore.programId
-    )
-
-    const [poolState, poolStateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [POOL_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount)],
-      cyclosCore.programId
-    )
-
-    const tickLowerStateData = await cyclosCore.account.tickState.fetch(tickLowerState)
-    const tickUpperStateData = await cyclosCore.account.tickState.fetch(tickUpperState)
-
-    const poolStateData = await cyclosCore.account.poolState.fetch(poolState)
-
-    const { feeGrowthOutside0X32: outside0Lower, feeGrowthOutside1X32: outside1Lower } = tickLowerStateData
-    const { feeGrowthOutside0X32: outside0Upper, feeGrowthOutside1X32: outside1Upper } = tickUpperStateData
-    const { feeGrowthGlobal0X32, feeGrowthGlobal1X32 } = poolStateData
-
-    console.log(JSON.stringify(tickLowerStateData, null, 2))
-    console.log(JSON.stringify(tickUpperStateData, null, 2))
-    console.log(JSON.stringify(poolStateData, null, 2))
-
-    // console.log('tickLowerStateData', outside0Lower.toString(), outside1Lower.toString())
-    // console.log('tickUpperStateData', outside0Upper.toString(), outside1Upper.toString())
-    // console.log('poolStateData', feeGrowthGlobal0X32.toString(), feeGrowthGlobal1X32.toString())
-
-    // calculate fee growth below
-    // if (current_above_lower) {
-    //   feeGrowthBelowX = tickLowerStateData.feeGrowthOutside0X32
-    // } else {
-    //   feeGrowthBelowX = poolStateData.feeGrowthGlobal0X32.sub(tickLowerStateData.feeGrowthOutside0X32)
-    // }
-    // if (current_above_lower) {
-    //   feeGrowthBelowY = tickLowerStateData.feeGrowthOutside1X32
-    // } else {
-    //   feeGrowthBelowY = poolStateData.feeGrowthGlobal1X32.sub(tickLowerStateData.feeGrowthOutside1X32)
-    // }
-
-    // // calculate fee growth above
-    // if (current_below_upper) {
-    //   feeGrowthAboveX = tickUpperStateData.feeGrowthOutside0X32
-    // } else {
-    //   feeGrowthAboveX = poolStateData.feeGrowthGlobal0X32.sub(tickUpperStateData.feeGrowthOutside0X32)
-    // }
-    // if (current_below_upper) {
-    //   feeGrowthAboveY = tickUpperStateData.feeGrowthOutside1X32
-    // } else {
-    //   feeGrowthAboveY = poolStateData.feeGrowthGlobal1X32.sub(tickUpperStateData.feeGrowthOutside1X32)
-    // }
-
-    // // // calculate fee growth inside
-    // const feeGrowthInsideX = poolStateData.feeGrowthGlobal0X32.sub(feeGrowthInside0LastX128.sub(feeGrowthAboveX))
-    // const feeGrowthInsideY = poolStateData.feeGrowthGlobal1X32.sub(feeGrowthInside0LastY128.sub(feeGrowthAboveY))
-
-    // const tokensOwedX = liquidity.mul(feeGrowthInsideX.sub(feeGrowthInside0LastX128)).div(10e6)
-    // const tokensOwedY = liquidity.mul(feeGrowthInsideY.sub(feeGrowthInside0LastY128)).div(10e6)
-    // const tokensOwedXTotal = tokensOwedX.v.add(tokensOwedX)
-    // const tokensOwedYTotal = tokensOwedY.v.add(tokensOwedY)
-    // const [finalAmt0, finalAmt1] = [tokensOwedXTotal, tokensOwedYTotal]
     // calling the contract
     try {
       setCollecting(false)
+      console.log(feeValue0.toSignificant(), feeValue1.toSignificant())
+      // const amount0 = +feeValue0.toSignificant() > 0 ? new BN(feeValue0.toSignificant()) : 0
+      // const amount1 = +feeValue1.toSignificant() > 0 ? new BN(feeValue1.toSignificant()) : 0
 
-      // const txHash = await cyclosCore.rpc.collectFromTokenized(amount0Max, amount1Max, {
-      //   accounts: {
-      //     ownerOrDelegate: owner,
-      //     nftAccount: positionANftAccount,
-      //     tokenizedPositionState: tokenizedPositionAState,
-      //     factoryState,
-      //     poolState: poolAState,
-      //     corePositionState: corePositionAState,
-      //     tickLowerState: tickLowerAState,
-      //     tickUpperState: tickUpperAState,
-      //     bitmapLowerState: bitmapLowerAState,
-      //     bitmapUpperState: bitmapUpperAState,
-      //     latestObservationState: latestObservationAState,
-      //     nextObservationState: nextObservationAState,
-      //     coreProgram: cyclosCore.programId,
-      //     vault0: vaultA0,
-      //     vault1: vaultA1,
-      //     recipientWallet0: feeRecipientWallet0,
-      //     recipientWallet1: feeRecipientWallet1,
-      //     tokenProgram: TOKEN_PROGRAM_ID,
-      //   },
-      // })
-      setCollectMigrationHash('Enter Hash here')
+      // console.log(amount0.toString(), amount1.toString())
+
+      const provider = new anchor.Provider(connection, wallet as Wallet, {
+        skipPreflight: false,
+      })
+      const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+
+      const token0Add = new PublicKey(token0.address)
+      const token1Add = new PublicKey(token1.address)
+
+      const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+        [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickLower)],
+        cyclosCore.programId
+      )
+
+      const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+        [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickUpper)],
+        cyclosCore.programId
+      )
+
+      const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+        [POOL_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount)],
+        cyclosCore.programId
+      )
+
+      const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+
+      const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+        [
+          POSITION_SEED,
+          token0Add.toBuffer(),
+          token1Add.toBuffer(),
+          u32ToSeed(feeAmount),
+          factoryState.toBuffer(),
+          u32ToSeed(tickLower),
+          u32ToSeed(tickUpper),
+        ],
+        cyclosCore.programId
+      )
+
+      const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+        [POSITION_SEED, new PublicKey(parsedTokenId).toBuffer()],
+        cyclosCore.programId
+      )
+
+      const positionNftAccount = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(parsedTokenId),
+        wallet.publicKey!
+      )
+
+      const tickSpacing = feeAmount / 50
+
+      const wordPosLower = (tickLower / tickSpacing) >> 8
+      const wordPosUpper = (tickUpper / tickSpacing) >> 8
+
+      const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+        [BITMAP_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u16ToSeed(wordPosLower)],
+        cyclosCore.programId
+      )
+
+      const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+        [BITMAP_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u16ToSeed(wordPosUpper)],
+        cyclosCore.programId
+      )
+
+      const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
+
+      const latestObservationState = (
+        await PublicKey.findProgramAddress(
+          [
+            OBSERVATION_SEED,
+            token0Add.toBuffer(),
+            token1Add.toBuffer(),
+            u32ToSeed(feeAmount),
+            u16ToSeed(observationIndex),
+          ],
+          cyclosCore.programId
+        )
+      )[0]
+
+      const vault0 = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        token0Add,
+        poolState,
+        true
+      )
+      const vault1 = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        token1Add,
+        poolState,
+        true
+      )
+
+      //fetch ATA of pool tokens
+      const userATA0 = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        token0Add,
+        new PublicKey(account),
+        true
+      )
+      // console.log(`user ATA 0 -> ${userATA0.toString()}`)
+      const userATA1 = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        token1Add,
+        new PublicKey(account),
+        true
+      )
+
+      const nextObservationState = (
+        await PublicKey.findProgramAddress(
+          [
+            OBSERVATION_SEED,
+            token0Add.toBuffer(),
+            token1Add.toBuffer(),
+            u32ToSeed(feeAmount),
+            u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+          ],
+          cyclosCore.programId
+        )
+      )[0]
+
+      const txHash = await cyclosCore.rpc.collectFromTokenized(
+        new BN(2).pow(new BN(64)).subn(1),
+        new BN(2).pow(new BN(64)).subn(1),
+        {
+          accounts: {
+            ownerOrDelegate: owner,
+            nftAccount: positionNftAccount,
+            tokenizedPositionState: tokenizedPositionState,
+            factoryState,
+            poolState: poolState,
+            corePositionState: corePositionState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            bitmapLowerState: bitmapLowerState,
+            bitmapUpperState: bitmapUpperState,
+            latestObservationState: latestObservationState,
+            nextObservationState: nextObservationState,
+            coreProgram: cyclosCore.programId,
+            vault0: vault0,
+            vault1: vault1,
+            recipientWallet0: userATA0,
+            recipientWallet1: userATA1,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        }
+      )
+      setCollectMigrationHash(txHash)
     } catch (e) {
       setCollecting(false)
 
