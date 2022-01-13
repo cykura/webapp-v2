@@ -13,7 +13,7 @@ import { AutoColumn, ColumnCenter } from '../Column'
 import Circle from '../../assets/images/blue-loader.svg'
 
 import { Network } from '@saberhq/solana-contrib'
-import { useSolana } from '@gokiprotocol/walletkit'
+import { useSolana } from '@saberhq/use-solana'
 
 const Wrapper = styled.div`
   width: 100%;
