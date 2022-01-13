@@ -123,7 +123,6 @@
     "@saberhq/use-solana": "^1.11.3",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.31.0",
-    "@uniswap/sdk-core": "cyclos-io/sdk-core",
     "notistack": "^2.0.3"
   }
 }
