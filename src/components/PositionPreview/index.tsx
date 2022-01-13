@@ -44,7 +44,7 @@ export const PositionPreview = ({
   const sorted = baseCurrency === currency0
   const quoteCurrency = sorted ? currency1 : currency0
 
-  const price = sorted ? position.pool.priceOf(position.pool.token0) : position.pool.priceOf(position.pool.token1)
+  const price = !sorted ? position.pool?.priceOf(position.pool.token0) : position.pool?.priceOf(position.pool.token1)
 
   const priceLower = sorted ? position.token0PriceLower : position.token0PriceUpper.invert()
   const priceUpper = sorted ? position.token0PriceUpper : position.token0PriceLower.invert()

@@ -212,7 +212,11 @@ export default function AddLiquidity({
     // Convinence helpers
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
-    const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    let [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+
+    if (tk1.symbol === 'CYS' || tk2.symbol === 'CYS') {
+      ;[tk1, tk2] = [tokenA, tokenB]
+    }
 
     const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
 
