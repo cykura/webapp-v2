@@ -75,7 +75,7 @@ const USDT = {
 }
 const CYS = {
   symbol: 'CYS',
-  address: new PublicKey('cxWg5RTK5AiSbBZh7NRg5btsbSrc8ETLXGf7tk3MUez'),
+  address: new PublicKey('cb9GdmEo2vbNh8T8JeAGEVhmDSHZApHbea72eY4oVtk'),
   decimal: 6,
   name: 'Cyclos',
   logoURI:
