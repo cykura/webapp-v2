@@ -38,7 +38,7 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
     //handle usdt
     if (currency?.wrapped.symbol === 'USDT') {
       // console.log('Fetching USDT price')
-      return new Price(currency?.wrapped, stablecoin, '1', '2')
+      return new Price(currency?.wrapped, stablecoin, '1', '1')
     }
 
     //handle wsol
@@ -49,7 +49,7 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
     //handle cys
     if (currency?.wrapped.symbol === 'CYS') {
       // console.log('Fetching CYS price')
-      return new Price(currency?.wrapped, stablecoin, '1', '3')
+      return new Price(currency?.wrapped, stablecoin, '1', '1')
     }
     return undefined
   }, [currency, stablecoin])

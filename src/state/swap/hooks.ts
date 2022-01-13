@@ -126,8 +126,6 @@ export function useDerivedSwapInfo() {
   // const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
   // const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
 
-  const v3Trade = bestV3TradeExactIn
-
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],
     [Field.OUTPUT]: relevantTokenBalances[1],
@@ -160,7 +158,7 @@ export function useDerivedSwapInfo() {
     }
   }
 
-  const toggledTrade = v3Trade?.trade ?? undefined
+  const toggledTrade = bestV3TradeExactIn?.trade ?? undefined
   // const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
   const allowedSlippage = new Percent(10)
 
@@ -188,7 +186,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'wSOL') return SOLCYS_LOCAL.address
+    if (urlParam.toUpperCase() === 'CYS') return SOLCYS_LOCAL.address
   }
   return ''
 }

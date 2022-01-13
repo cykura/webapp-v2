@@ -26,13 +26,16 @@ export function useV3SwapPools(
   useEffect(() => {
     async function fetchPool() {
       if (currencyIn && currencyOut) {
-        let token0 = new PublicKey((currencyIn as Token).address)
-        let token1 = new PublicKey((currencyOut as Token).address)
-        if (token0.toString() > token1.toString()) {
-          const temp = token0
-          token0 = token1
-          token1 = temp
+        let [tk0, tk1] = [currencyIn?.wrapped, currencyOut?.wrapped]
+        if (currencyIn?.wrapped.address !== currencyOut?.wrapped.address) {
+          ;[tk0, tk1] = currencyIn?.wrapped.sortsBefore(currencyOut?.wrapped)
+            ? [currencyIn?.wrapped, currencyOut?.wrapped]
+            : [currencyOut?.wrapped, currencyIn?.wrapped] // does safety checks
         }
+
+        const token0 = new PublicKey((tk0 as Token).address)
+        const token1 = new PublicKey((tk1 as Token).address)
+
         const generatedAddr = (
           await PublicKey.findProgramAddress(
             [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500)],
