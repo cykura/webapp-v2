@@ -896,11 +896,11 @@ export function PositionPage({
                           onClick={() => setShowConfirm(true)}
                         >
                           {!!collectMigrationHash && !isCollectPending ? (
-                            <TYPE.main color={theme.text1}>
+                            <TYPE.main color={theme.black}>
                               <span> Collected</span>
                             </TYPE.main>
                           ) : isCollectPending || collecting ? (
-                            <TYPE.main color={theme.text1}>
+                            <TYPE.main color={theme.black}>
                               {' '}
                               <Dots>
                                 <span>Collecting</span>
@@ -908,7 +908,7 @@ export function PositionPage({
                             </TYPE.main>
                           ) : (
                             <>
-                              <TYPE.main color={theme.white}>
+                              <TYPE.main color={theme.black}>
                                 <span>Collect fees</span>
                               </TYPE.main>
                             </>

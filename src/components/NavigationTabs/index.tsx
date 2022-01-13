@@ -122,7 +122,8 @@ export function AddRemoveTabs({
         <TYPE.mediumHeader fontWeight={500} fontSize={20}>
           {creating ? <span>Create a pair</span> : adding ? <span>Add Liquidity</span> : <span>Remove Liquidity</span>}
         </TYPE.mediumHeader>
-        <SettingsTab placeholderSlippage={defaultSlippage} />
+        {/* <SettingsTab placeholderSlippage={defaultSlippage} /> */}
+        <span>&nbsp;</span>
       </RowBetween>
     </Tabs>
   )

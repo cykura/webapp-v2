@@ -298,8 +298,8 @@ const ActiveOutlined = styled(ButtonOutlined)`
 `
 
 const Circle = styled.div`
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 16px;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.primary1};
   display: flex;
@@ -308,11 +308,11 @@ const Circle = styled.div`
 `
 
 const CheckboxWrapper = styled.div`
-  width: 30px;
+  width: 26px;
   padding: 0 10px;
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 5px;
+  right: 5px;
 `
 
 const ResponsiveCheck = styled(Check)`
@@ -336,7 +336,7 @@ export function ButtonRadioChecked({ active = false, children, ...rest }: { acti
             {children}
             <CheckboxWrapper>
               <Circle>
-                <ResponsiveCheck size={13} stroke={theme.white} />
+                <ResponsiveCheck size={13} stroke={theme.text5} />
               </Circle>
             </CheckboxWrapper>
           </RowBetween>

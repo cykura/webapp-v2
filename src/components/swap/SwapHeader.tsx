@@ -21,7 +21,8 @@ export default function SwapHeader({ allowedSlippage }: { allowedSlippage: Perce
           </TYPE.black>
         </RowFixed>
         <RowFixed>
-          <SettingsTab placeholderSlippage={allowedSlippage} />
+          {/* <SettingsTab placeholderSlippage={allowedSlippage} /> */}
+          <span>&nbsp;</span>
         </RowFixed>
       </RowBetween>
     </StyledSwapHeader>

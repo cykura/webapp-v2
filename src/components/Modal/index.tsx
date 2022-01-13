@@ -120,7 +120,7 @@ export default function Modal({
             <StyledDialogOverlay
               key={key}
               style={props}
-              onDismiss={onDismiss}
+              // onDismiss={onDismiss}
               initialFocusRef={initialFocusRef}
               unstable_lockFocusAcrossFrames={false}
             >

@@ -981,10 +981,7 @@ export default function AddLiquidity({
                     </RowBetween>
                     <TYPE.main fontSize={14} fontWeight={400} style={{ marginBottom: '.5rem', lineHeight: '125%' }}>
                       <span>
-                        Your liquidity will only earn fees when the market price of the pair is within your range.{' '}
-                        <ExternalLink href={'https://discord.gg/vpbTxzHWYg'} style={{ fontSize: '14px' }}>
-                          Need help picking a range?
-                        </ExternalLink>
+                        Your liquidity will only earn fees when the market price of the pair is within your range.
                       </span>
                     </TYPE.main>
 
