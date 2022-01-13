@@ -5,7 +5,7 @@ import { useV3PositionFromTokenId } from './useV3Positions'
 import JSBI from 'jsbi'
 import idl from '../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
-import { TICK_SEED, POOL_SEED } from '../constants/tokens'
+import { TICK_SEED, POOL_SEED, POSITION_SEED } from '../constants/tokens'
 import { PROGRAM_ID_STR } from '../constants/addresses'
 import { useSolana } from '@saberhq/use-solana'
 import { useActiveWeb3ReactSol } from './web3'
@@ -97,6 +97,29 @@ export function useV3PositionFees(
         cyclosCore.programId
       )
 
+      const [factoryState, factoryStateBump] = await anchor.web3.PublicKey.findProgramAddress([], cyclosCore.programId)
+
+      const [corePositionState, corePositionBump] = await anchor.web3.PublicKey.findProgramAddress(
+        [
+          POSITION_SEED,
+          token0Add.toBuffer(),
+          token1Add.toBuffer(),
+          u32ToSeed(feeAmount),
+          factoryState.toBuffer(),
+          u32ToSeed(tickLower),
+          u32ToSeed(tickUpper),
+        ],
+        cyclosCore.programId
+      )
+
+      const corePositionData = await cyclosCore.account.positionState.fetch(corePositionState)
+      let {
+        feeGrowthInside0LastX32: coreInside0X32,
+        tokensOwed0: coreTokensOwed0,
+        tokensOwed1: coreTokensOwed1,
+        feeGrowthInside1LastX32: coreInside1X32,
+      } = corePositionData
+
       const tickLowerStateData = await cyclosCore.account.tickState.fetch(tickLowerState)
       const tickUpperStateData = await cyclosCore.account.tickState.fetch(tickUpperState)
 
@@ -105,6 +128,7 @@ export function useV3PositionFees(
       let { feeGrowthOutside0X32: outside0Lower, feeGrowthOutside1X32: outside1Lower } = tickLowerStateData
       let { feeGrowthOutside0X32: outside0Upper, feeGrowthOutside1X32: outside1Upper } = tickUpperStateData
       let { feeGrowthGlobal0X32, feeGrowthGlobal1X32 } = poolStateData
+      // console.log(coreTokensOwed0.toString(), coreTokensOwed1.toString())
 
       outside0Lower = JSBI.BigInt(outside0Lower.toString())
       outside1Lower = JSBI.BigInt(outside1Lower.toString())
@@ -112,6 +136,10 @@ export function useV3PositionFees(
       outside1Upper = JSBI.BigInt(outside1Upper.toString())
       feeGrowthGlobal0X32 = JSBI.BigInt(feeGrowthGlobal0X32.toString())
       feeGrowthGlobal1X32 = JSBI.BigInt(feeGrowthGlobal1X32.toString())
+      coreInside0X32 = JSBI.BigInt(coreInside0X32.toString())
+      coreInside1X32 = JSBI.BigInt(coreInside1X32.toString())
+      coreTokensOwed0 = JSBI.BigInt(coreTokensOwed0.toString())
+      coreTokensOwed1 = JSBI.BigInt(coreTokensOwed1.toString())
 
       // calculate fee growth below
       if (current_above_lower) {
@@ -152,7 +180,7 @@ export function useV3PositionFees(
             JSBI.BigInt(JSBI.subtract(feeGrowthInsideX, JSBI.BigInt(feeGrowthInside0LastX128)))
           )
         ),
-        JSBI.BigInt(10e6)
+        JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(32))
       )
       const tokensOwedY = JSBI.divide(
         JSBI.BigInt(
@@ -161,7 +189,7 @@ export function useV3PositionFees(
             JSBI.BigInt(JSBI.subtract(feeGrowthInsideY, JSBI.BigInt(feeGrowthInside1LastX128)))
           )
         ),
-        JSBI.BigInt(10e6)
+        JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(32))
       )
       const tokensOwedXTotal = JSBI.add(tokensOwedX, JSBI.BigInt(tokensOwed0))
       const tokensOwedYTotal = JSBI.add(tokensOwedY, JSBI.BigInt(tokensOwed1))
