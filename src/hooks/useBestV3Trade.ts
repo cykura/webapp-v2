@@ -111,7 +111,8 @@ export function useBestV3TradeExactIn(
         ? new Fraction(pool.sqrtRatioX32, MaxU32)
         : new Fraction(MaxU32, pool.sqrtRatioX32)
     console.log('price factor', factor.quotient)
-    const amountOut = amountIn.multiply(factor)
+    const out = amountIn.multiply(factor)
+    const amountOut = CurrencyAmount.fromFractionalAmount(currencyOut, out.numerator, out.denominator)
 
     return {
       state: V3TradeState.VALID,

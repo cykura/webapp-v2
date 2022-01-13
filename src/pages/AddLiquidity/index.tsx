@@ -700,10 +700,10 @@ export default function AddLiquidity({
       } else {
         // prevent weth + eth
         const isETHOrWETHNew =
-          currencyIdNew === 'wSOL' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address)
+          currencyIdNew === 'CYS' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address)
         const isETHOrWETHOther =
           currencyIdOther !== undefined &&
-          (currencyIdOther === 'wSOL' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address))
+          (currencyIdOther === 'CYS' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address))
 
         if (isETHOrWETHNew && isETHOrWETHOther) {
           return [currencyIdNew, undefined]
@@ -929,7 +929,7 @@ export default function AddLiquidity({
                             )}
                           </TYPE.main>
                         </RowBetween>
-                        <BlueCard
+                        {/* <BlueCard
                           style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -949,7 +949,7 @@ export default function AddLiquidity({
                           <TYPE.body fontWeight={500} textAlign="center" fontSize={14} style={{ opacity: 0.8 }}>
                             The transaction cost will be much higher as it includes the rent to create the pool.
                           </TYPE.body>
-                        </BlueCard>
+                        </BlueCard> */}
                       </AutoColumn>
                     </DynamicSection>
                   )}
