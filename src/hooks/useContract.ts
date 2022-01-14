@@ -7,7 +7,7 @@ import { abi as NFTPositionManagerABI } from '@uniswap/v3-periphery/artifacts/co
 import { useMemo } from 'react'
 import { getContract } from 'utils'
 import { useActiveWeb3ReactSol } from './web3'
-import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOLCYS_LOCAL } from '../constants/tokens'
+import { SOLUSDC, SOLUSDT, SOLCYS_LOCAL } from '../constants/tokens'
 
 // returns null on errors
 export function useContract<T extends Contract = Contract>(
@@ -33,12 +33,12 @@ export function useContract<T extends Contract = Contract>(
 }
 
 export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: boolean) {
-  if (SOLUSDC_LOCAL.address === tokenAddress) {
-    return { ...SOLUSDC_LOCAL }
-  } else if (SOLUSDT_LOCAL.address === tokenAddress) {
-    return { ...SOLUSDT_LOCAL }
+  if (SOLUSDC.address === tokenAddress) {
+    return { ...SOLUSDC }
+  } else if (SOLUSDT.address === tokenAddress) {
+    return { ...SOLUSDT }
   } else {
-    return { ...SOLCYS_LOCAL }
+    return { ...SOLUSDT }
   }
 }
 

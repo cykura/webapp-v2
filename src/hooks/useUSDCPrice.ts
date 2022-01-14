@@ -8,7 +8,7 @@ import { useActiveWeb3ReactSol } from './web3'
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
   101: CurrencyAmount.fromRawAmount(SOLUSDC, 10e6),
   104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
-  103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
+  103: CurrencyAmount.fromRawAmount(SOLUSDC, 1000_000),
 }
 
 /**

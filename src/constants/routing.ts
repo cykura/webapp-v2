@@ -20,6 +20,9 @@ import {
   ETH2X_FLI,
   WETH9_EXTENDED,
   SOLCYS_LOCAL,
+  SOLUSDT,
+  SOLUSDC,
+  SOL_LOCAL,
   SOLUSDT_LOCAL,
   SOLUSDC_LOCAL,
 } from './tokens'
@@ -42,8 +45,8 @@ const WETH_ONLY: ChainTokenList = {
 }
 // used to construct intermediary pairs for trading
 export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
-  [104]: [SOLCYS_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [103]: [SOLCYS_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
+  [104]: [SOL_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
+  [103]: [SOLUSDT, SOLUSDC],
 }
 export const ADDITIONAL_BASES: { [chainId: number]: { [tokenAddress: string]: Token[] } } = {
   [1]: {
@@ -76,8 +79,8 @@ export const CUSTOM_BASES: { [chainId: number]: { [tokenAddress: string]: Token[
  */
 export const COMMON_BASES: ChainCurrencyList = {
   // [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
-  [104]: [SOLCYS_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [103]: [SOLCYS_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
+  [104]: [SOL_LOCAL, SOLUSDT_LOCAL, SOLUSDC_LOCAL],
+  [103]: [SOLUSDT, SOLUSDC],
 }
 
 // used to construct the list of all pairs we consider by default in the frontend

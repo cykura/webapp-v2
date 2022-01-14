@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from './web3'
 
 import { Pool, FeeAmount } from '@uniswap/v3-sdk'
-import { POOL_SEED, SOLUSDC_LOCAL, SOLUSDT_LOCAL } from 'constants/tokens'
+import { POOL_SEED, SOLUSDC, SOLUSDT } from 'constants/tokens'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 
 // const POOL_STATE_INTERFACE = new Interface(IUniswapV3PoolStateABI) as IUniswapV3PoolStateInterface

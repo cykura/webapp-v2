@@ -1,6 +1,6 @@
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
-import { SOLCYS_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
+import { SOLCYS_LOCAL, SOLUSDT, WETH9_EXTENDED } from '../../constants/tokens'
 import AddLiquidity from './index'
 
 export function RedirectDuplicateTokenIds(
@@ -16,8 +16,8 @@ export function RedirectDuplicateTokenIds(
   // const chainId = 103;
 
   // prevent weth + eth
-  const isETHOrWETHA = currencyIdA === 'CYS' || (chainId !== undefined && currencyIdA === SOLCYS_LOCAL.address)
-  const isETHOrWETHB = currencyIdB === 'CYS' || (chainId !== undefined && currencyIdB === SOLCYS_LOCAL.address)
+  const isETHOrWETHA = currencyIdA === 'USDT' || (chainId !== undefined && currencyIdA === SOLUSDT.address)
+  const isETHOrWETHB = currencyIdB === 'USDT' || (chainId !== undefined && currencyIdB === SOLUSDT.address)
 
   if (
     currencyIdA &&

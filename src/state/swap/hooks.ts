@@ -15,7 +15,7 @@ import { useCurrencyBalances } from '../wallet/hooks'
 import { Field, replaceSwapState, selectCurrency, setRecipient, switchCurrencies, typeInput } from './actions'
 import { SwapState } from './reducer'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
-import { SOLCYS_LOCAL } from 'constants/tokens'
+import { SOLCYS_LOCAL, SOLUSDC, SOLUSDT } from 'constants/tokens'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -33,7 +33,7 @@ export function useSwapActionHandlers(): {
       dispatch(
         selectCurrency({
           field,
-          currencyId: currency.isToken ? currency.address : currency.isNative ? SOLCYS_LOCAL.address : '',
+          currencyId: currency.isToken ? currency.address : currency.isNative ? SOLUSDC.address : '',
         })
       )
     },
@@ -186,7 +186,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'CYS') return SOLCYS_LOCAL.address
+    if (urlParam.toUpperCase() === 'USDT') return SOLUSDT.address
   }
   return ''
 }

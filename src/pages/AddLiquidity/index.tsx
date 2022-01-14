@@ -14,6 +14,7 @@ import {
   POOL_SEED,
   POSITION_SEED,
   SOLCYS_LOCAL,
+  SOLUSDT,
   TICK_SEED,
 } from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
@@ -699,11 +700,10 @@ export default function AddLiquidity({
         return [currencyIdNew, undefined]
       } else {
         // prevent weth + eth
-        const isETHOrWETHNew =
-          currencyIdNew === 'CYS' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address)
+        const isETHOrWETHNew = currencyIdNew === 'USDT' || (chainId !== undefined && currencyIdNew === SOLUSDT.address)
         const isETHOrWETHOther =
           currencyIdOther !== undefined &&
-          (currencyIdOther === 'CYS' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address))
+          (currencyIdOther === 'USDT' || (chainId !== undefined && currencyIdOther === SOLUSDT.address))
 
         if (isETHOrWETHNew && isETHOrWETHOther) {
           return [currencyIdNew, undefined]

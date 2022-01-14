@@ -164,15 +164,15 @@ export class ExtendedEther extends Ether {
 
 // SOLANA TOKENS
 
-export const SOLUSDC = new Token(103, '5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW', 6, 'USDC', 'USDC Coin')
-export const SOLUSDT = new Token(103, '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm', 6, 'USDT', 'USDT Coin')
+export const SOLUSDC = new Token(103, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
+export const SOLUSDT = new Token(103, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
+export const SOLCYS_LOCAL = new Token(103, 'cb9GdmEo2vbNh8T8JeAGEVhmDSHZApHbea72eY4oVtk', 6, 'CYS', 'Cyclos')
 
 // LOCALNET TOKENS
 
-export const SOLUSDC_LOCAL = new Token(103, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
-export const SOLUSDT_LOCAL = new Token(103, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
-export const SOL_LOCAL = new Token(103, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')
-export const SOLCYS_LOCAL = new Token(103, 'cb9GdmEo2vbNh8T8JeAGEVhmDSHZApHbea72eY4oVtk', 6, 'CYS', 'Cyclos')
+export const SOLUSDC_LOCAL = new Token(104, 'GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm', 6, 'USDC', 'USDC Coin')
+export const SOLUSDT_LOCAL = new Token(104, '7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t', 6, 'USDT', 'USDT Coin')
+export const SOL_LOCAL = new Token(104, 'EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP', 9, 'wSOL', 'Wrapped SOL')
 
 export const USDC_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
