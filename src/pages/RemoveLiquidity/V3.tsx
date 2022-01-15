@@ -103,6 +103,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
   const { onPercentSelect } = useBurnV3ActionHandlers()
 
   const removed = JSBI.EQ(position?.liquidity, 0)
+  const MaxU64 = new BN(2).pow(new BN(64)).subn(1)
 
   // boilerplate for the slider
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)
@@ -153,11 +154,16 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       return
     }
 
-    const removeLiquidityAmount = liquidityPercentage?.multiply(
-      JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100))
-    )
-
-    // console.log(liquidityPercentage?.multiply())
+    const removeLiquidityAmount =
+      +liquidityPercentage.toSignificant() >= 100
+        ? new BN(positionSDK.liquidity.toString())
+        : new BN(
+            liquidityPercentage
+              ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100)))
+              .toSignificant()
+          )
+    console.log(positionSDK)
+    console.log('removeLiquidityAmount', removeLiquidityAmount.toString())
 
     const fee = position.fee
     const tickSpacing = fee / 50
@@ -278,35 +284,27 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       true
     )
 
-    const MaxU64 = new BN(2).pow(new BN(64)).subn(1)
-
     try {
       const tx = new Transaction()
       tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
       tx.add(
-        cyclosCore.instruction.decreaseLiquidity(
-          new BN(removeLiquidityAmount.toSignificant()),
-          amount0Minimum,
-          amount1Minimum,
-          deadline,
-          {
-            accounts: {
-              ownerOrDelegate: wallet?.publicKey,
-              nftAccount: positionNftAccount,
-              tokenizedPositionState: tokenizedPositionState,
-              factoryState,
-              poolState: poolState,
-              corePositionState: corePositionState,
-              tickLowerState: tickLowerState,
-              tickUpperState: tickUpperState,
-              bitmapLowerState: bitmapLowerState,
-              bitmapUpperState: bitmapUpperState,
-              latestObservationState: latestObservationState,
-              nextObservationState: nextObservationState,
-              coreProgram: cyclosCore.programId,
-            },
-          }
-        )
+        cyclosCore.instruction.decreaseLiquidity(removeLiquidityAmount, amount0Minimum, amount1Minimum, deadline, {
+          accounts: {
+            ownerOrDelegate: wallet?.publicKey,
+            nftAccount: positionNftAccount,
+            tokenizedPositionState: tokenizedPositionState,
+            factoryState,
+            poolState: poolState,
+            corePositionState: corePositionState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            bitmapLowerState: bitmapLowerState,
+            bitmapUpperState: bitmapUpperState,
+            latestObservationState: latestObservationState,
+            nextObservationState: nextObservationState,
+            coreProgram: cyclosCore.programId,
+          },
+        })
       )
       tx.add(
         cyclosCore.instruction.collectFromTokenized(MaxU64, MaxU64, {
