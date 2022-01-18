@@ -172,6 +172,10 @@ export function useSwapCallback(
     const signer = wallet.publicKey!
     const pool = trade.route
 
+    // Find bitmap and tick accounts required to consume the input amount
+    // 1. Find current tick from pool account
+    // 2. Find swap direction
+    // 3. Formula to know if a tick is consumed completely
     const { observationIndex, observationCardinalityNext, tick, token0, token1 } =
       await cyclosCore.account.poolState.fetch(pool)
     console.log('token0', token0.toString(), 'token1', token1.toString())
@@ -209,16 +213,12 @@ export function useSwapCallback(
       pool,
       true
     )
-
-    const wordPos = (tick / 10) >> 8
-
     const latestObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
-
     const nextObservationState = (
       await PublicKey.findProgramAddress(
         [
@@ -232,34 +232,105 @@ export function useSwapCallback(
       )
     )[0]
 
-    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos + 1)],
-      cyclosCore.programId
-    )
-    console.log('bitmap upper', bitmapUpperState.toString())
+    // must pass the bitmap for current pool price, plus additional bitmaps until an active tick
+    // is encountered
+    const bitmapAccounts = []
+    // loop until initialized tick found
+    // assume ticks are not crossed. Just valid bitmap must be passed
 
-    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos)],
-      cyclosCore.programId
-    )
-    console.log('bitmap lower', bitmapLowerState.toString())
-
-    const [tickState, tickStateBump] = await PublicKey.findProgramAddress(
-      [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u32ToSeed(tick)],
-      cyclosCore.programId
-    )
+    // TODO support other spacings
+    // currently just 10 spacing supported for 0.05% fee tier
+    let wordPos = (tick / 10) >> 8
+    let bitPos = (tick / 10) % 256
+    let next: number | undefined
+    let currentBitmap: PublicKey | undefined
+    // price = reserves_1 / reserves_0
+    // token 0 -> 1 (USDT -> USDC), price down
+    // token 1 -> 0 (USDC -> USDT), price up
 
     const inputToken = new PublicKey((trade.inputAmount.currency as UniToken).address)
-    const [inputTokenAccount, outputTokenAccount, inputVault, outputVault] = inputToken.equals(token0)
-      ? [minterWallet0, minterWallet1, vault0, vault1]
-      : [minterWallet1, minterWallet0, vault1, vault0]
+    const [inputTokenAccount, outputTokenAccount, inputVault, outputVault, zeroForOne] = inputToken.equals(token0)
+      ? [minterWallet0, minterWallet1, vault0, vault1, true]
+      : [minterWallet1, minterWallet0, vault1, vault0, false]
 
-    console.log('minter ac 0', minterWallet0.toString())
-    console.log('minter ac 1', minterWallet1.toString())
-    console.log('vault 0', vault0.toString())
-    console.log('vault 1', vault1.toString())
+    let initialized = false
+    while (!initialized) {
+      console.log('checking in word', wordPos)
+      // bitmap containing current tick
+      currentBitmap = (
+        await PublicKey.findProgramAddress(
+          [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos)],
+          cyclosCore.programId
+        )
+      )[0]
+      bitmapAccounts.push(currentBitmap)
+      console.log('current tick bitmap', currentBitmap.toString())
+
+      console.log('tick', tick, 'word pos', wordPos, 'bit pos', bitPos)
+      const bitmapData = await cyclosCore.account.tickBitmapState.fetch(currentBitmap)
+      console.log('current bitmap', bitmapData.word) // [u64; 4]
+
+      let word = new BN(0)
+      for (let i = 0; i < bitmapData.word.length; i++) {
+        console.log('word', i, bitmapData.word[i].toString())
+        word = word.add(bitmapData.word[i].shln(64 * i))
+      }
+      console.log('got word', word.toString(), 'bit length', word.bitLength())
+      console.log('zero for one', zeroForOne)
+      if (zeroForOne) {
+        // get the next active tick less than or equal to the current tick
+        const mask = new BN(1).shln(bitPos).subn(1).add(new BN(1).shln(bitPos))
+        const masked = word.and(mask)
+        initialized = !masked.eqn(0)
+        next = -(initialized ? bitPos - mostSignificantBit(masked) : bitPos)
+        if (!initialized) {
+          wordPos -= 1 // look in the previous bitmap
+          bitPos = 255
+        }
+      } else {
+        // get the next active tick greater than the current tick
+        const mask = new BN(1).shln(bitPos).subn(1).notn(256)
+        const masked = word.and(mask)
+        initialized = !masked.eqn(0)
+        next = initialized ? leastSignificantBit(masked) - bitPos : 255 - bitPos
+        if (!initialized) {
+          wordPos += 1 // look in the next bitmap
+          bitPos = 0 // TODO handle equal to condition for bitmaps ahead of current price bitmap
+        }
+      }
+      console.log('initialized', initialized, 'next', next)
+    }
+
+    if (next) {
+      const nextTick = (wordPos << 8) + next
+      console.log('word pos', wordPos, 'bit pos', bitPos, 'got next tick', nextTick)
+    }
+
+    if (!currentBitmap) {
+      return ''
+    }
+
+    // TODO support swaps where ticks are flipped
+    // flipped tick accounts must be passed
+
+    // const [tickState, tickStateBump] = await PublicKey.findProgramAddress(
+    //   [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u32ToSeed(tick)],
+    //   cyclosCore.programId
+    // )
+    // try {
+    //   // no account for tick = 0. Tick account is needed only when price moves past an active tick
+    //   const tickData = await cyclosCore.account.tickState.fetch(tickState)
+    //   console.log('got tick account', tickData)
+    // } catch (error) {
+    //   console.error('failed to get tick account', error)
+    // }
+
+    // console.log('minter ac 0', minterWallet0.toString())
+    // console.log('minter ac 1', minterWallet1.toString())
+    // console.log('vault 0', vault0.toString())
+    // console.log('vault 1', vault1.toString())
     const deadline = new BN(Date.now() / 1000 + 100_000)
-    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([1]), {
+    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([bitmapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
@@ -274,17 +345,17 @@ export function useSwapCallback(
           isWritable: true,
         },
         {
-          pubkey: outputTokenAccount, // outputTokenAccount
+          pubkey: outputTokenAccount,
           isSigner: false,
           isWritable: true,
         },
         {
-          pubkey: inputVault, // input vault
+          pubkey: inputVault,
           isSigner: false,
           isWritable: true,
         },
         {
-          pubkey: outputVault, // output vault
+          pubkey: outputVault,
           isSigner: false,
           isWritable: true,
         },
@@ -298,16 +369,18 @@ export function useSwapCallback(
           isSigner: false,
           isWritable: true,
         },
-        {
-          pubkey: bitmapLowerState,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: tickState,
-          isSigner: false,
-          isWritable: true,
-        },
+        ...bitmapAccounts.map((bitmapAc) => {
+          return {
+            pubkey: bitmapAc,
+            isSigner: false,
+            isWritable: true,
+          }
+        }),
+        // {
+        //   pubkey: tickState,
+        //   isSigner: false,
+        //   isWritable: true,
+        // },
       ],
     })
 
@@ -315,127 +388,12 @@ export function useSwapCallback(
     return hash
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
+}
 
-  // return useMemo(() => {
-  //   if (!trade || !librarySol || !account || !chainId) {
-  //     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
-  //   }
-  //   if (!recipient) {
-  //     if (recipientAddress !== null) {
-  //       return { state: SwapCallbackState.INVALID, callback: null, error: 'Invalid recipient' }
-  //     } else {
-  //       return { state: SwapCallbackState.LOADING, callback: null, error: null }
-  //     }
-  //   }
+function mostSignificantBit(x: BN) {
+  return x.bitLength() - 1
+}
 
-  //   return {
-  //     state: SwapCallbackState.VALID,
-  //     callback: async function onSwap(): Promise<string> {
-  //       const estimatedCalls: SwapCallEstimate[] = await Promise.all(
-  //         swapCalls.map((call) => {
-  //           const { address, calldata, value } = call
-
-  //           const tx =
-  //             !value || isZero(value)
-  //               ? { from: account, to: address, data: calldata }
-  //               : {
-  //                   from: account,
-  //                   to: address,
-  //                   data: calldata,
-  //                   value,
-  //                 }
-
-  //           return librarySol
-  //             ?.estimateGas(tx)
-  //             .then((gasEstimate: any) => {
-  //               return {
-  //                 call,
-  //                 gasEstimate,
-  //               }
-  //             })
-  //             .catch((gasError: any) => {
-  //               console.debug('Gas estimate failed, trying eth_call to extract error', call)
-
-  //               return librarySol
-  //                 ?.call(tx)
-  //                 .then((result: any) => {
-  //                   console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
-  //                   return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
-  //                 })
-  //                 .catch((callError: any) => {
-  //                   console.debug('Call threw error', call, callError)
-  //                   return { call, error: new Error(swapErrorToUserReadableMessage(callError)) }
-  //                 })
-  //             })
-  //         })
-  //       )
-
-  //       // a successful estimation is a bignumber gas estimate and the next call is also a bignumber gas estimate
-  //       let bestCallOption: SuccessfulCall | SwapCallEstimate | undefined = estimatedCalls.find(
-  //         (el, ix, list): el is SuccessfulCall =>
-  //           'gasEstimate' in el && (ix === list.length - 1 || 'gasEstimate' in list[ix + 1])
-  //       )
-
-  //       // check if any calls errored with a recognizable error
-  //       if (!bestCallOption) {
-  //         const errorCalls = estimatedCalls.filter((call): call is FailedCall => 'error' in call)
-  //         if (errorCalls.length > 0) throw errorCalls[errorCalls.length - 1].error
-  //         const firstNoErrorCall = estimatedCalls.find<SwapCallEstimate>(
-  //           (call): call is SwapCallEstimate => !('error' in call)
-  //         )
-  //         if (!firstNoErrorCall) throw new Error('Unexpected error. Could not estimate gas for the swap.')
-  //         bestCallOption = firstNoErrorCall
-  //       }
-
-  //       const {
-  //         call: { address, calldata, value },
-  //       } = bestCallOption
-
-  //       return librarySol
-  //         ?.getSigner()
-  //         .sendTransaction({
-  //           from: account,
-  //           to: address,
-  //           data: calldata,
-  //           // let the wallet try if we can't estimate the gas
-  //           ...('gasEstimate' in bestCallOption ? { gasLimit: calculateGasMargin(bestCallOption.gasEstimate) } : {}),
-  //           ...(value && !isZero(value) ? { value } : {}),
-  //         })
-  //         .then((response: any) => {
-  //           const inputSymbol = trade.inputAmount.currency.symbol
-  //           const outputSymbol = trade.outputAmount.currency.symbol
-  //           const inputAmount = trade.inputAmount.toSignificant(4)
-  //           const outputAmount = trade.outputAmount.toSignificant(4)
-
-  //           const base = `Swap ${inputAmount} ${inputSymbol} for ${outputAmount} ${outputSymbol}`
-  //           const withRecipient =
-  //             recipient === account
-  //               ? base
-  //               : `${base} to ${
-  //                   recipientAddress && isAddress(recipientAddress)
-  //                     ? shortenAddress(recipientAddress)
-  //                     : recipientAddress
-  //                 }`
-
-  //           addTransaction(response, {
-  //             summary: withRecipient,
-  //           })
-
-  //           return response.hash
-  //         })
-  //         .catch((error: any) => {
-  //           // if the user rejected the tx, pass this along
-  //           if (error?.code === 4001) {
-  //             throw new Error('Transaction rejected.')
-  //           } else {
-  //             // otherwise, the error was unexpected and we need to convey that
-  //             console.error(`Swap failed`, error, address, calldata, value)
-
-  //             throw new Error(`Swap failed: ${swapErrorToUserReadableMessage(error)}`)
-  //           }
-  //         })
-  //     },
-  //     error: null,
-  //   }
-  // }, [trade, librarySol, account, chainId, recipient, recipientAddress, swapCalls, addTransaction])
+function leastSignificantBit(x: BN) {
+  return x.zeroBits()
 }

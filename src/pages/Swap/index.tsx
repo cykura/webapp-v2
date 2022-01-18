@@ -240,7 +240,7 @@ export default function Swap({ history }: RouteComponentProps) {
   ])
 
   // errors
-  const [showInverted, setShowInverted] = useState<boolean>(false)
+  // const [showInverted, setShowInverted] = useState<boolean>(false)
 
   // // warnings on the greater of fiat value price impact and execution price impact
   // const priceImpactSeverity = useMemo(() => {
