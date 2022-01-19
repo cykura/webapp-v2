@@ -3466,7 +3466,7 @@
 
 "@uniswap/v3-sdk@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git":
   version "3.7.1"
-  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#0565bb90b96f3ec451ad184658024c8d046a1c96"
+  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#abf1426cfdd9587993d1b242882becb9beacbc31"
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"
