@@ -157,7 +157,7 @@ function Faucet() {
         enqueueSnackbar('Transaction Sent', {
           variant: 'info',
           action: (
-            <ExternalLink href={`https://solscan.io/tx/${txHash}?cluster=devnet`}>
+            <ExternalLink href={`https://solscan.io/tx/${txHash}`}>
               <TYPE.link color="white">View on Explorer</TYPE.link>
             </ExternalLink>
           ),

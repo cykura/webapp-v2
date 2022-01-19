@@ -265,7 +265,6 @@ export default function Header() {
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>
-          {wallet?.connected && <Faucet />}
           <AccountElement
             active={!!wallet?.connected}
             style={{ pointerEvents: 'auto' }}
