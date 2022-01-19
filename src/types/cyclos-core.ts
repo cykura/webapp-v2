@@ -305,6 +305,22 @@ export type CyclosCore = {
       ]
     },
     {
+      name: 'closeTickAccount'
+      accounts: [
+        {
+          name: 'tickState'
+          isMut: true
+          isSigner: false
+        },
+        {
+          name: 'recipient'
+          isMut: true
+          isSigner: false
+        }
+      ]
+      args: []
+    },
+    {
       name: 'initBitmapAccount'
       accounts: [
         {
@@ -573,11 +589,6 @@ export type CyclosCore = {
           name: 'owner'
           isMut: false
           isSigner: true
-        },
-        {
-          name: 'lamportDestination'
-          isMut: false
-          isSigner: false
         },
         {
           name: 'poolState'
@@ -2523,6 +2534,22 @@ export const IDL: CyclosCore = {
       ],
     },
     {
+      name: 'closeTickAccount',
+      accounts: [
+        {
+          name: 'tickState',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'recipient',
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: 'initBitmapAccount',
       accounts: [
         {
@@ -2791,11 +2818,6 @@ export const IDL: CyclosCore = {
           name: 'owner',
           isMut: false,
           isSigner: true,
-        },
-        {
-          name: 'lamportDestination',
-          isMut: false,
-          isSigner: false,
         },
         {
           name: 'poolState',

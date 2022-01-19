@@ -67,50 +67,13 @@ const useAsync = <T, E = string>(asyncFunction: () => Promise<T>, immediate = tr
 }
 
 export function usePositionTokenURI(tokenId: TokenId | undefined): UsePositionTokenURIResult {
-  const { position } = useV3PositionFromTokenId(tokenId as string)
-
-  const { token0, token1, fee, liquidity, tickLower, tickUpper } = position || {}
-
-  const tk0 = useToken(token0)
-  const tk1 = useToken(token1)
-
-  const pool = usePool(tk0 ?? undefined, tk1 ?? undefined, fee)
-  const below = pool && typeof tickLower === 'number' ? pool.tickCurrent < tickLower : undefined
-  const above = pool && typeof tickUpper === 'number' ? pool.tickCurrent >= tickUpper : undefined
-  const overRange = above ? -1 : below ? 1 : 0
-
-  const pst = useMemo(() => {
-    if (pool && liquidity && typeof tickLower === 'number' && typeof tickUpper === 'number') {
-      // console.log(
-      //   `POSITION PAGE\nprice is ${pool.sqrtRatioX32.toString()}\ntokenLower is ${tickLower}\ntokenUpper is ${tickUpper}`
-      // )
-      return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
-    }
-    return undefined
-  }, [liquidity, pool, tickLower, tickUpper])
-  const { priceLower, priceUpper, base, quote } = getPriceOrderingFromPositionForUI(pst)
-
   const fetchNFT = useCallback(async () => {
-    if (!base || !quote) {
-      throw 'no postion'
-    }
-    const p = {
-      mint: tokenId?.toString(),
-      qt: quote?.address,
-      bt: base?.address,
-      qts: quote?.symbol,
-      bts: base?.symbol,
-      ft: (fee ?? 500) / 10000,
-      tl: tickLower,
-      tu: tickUpper,
-      or: overRange,
-    }
     const res = await fetch(
-      `https://asia-south1-cyclos-finance.cloudfunctions.net/getSVG?mint=${p.mint}&qt=${p.qt}&bt=${p.bt}&qts=${p.qts}&bts=${p.bts}&ft=${p.ft}&tl=${p.tl}&tu=${p.tu}&or=${p.or}`
+      `https://asia-south1-cyclos-finance.cloudfunctions.net/encodedSvg?mint=${tokenId?.toString()}&devnet=true`
     )
     const body = await res.text()
     return body
-  }, [tokenId, base, quote, tickLower, tickUpper, fee])
+  }, [tokenId])
 
   const { status, value: result, error } = useAsync<string>(fetchNFT)
   const loading = status === 'pending'

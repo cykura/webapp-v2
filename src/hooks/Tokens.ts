@@ -58,7 +58,7 @@ export function useAllTokens(): { [address: string]: Token } {
     const map = {
       [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
       [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
-      [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
+      // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
     return map
   } else if (network === 'mainnet-beta') {
@@ -68,7 +68,7 @@ export function useAllTokens(): { [address: string]: Token } {
     const map = {
       [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
       [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
-      [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
+      // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
     return map
   }

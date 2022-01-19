@@ -84,7 +84,7 @@ export function CurrencySearch({
   const tokenComparator = useTokenComparator(invertSearchOrder)
 
   const filteredTokens: Token[] = useMemo(() => {
-    return filterTokens(Object.values(allTokens), debouncedQuery)
+    return list.filter((t) => t?.name?.toLowerCase()?.indexOf(debouncedQuery) !== -1)
   }, [allTokens, debouncedQuery])
 
   const sortedTokens: Token[] = useMemo(() => {
@@ -117,15 +117,6 @@ export function CurrencySearch({
     fixedList.current?.scrollTo(0)
   }, [])
 
-  const handleEnter = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        console.log('Enter pressed')
-      }
-    },
-    [debouncedQuery, ether, handleCurrencySelect]
-  )
-
   // menu ui
   const [open, toggle] = useToggle(false)
   const node = useRef<HTMLDivElement>()
@@ -136,7 +127,7 @@ export function CurrencySearch({
       <PaddedColumn gap="16px">
         <RowBetween>
           <Text fontWeight={500} fontSize={16}>
-            <span>Select a tokens</span>
+            <span>Select a token</span>
           </Text>
           <CloseIcon onClick={onDismiss} />
         </RowBetween>
@@ -144,12 +135,11 @@ export function CurrencySearch({
           <SearchInput
             type="text"
             id="token-search-input"
-            placeholder={'Search name or paste address'}
+            placeholder={'Search name'}
             autoComplete="off"
             value={searchQuery}
             ref={inputRef as RefObject<HTMLInputElement>}
             onChange={handleInput}
-            onKeyDown={handleEnter}
           />
         </Row>
         {showCommonBases && (
@@ -161,13 +151,13 @@ export function CurrencySearch({
         <Column style={{ padding: '20px 0', height: '100%' }}>
           <ImportRow token={searchToken} />
         </Column>
-      ) : Object.keys(allTokens)?.length > 0 ? (
+      ) : Object.keys(filteredTokens)?.length > 0 ? (
         <div style={{ flex: '1' }}>
           <AutoSizer disableWidth>
             {({ height }) => (
               <CurrencyList
                 height={height}
-                currencies={list}
+                currencies={filteredTokens}
                 onCurrencySelect={handleCurrencySelect}
                 otherCurrency={otherSelectedCurrency}
                 selectedCurrency={selectedCurrency}

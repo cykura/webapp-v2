@@ -41,13 +41,13 @@ export const PositionPreview = ({
       : currency0
   )
 
-  const sorted = baseCurrency === currency0
-  const quoteCurrency = sorted ? currency1 : currency0
+  const sorted = baseCurrency === currency1
+  const quoteCurrency = sorted ? currency0 : currency1
 
   const price = !sorted ? position.pool?.priceOf(position.pool.token0) : position.pool?.priceOf(position.pool.token1)
 
-  const priceLower = sorted ? position.token0PriceLower : position.token0PriceUpper.invert()
-  const priceUpper = sorted ? position.token0PriceUpper : position.token0PriceLower.invert()
+  const priceLower = !sorted ? position.token0PriceLower : position.token0PriceUpper.invert()
+  const priceUpper = !sorted ? position.token0PriceUpper : position.token0PriceLower.invert()
 
   const handleRateChange = useCallback(() => {
     setBaseCurrency(quoteCurrency)

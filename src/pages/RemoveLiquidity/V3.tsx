@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
-import { Redirect, RouteComponentProps } from 'react-router-dom'
+import { Redirect, RouteComponentProps, useHistory } from 'react-router-dom'
 import {
   BITMAP_SEED,
   OBSERVATION_SEED,
@@ -153,11 +153,20 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       return
     }
 
-    const removeLiquidityAmount = liquidityPercentage?.multiply(
-      JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100))
-    )
+    console.log(`Position Liq ${positionSDK.liquidity.toString()}`)
+    // const hundred = new BN(position.liquidity.toString())
+    // const max = new BN(2).pow(new BN(64)).subn(1)
 
-    // console.log(liquidityPercentage?.multiply())
+    const removeLiquidityAmount =
+      +liquidityPercentage.toSignificant() >= 100
+        ? new BN(positionSDK.liquidity.toString())
+        : new BN(
+            liquidityPercentage
+              ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100)))
+              .toSignificant()
+          )
+
+    console.log(`Removing liq ${removeLiquidityAmount.toString()}`)
 
     const fee = position.fee
     const tickSpacing = fee / 50
@@ -284,29 +293,23 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       const tx = new Transaction()
       tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
       tx.add(
-        cyclosCore.instruction.decreaseLiquidity(
-          new BN(removeLiquidityAmount.toSignificant()),
-          amount0Minimum,
-          amount1Minimum,
-          deadline,
-          {
-            accounts: {
-              ownerOrDelegate: wallet?.publicKey,
-              nftAccount: positionNftAccount,
-              tokenizedPositionState: tokenizedPositionState,
-              factoryState,
-              poolState: poolState,
-              corePositionState: corePositionState,
-              tickLowerState: tickLowerState,
-              tickUpperState: tickUpperState,
-              bitmapLowerState: bitmapLowerState,
-              bitmapUpperState: bitmapUpperState,
-              latestObservationState: latestObservationState,
-              nextObservationState: nextObservationState,
-              coreProgram: cyclosCore.programId,
-            },
-          }
-        )
+        cyclosCore.instruction.decreaseLiquidity(removeLiquidityAmount, amount0Minimum, amount1Minimum, deadline, {
+          accounts: {
+            ownerOrDelegate: wallet?.publicKey,
+            nftAccount: positionNftAccount,
+            tokenizedPositionState: tokenizedPositionState,
+            factoryState,
+            poolState: poolState,
+            corePositionState: corePositionState,
+            tickLowerState: tickLowerState,
+            tickUpperState: tickUpperState,
+            bitmapLowerState: bitmapLowerState,
+            bitmapUpperState: bitmapUpperState,
+            latestObservationState: latestObservationState,
+            nextObservationState: nextObservationState,
+            coreProgram: cyclosCore.programId,
+          },
+        })
       )
       tx.add(
         cyclosCore.instruction.collectFromTokenized(MaxU64, MaxU64, {
@@ -348,6 +351,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     }
   }
 
+  const history = useHistory()
+
   const handleDismissConfirmation = useCallback(() => {
     setShowConfirm(false)
     // if there was a tx hash, we want to clear the input
@@ -356,6 +361,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     }
     setAttemptingTxn(false)
     setTxnHash('')
+    history.push(`/pool/${tokenId}`)
   }, [onPercentSelectForSlider, txnHash])
 
   const pendingText = `Removing ${liquidityValue0?.toSignificant(6)} ${
