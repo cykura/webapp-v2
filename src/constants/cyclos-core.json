@@ -2227,8 +2227,5 @@
       "name": "TooLittleReceived",
       "msg": "Too little received"
     }
-  ],
-  "metadata": {
-    "address": "cysGRNzZvgRxx9XgSDo3q5kqVTtvwxp2p3Bzs4K2LvX"
-  }
+  ]
 }
