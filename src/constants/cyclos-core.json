@@ -305,6 +305,22 @@
       ]
     },
     {
+      "name": "closeTickAccount",
+      "accounts": [
+        {
+          "name": "tickState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initBitmapAccount",
       "accounts": [
         {
@@ -439,23 +455,23 @@
           "isSigner": true
         },
         {
-          "name": "tokenAccount0",
-          "isMut": false,
+          "name": "inputTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "tokenAccount1",
-          "isMut": false,
+          "name": "outputTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vault0",
-          "isMut": false,
+          "name": "inputVault",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vault1",
-          "isMut": false,
+          "name": "outputVault",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -465,10 +481,6 @@
         }
       ],
       "args": [
-        {
-          "name": "exactInput",
-          "type": "bool"
-        },
         {
           "name": "amount0Delta",
           "type": "i64"
@@ -577,11 +589,6 @@
           "name": "owner",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "lamportDestination",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "poolState",
@@ -2220,5 +2227,8 @@
       "name": "TooLittleReceived",
       "msg": "Too little received"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "cysGRNzZvgRxx9XgSDo3q5kqVTtvwxp2p3Bzs4K2LvX"
+  }
 }

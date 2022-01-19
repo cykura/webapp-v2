@@ -10,6 +10,7 @@ import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, PROGRAM_ID_STR } from '../../co
 import {
   BITMAP_SEED,
   FEE_SEED,
+  METADATA_SEED,
   OBSERVATION_SEED,
   POOL_SEED,
   POSITION_SEED,
@@ -67,6 +68,7 @@ import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'
 import { sqrt } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
+import * as metaplex from '@metaplex/js'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -549,6 +551,17 @@ export default function AddLiquidity({
       )
     )[0]
 
+    const metadataAccount = (
+      await PublicKey.findProgramAddress(
+        [
+          METADATA_SEED,
+          metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
+          nftMintKeypair.publicKey.toBuffer(),
+        ],
+        metaplex.programs.metadata.MetadataProgram.PUBKEY
+      )
+    )[0]
+
     if (noLiquidity || !existingPosition) {
       console.log(
         tickLowerState.toString(),
@@ -596,8 +609,32 @@ export default function AddLiquidity({
             signers: [nftMintKeypair],
           }
         )
-        const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
-        console.log(tokenizedPositionData)
+        setAttemptingTxn(true)
+        setTxHash(txnHash)
+      } catch (err: any) {
+        setAttemptingTxn(false)
+        console.log(err)
+        enqueueSnackbar(err?.message ?? 'Something went wrong', {
+          variant: 'error',
+        })
+        return
+      }
+      // Create NFT Metadata
+      console.log('Creating NFT Metadata')
+      try {
+        const txnHash = await cyclosCore.rpc.addMetaplexMetadata({
+          accounts: {
+            payer: wallet?.publicKey,
+            factoryState,
+            nftMint: nftMintKeypair.publicKey,
+            tokenizedPositionState,
+            metadataAccount,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            metadataProgram: metaplex.programs.metadata.MetadataProgram.PUBKEY,
+          },
+        })
         setAttemptingTxn(true)
         setTxHash(txnHash)
       } catch (err: any) {
