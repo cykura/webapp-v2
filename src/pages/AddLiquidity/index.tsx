@@ -259,12 +259,20 @@ export default function AddLiquidity({
     }
     nr = nr * 10e6
     const dr = 10e6
-    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    let sqrtPriceX32 = new BN('4294967295')
+    try {
+      sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    } catch (error) {
+      console.log('TODO fix sqrtPriceX32 error', error)
+    }
+    // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
     console.log('sqrtpricex32 -> ', sqrtPriceX32.toString())
 
     // taken as contants in test file
     const tickLower = ticks.LOWER ?? 0
     const tickUpper = ticks.UPPER ?? 10
+    // const tickLower = -10
+    // const tickUpper = 10
     // flipping ticks according to token sorted order
     // if (!invertPrice && tickUpper && tickLower) {
     //   console.log('Invert Price is true and hence we flip ticks?')
