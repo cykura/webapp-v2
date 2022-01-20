@@ -81,6 +81,14 @@ const CYS = {
   logoURI:
     'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg/logo.svg',
 }
+const SOL = {
+  symbol: 'wSOL',
+  address: new PublicKey('EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP'),
+  decimal: 9,
+  name: 'Wrapped SOL',
+  logoURI:
+    'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png',
+}
 
 function Faucet() {
   const { enqueueSnackbar } = useSnackbar()
@@ -106,11 +114,11 @@ function Faucet() {
           })
         })
 
-      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, CYS.address]
+      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, SOL.address]
       const collateralsQuantities: number[] = [
         100 * 10 ** USDC.decimal,
         100 * 10 ** USDT.decimal,
-        100 * 10 ** CYS.decimal,
+        100 * 10 ** SOL.decimal,
       ]
 
       const instructions: TransactionInstruction[] = []

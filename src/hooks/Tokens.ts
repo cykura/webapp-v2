@@ -2,7 +2,7 @@ import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useMemo } from 'react'
-import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOLCYS_LOCAL, SOLUSDC_MAIN, SOLUSDT_MAIN } from '../constants/tokens'
+import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOLCYS_LOCAL, SOLUSDC_MAIN, SOLUSDT_MAIN, SOL_LOCAL } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { TokenAddressMap } from './../state/lists/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -58,7 +58,7 @@ export function useAllTokens(): { [address: string]: Token } {
     const map = {
       [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
       [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
-      // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
+      [SOL_LOCAL.address]: SOL_LOCAL,
     }
     return map
   } else if (network === 'mainnet-beta') {
