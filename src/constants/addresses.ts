@@ -34,5 +34,5 @@ export const V3_MIGRATOR_ADDRESSES: AddressMap = constructSameAddressMap('0xA564
   SupportedChainId.ARBITRUM_RINKEBY,
 ])
 
-export const PROGRAM_ID_STR = 'cysPUuUXXhvtTpcyhsCgYsM7Gyk7q5RJyKKsKvf9fLv'
-export const PROGRAM_ID = new PublicKey('cysPUuUXXhvtTpcyhsCgYsM7Gyk7q5RJyKKsKvf9fLv')
+export const PROGRAM_ID_STR = 'cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8'
+export const PROGRAM_ID = new PublicKey('cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8')

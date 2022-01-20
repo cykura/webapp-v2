@@ -240,8 +240,8 @@ export function useSwapCallback(
 
     // TODO support other spacings
     // currently just 10 spacing supported for 0.05% fee tier
-    let wordPos = (tick / 10) >> 8
-    let bitPos = (tick / 10) % 256
+    let wordPos = Math.floor(tick / 10) >> 8
+    let bitPos = Math.abs(Math.floor(tick / 10)) % 256
     let next: number | undefined
     let currentBitmap: PublicKey | undefined
     // price = reserves_1 / reserves_0
