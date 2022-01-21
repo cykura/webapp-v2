@@ -161,7 +161,7 @@ export default function Pool() {
                 <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/wSOL">
                   + <span>New Position</span>
                 </ResponsiveButtonPrimary>
-                {/* <Menu
+                <Menu
                   content={
                     <ShowInactiveToggle>
                       <TYPE.small>
@@ -184,7 +184,7 @@ export default function Pool() {
                       </TYPE.body>
                     </MoreOptionsButton>
                   )}
-                /> */}
+                />
               </ButtonRow>
             </TitleRow>
 

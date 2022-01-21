@@ -15,6 +15,7 @@ import { POSITION_SEED } from 'constants/tokens'
 import PositionList from 'components/PositionList'
 import { FeeAmount } from '@uniswap/v3-sdk'
 import JSBI from 'jsbi'
+import { Metadata } from '@metaplex-foundation/mpl-token-metadata'
 
 interface UseV3PositionsResults {
   loading: boolean
@@ -108,35 +109,44 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
   const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
 
   const [positionDetails, setpositionDetails] = useState<any>(undefined)
+  const [loading, setLoading] = useState(false)
+
+  const getAllNfts = async (owner: PublicKey) => {
+    const tokens = await connection.getParsedTokenAccountsByOwner(owner, {
+      programId: TOKEN_PROGRAM_ID,
+    })
+
+    // initial filter - only tokens with 0 decimals & of which 1 is present in the wallet
+    return tokens.value
+      .filter((t) => {
+        const amount = t.account.data.parsed.info.tokenAmount
+        return amount.decimals === 0 && amount.uiAmount === 1
+      })
+      .map((t) => ({
+        address: new PublicKey(t.pubkey),
+        mint: new PublicKey(t.account.data.parsed.info.mint),
+      }))
+  }
 
   useEffect(() => {
+    setLoading(true)
     ;(async () => {
       if (!account) return
-
-      const { value } = await connection.getParsedTokenAccountsByOwner(new PublicKey(account), {
-        programId: TOKEN_PROGRAM_ID,
-      })
-
-      // console.log('All tokens')
-      // value.forEach((v) => {
-      //   console.log(v)
-      // })
+      // const [mintAuthority, _] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
       // console.log("NFT's")
-      const transformedList = value.filter((v) => v.account.data.parsed.info.tokenAmount.decimals == 0)
-      transformedList.forEach(async (tokens) => {
-        return tokens.pubkey
-      })
-
-      // console.log(JSON.stringify(transformedList, null, 2))
+      const nfts = await getAllNfts(new PublicKey(account))
 
       const positionList = await Promise.all(
-        transformedList.map(async (value) => {
+        nfts.map(async (nft: any) => {
           try {
-            // console.log(value.pubkey.toString())
-
+            // const pda = await Metadata.getPDA(nft.mint)
+            // const metadata = (await Metadata.load(connection, pda)).data
+            // if (metadata.updateAuthority !== mintAuthority?.toString()) {
+            //   return null
+            // }
             const [tokenizedPositionState, _] = await PublicKey.findProgramAddress(
-              [POSITION_SEED, new PublicKey(value.account.data.parsed.info.mint).toBuffer()],
+              [POSITION_SEED, new PublicKey(nft.mint).toBuffer()],
               cyclosCore.programId
             )
 
@@ -161,20 +171,19 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
               tokensOwed1: tokenizedPositionData.tokensOwed1,
             }
           } catch (e) {
-            console.log(value)
-            console.log('ERROR ', e)
+            console.warn(e)
           }
           return null
         })
       )
-      // console.log(positionList)
       const posList = positionList.filter((v) => v != null)
       setpositionDetails(posList)
+      setLoading(false)
     })()
   }, [chainId, account])
 
   return {
-    loading: false,
+    loading,
     positions: positionDetails,
   }
 }
