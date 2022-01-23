@@ -130,7 +130,7 @@ function parseStringOrBytes32(str: string | undefined, bytes32: string | undefin
 export function useToken(tokenAddress?: string): Token | undefined | null {
   const { chainId } = useActiveWeb3ReactSol()
   const tokens = useAllTokens()
-
+  // console.log(tokenAddress)
   const token: Token | undefined | any = tokenAddress ? tokens[tokenAddress] : undefined
 
   return useMemo(() => {

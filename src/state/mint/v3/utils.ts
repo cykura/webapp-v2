@@ -21,9 +21,11 @@ export function tryParseTick(
     return undefined
   }
 
+  // console.log('inside tryParse Tick', baseToken.name, quoteToken.name, value)
   // base token fixed at 1 unit, quote token amount based on typed input
   const amount = tryParseAmount(value, quoteToken)
   const amountOne = tryParseAmount('1', baseToken)
+  // console.log(`tryParseTick\tamount ${amount?.toSignificant()}\tamountOne ${amountOne?.toSignificant()}`)
 
   if (!amount || !amountOne) return undefined
 
@@ -31,46 +33,36 @@ export function tryParseTick(
   const price = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
   let modifiedPrice = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
 
-  if (baseToken.decimals == quoteToken.decimals) {
-    console.log('Goes here')
+  if (baseToken?.decimals == quoteToken?.decimals) {
     modifiedPrice = price
   } else {
-    // check for different decimals
+    // calculate decimals
+    const decimalDiff =
+      baseToken.decimals > quoteToken.decimals
+        ? baseToken.decimals - quoteToken.decimals
+        : quoteToken.decimals - baseToken.decimals
+    const decimalMul = JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimalDiff))
+
+    // Ticks calculated here maintain insertion order in the pool
     if (invertPrice) {
       if (baseToken.decimals < quoteToken.decimals) {
-        // console.log('True and True')
-        modifiedPrice = new Price(
-          price.baseCurrency,
-          price.quoteCurrency,
-          JSBI.divide(price.numerator, JSBI.BigInt(1000)),
-          price.denominator
-        )
+        // USDC WSOL (invert)
+        // console.log('True and True ticks')
+        modifiedPrice = new Price(baseToken, quoteToken, amountOne.quotient, JSBI.divide(amount.quotient, decimalMul))
       } else {
-        // console.log('True and False')
-        modifiedPrice = new Price(
-          price.baseCurrency,
-          price.quoteCurrency,
-          price.numerator,
-          JSBI.divide(price.denominator, JSBI.BigInt(1000))
-        )
+        // WSOL USDT (invert)
+        // console.log('True and False ticks')
+        modifiedPrice = new Price(quoteToken, baseToken, amount.quotient, JSBI.divide(amountOne.quotient, decimalMul))
       }
     } else {
       if (baseToken.decimals < quoteToken.decimals) {
-        // console.log('False and True')
-        modifiedPrice = new Price(
-          price.quoteCurrency,
-          price.baseCurrency,
-          JSBI.divide(price.numerator, JSBI.BigInt(1000)),
-          price.denominator
-        )
+        // USDT WSOL
+        // console.log('False and True ticks')
+        modifiedPrice = new Price(quoteToken, baseToken, JSBI.divide(amount.quotient, decimalMul), amountOne.quotient)
       } else {
-        // console.log('False and False')
-        modifiedPrice = new Price(
-          price.quoteCurrency,
-          price.baseCurrency,
-          JSBI.multiply(price.numerator, JSBI.BigInt(1000)),
-          price.denominator
-        )
+        // WSOL USDC
+        // console.log('False and False ticks')
+        modifiedPrice = new Price(baseToken, quoteToken, JSBI.divide(amountOne.quotient, decimalMul), amount.quotient)
       }
     }
   }
@@ -85,6 +77,9 @@ export function tryParseTick(
     tick = TickMath.MIN_TICK
   } else {
     // this function is agnostic to the base, will always return the correct tick
+    // console.log(
+    //   `to calculate ticks this price is used ${modifiedPrice.quotient} nr ${modifiedPrice.numerator} dr ${modifiedPrice.denominator}`
+    // )
     tick = priceToClosestTick(modifiedPrice)
   }
   // console.log(

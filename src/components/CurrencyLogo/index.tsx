@@ -53,7 +53,7 @@ export default function CurrencyLogo({
   if (currency?.isNative) {
     return <StyledEthereumLogo src={EthereumLogo} size={size} style={style} {...rest} />
   }
-  const logo = currency?.symbol === 'USDC' ? USDC_ICON : currency?.symbol === 'USDT' ? USDT_ICON : CYS_ICON
+  const logo = currency?.symbol === 'USDC' ? USDC_ICON : currency?.symbol === 'USDT' ? USDT_ICON : SOL_ICON
 
   return <StyledLogo size={size} srcs={[logo]} alt={`${currency?.symbol ?? 'token'} logo`} style={style} {...rest} />
 }

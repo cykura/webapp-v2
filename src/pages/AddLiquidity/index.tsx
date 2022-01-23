@@ -223,7 +223,7 @@ export default function AddLiquidity({
     const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
 
     console.log(
-      `POOL CREATION\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${tk1?.symbol}\ntoken2 ${tk2?.symbol}\ninvertPrice ${invertPrice}\nnew invert price ${newInvertPrice}`
+      `POOL CREATION\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${tk1?.symbol}\ntoken2 ${tk2?.symbol}\ninvertPrice ${invertPrice}`
     )
 
     const token1 = new anchor.web3.PublicKey(tk1.address)
@@ -257,16 +257,17 @@ export default function AddLiquidity({
     if (invertPrice) {
       nr = 1 / nr
     }
-    nr = nr * 10e6
-    const dr = 10e6
-    let sqrtPriceX32 = new BN('4294967295')
-    try {
-      sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    } catch (error) {
-      console.log('TODO fix sqrtPriceX32 error', error)
-    }
+    nr = nr * 10e9
+    const dr = 10e9
+    // let sqrtPriceX32 = new BN('4294967295')
+    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    // try {
+    //   sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    // } catch (error) {
+    //   console.log('TODO fix sqrtPriceX32 error', error)
+    // }
     // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    console.log('sqrtpricex32 -> ', sqrtPriceX32.toString())
+    console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
 
     // taken as contants in test file
     const tickLower = ticks.LOWER ?? 0
