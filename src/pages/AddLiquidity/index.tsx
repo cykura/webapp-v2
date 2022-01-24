@@ -193,13 +193,11 @@ export default function AddLiquidity({
   // get value and prices at ticks
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
-  // console.log(priceLower?.toSignificant())
-  // console.log(priceUpper?.toSignificant())
 
   // console.log(+formattedAmounts[Field.CURRENCY_A])
   // console.log(+formattedAmounts[Field.CURRENCY_B])
   async function OnAdd() {
-    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
+    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address || !price) return
 
     setAttemptingTxn(true)
 
@@ -214,20 +212,12 @@ export default function AddLiquidity({
     // Convinence helpers
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
-    let [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
-    if (tk1.symbol === 'CYS' || tk2.symbol === 'CYS') {
-      ;[tk1, tk2] = [tokenA, tokenB]
-    }
+    console.log(`POOL CREATION\ttoken0 ${tk0?.symbol}\rtoken1 ${tk1?.symbol}`)
 
-    const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
-
-    console.log(
-      `POOL CREATION\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${tk1?.symbol}\ntoken2 ${tk2?.symbol}\ninvertPrice ${invertPrice}`
-    )
-
-    const token1 = new anchor.web3.PublicKey(tk1.address)
-    const token2 = new anchor.web3.PublicKey(tk2.address)
+    const token1 = new anchor.web3.PublicKey(tk0.address)
+    const token2 = new anchor.web3.PublicKey(tk1.address)
 
     // create fee state
     const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -250,47 +240,28 @@ export default function AddLiquidity({
     // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
     // get init Price from UI - should encode into Q32.32
-    // Need to handle decimals here
-    // NOTE. We shouldn't be flipping ticks here to sync with UI.
-    // This calls the contract and we should supply ticks that will satisfy the contract instead.
     let nr = +startPriceTypedValue
     if (invertPrice) {
       nr = 1 / nr
     }
     nr = nr * 10e9
     const dr = 10e9
-    // let sqrtPriceX32 = new BN('4294967295')
-    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    // try {
-    //   sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    // } catch (error) {
-    //   console.log('TODO fix sqrtPriceX32 error', error)
-    // }
+
     // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(price.numerator.toString(), price.denominator.toString()).toString())
+
     console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
+    console.log('price', price?.toSignificant())
 
     // taken as contants in test file
     const tickLower = ticks.LOWER ?? 0
     const tickUpper = ticks.UPPER ?? 10
-    // const tickLower = -10
-    // const tickUpper = 10
-    // flipping ticks according to token sorted order
-    // if (!invertPrice && tickUpper && tickLower) {
-    //   console.log('Invert Price is true and hence we flip ticks?')
-    //   ;[tickLower, tickUpper] = [tickLower, tickUpper]
-    //   // console.log(`tickLower is ${tickLower} and tickUpper is ${tickUpper}`)
-    // } else {
-    //   console.log('Invert Price is false and hence we negate ticks?')
-    //   ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
-    // }
-    // tickLower should be less than tickUpper
-    // ;[tickLower, tickUpper] = tickLower < tickUpper ? [tickLower, tickUpper] : [tickUpper, tickLower]
+
+    console.log(pool)
     console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper)
-    // const tickLower = 0
-    // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
+
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
-    // console.log(tickLower, tickUpper, wordPosLower, wordPosUpper)
 
     //fetch ATA of pool tokens
     const vault1 = await Token.getAssociatedTokenAddress(
@@ -414,13 +385,13 @@ export default function AddLiquidity({
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
-    console.log(
-      tickLowerStateInfo,
-      tickUpperStateInfo,
-      bitmapLowerStateInfo,
-      bitmapUpperStateInfo,
-      corePositionStateInfo
-    )
+    // console.log(
+    //   tickLowerStateInfo,
+    //   tickUpperStateInfo,
+    //   bitmapLowerStateInfo,
+    //   bitmapUpperStateInfo,
+    //   corePositionStateInfo
+    // )
 
     // Build the transaction
     if (
@@ -538,7 +509,7 @@ export default function AddLiquidity({
     const amount1Desired = new BN(
       +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
     )
-    console.log(amount0Desired.toString(), amount1Desired.toString())
+    // console.log(amount0Desired.toString(), amount1Desired.toString())
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
@@ -578,13 +549,13 @@ export default function AddLiquidity({
     )[0]
 
     if (noLiquidity || !existingPosition) {
-      console.log(
-        tickLowerState.toString(),
-        tickUpperState.toString(),
-        bitmapLowerState.toString(),
-        bitmapUpperState.toString(),
-        corePositionState.toString()
-      )
+      // console.log(
+      //   tickLowerState.toString(),
+      //   tickUpperState.toString(),
+      //   bitmapLowerState.toString(),
+      //   bitmapUpperState.toString(),
+      //   corePositionState.toString()
+      // )
       // Create new position
       console.log('Creating new position')
       try {

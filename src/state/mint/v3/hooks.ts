@@ -181,23 +181,13 @@ export function useV3DerivedMintInfo(
   // note to parse inputs in reverse
   const invertPrice = Boolean(baseToken && token0 && !baseToken.equals(token0))
 
-  // console.log(
-  //   `INSIDE HOOKS\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${token0?.symbol}\ntoken2 ${token1?.symbol}\ninverse Price is ${invertPrice}`
-  // )
-
   // always returns the price with 0 as base token
   const price: Price<Token, Token> | undefined = useMemo(() => {
     // if no liquidity use typed value
     if (noLiquidity) {
-      console.log('There was no pool hence mock price is consturcted')
-      // console.log(`token1 ${token0?.symbol} has ${token0?.decimals}\ntoken2 ${token1?.symbol} has ${token1?.decimals}`)
-      // this is the original one
       const parsedQuoteAmount = tryParseAmount(startPriceTypedValue, invertPrice ? token0 : token1)
-      // const i = +startPriceTypedValue * 10e3
-      // const parsedQuoteAmount = tryParseAmount(i.toString(), invertPrice ? token0 : token1)
       if (parsedQuoteAmount && token0 && token1) {
         const baseAmount = tryParseAmount('1', invertPrice ? token1 : token0)
-        // console.log(`parsedAmount\t${parsedQuoteAmount.toSignificant()}\tbaseAmount ${baseAmount?.toSignificant()}`)
         const price =
           baseAmount && parsedQuoteAmount
             ? new Price(
@@ -232,85 +222,16 @@ export function useV3DerivedMintInfo(
   // used for ratio calculation when pool not initialized
   const mockPool = useMemo(() => {
     if (tokenA && tokenB && token0 && token1 && feeAmount && price && !invalidPrice) {
-      // console.log(
-      //   `tokenA ${tokenA?.symbol}\ttokenB ${tokenB?.symbol}\noken1 ${token0?.symbol}\ttoken2 ${token1?.symbol}\tinverse Price is ${invertPrice}`
-      // )
-      // console.log(price)
-      let modifiedPrice = price
-      // if token decimals match then dont do any of that
-      if (tokenA?.decimals == tokenB?.decimals) {
-        modifiedPrice = price
-      } else {
-        // calculate decimals
-        const decimalDiff =
-          token0.decimals > token1.decimals ? token0.decimals - token1.decimals : token1.decimals - token0.decimals
-        const decimalMul = JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimalDiff))
-
-        // Current ticks now match the insertion order of the Pool
-        if (invertPrice) {
-          if (token0.decimals < token1.decimals) {
-            // WSOL USDT (invert)
-            // console.log('True and True tickCurrent')
-            modifiedPrice = new Price(
-              price.quoteCurrency,
-              price.baseCurrency,
-              price.denominator,
-              JSBI.divide(price.numerator, decimalMul)
-            )
-          } else {
-            // USDC WSOL (invert)
-            // console.log('True and False tickCurrent')
-            modifiedPrice = new Price(
-              price.baseCurrency,
-              price.quoteCurrency,
-              price.numerator,
-              JSBI.divide(price.denominator, decimalMul)
-            )
-          }
-        } else {
-          if (token0.decimals < token1.decimals) {
-            // USDT WSOL
-            // console.log('False and True tickCurrent')
-            modifiedPrice = new Price(
-              price.quoteCurrency,
-              price.baseCurrency,
-              JSBI.divide(price.numerator, decimalMul),
-              price.denominator
-            )
-          } else {
-            // WSOL USDC
-            // console.log('False and False tickCurrent')
-            modifiedPrice = new Price(
-              price.baseCurrency,
-              price.quoteCurrency,
-              JSBI.divide(price.denominator, decimalMul),
-              price.numerator
-            )
-          }
-        }
-      }
-
-      // console.log(
-      //   `modifiedPrice used to calc current Tick ${modifiedPrice.toSignificant()} base ${
-      //     modifiedPrice.baseCurrency.name
-      //   } quote ${
-      //     modifiedPrice.quoteCurrency.name
-      //   } nr ${modifiedPrice.numerator.toString()} dr ${modifiedPrice.denominator.toString()}`
-      // )
-      if (invertPrice) {
-        modifiedPrice = modifiedPrice.invert()
-      }
-      let currentTick = priceToClosestTick(modifiedPrice)
-      // flip tick here to match UI price and code price
-      // Need to add this back for difference in decimals
-      if (invertPrice) {
-        currentTick = currentTick * -1
-      }
-      // console.log('calculated tick ', currentTick.toString())
+      const currentTick = priceToClosestTick(price)
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
+<<<<<<< HEAD
       // console.log('calculated price ', currentSqrt.toString())
 
       return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
+=======
+
+      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick, [])
+>>>>>>> feat: add supp for tokens with diff decimals
     } else {
       return undefined
     }
@@ -318,16 +239,7 @@ export function useV3DerivedMintInfo(
 
   // if pool exists use it, if not use the mock pool
   const poolForPosition: Pool | undefined = pool ?? mockPool
-  // console.log('pool is ', !!pool, 'mockPool is ', !!mockPool)
-  // console.log(
-  //   'mockPool constructed with tick ',
-  //   mockPool?.tickCurrent.toString(),
-  //   ' and price of ',
-  //   mockPool?.sqrtRatioX32.toString()
-  // )
 
-  // parse typed range values and determine closest ticks
-  // lower should always be a smaller tick
   const ticks: {
     [key: string]: number | undefined
   } = useMemo(() => {
@@ -336,26 +248,22 @@ export function useV3DerivedMintInfo(
         typeof existingPosition?.tickLower === 'number'
           ? existingPosition.tickLower
           : invertPrice
-          ? tryParseTick(token1, token0, feeAmount, rightRangeTypedValue, invertPrice)
-          : tryParseTick(token0, token1, feeAmount, leftRangeTypedValue, invertPrice),
+          ? tryParseTick(token1, token0, feeAmount, rightRangeTypedValue)
+          : tryParseTick(token0, token1, feeAmount, leftRangeTypedValue),
       [Bound.UPPER]:
         typeof existingPosition?.tickUpper === 'number'
           ? existingPosition.tickUpper
           : invertPrice
-          ? tryParseTick(token1, token0, feeAmount, leftRangeTypedValue, invertPrice)
-          : tryParseTick(token0, token1, feeAmount, rightRangeTypedValue, invertPrice),
+          ? tryParseTick(token1, token0, feeAmount, leftRangeTypedValue)
+          : tryParseTick(token0, token1, feeAmount, rightRangeTypedValue),
     }
   }, [existingPosition, feeAmount, invertPrice, leftRangeTypedValue, rightRangeTypedValue, token0, token1])
 
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks || {}
 
-  // if (invertPrice) {
-  //   ;[tickLower, tickUpper] = [tickUpper, tickLower]
-  // }
-
-  console.log(
-    `Current Tick is ${poolForPosition?.tickCurrent.toString()}\tTick lower is ${tickLower?.toString()}\tTick upper is ${tickUpper?.toString()}`
-  )
+  // console.log(
+  //   `Current Tick is ${poolForPosition?.tickCurrent.toString()}\tTick lower is ${tickLower?.toString()}\tTick upper is ${tickUpper?.toString()}`
+  // )
 
   // mark invalid range
   const invalidRange = Boolean(typeof tickLower === 'number' && typeof tickUpper === 'number' && tickLower >= tickUpper)
@@ -369,31 +277,17 @@ export function useV3DerivedMintInfo(
   }, [token0, token1, ticks, price])
   const { [Bound.LOWER]: lowerPrice, [Bound.UPPER]: upperPrice } = pricesAtTicks
 
-  // Invert Prices
-  // lowerPrice = invertPrice ? lowerPrice?.invert() : lowerPrice
-  // upperPrice = invertPrice ? upperPrice?.invert() : upperPrice
-  // pricesAtTicks = {
-  //   [Bound.LOWER]: lowerPrice,
-  //   [Bound.UPPER]: upperPrice,
+  // console.log(
+  //   `Current Price is ${price?.toSignificant()}\tPrice lower is ${lowerPrice?.toSignificant()}\tPrice upper is ${upperPrice?.toSignificant()}`
+  // )
+  // if (invertPrice) {
+  //   console.log(
+  //     `UI is inverterd Current Price is ${price?.invert().toSignificant()}\tPrice lower is ${lowerPrice
+  //       ?.invert()
+  //       .toSignificant()}\tPrice upper is ${upperPrice?.invert().toSignificant()}`
+  //   )
   // }
 
-  console.log(
-    `Current Price is ${price?.toSignificant()}\tPrice lower is ${lowerPrice?.toSignificant()}\tPrice upper is ${upperPrice?.toSignificant()}`
-  )
-  if (invertPrice) {
-    console.log(
-      `UI is inverterd Current Price is ${price?.invert().toSignificant()}\tPrice lower is ${lowerPrice
-        ?.invert()
-        .toSignificant()}\tPrice upper is ${upperPrice?.invert().toSignificant()}`
-    )
-  }
-  // console.log(
-  //   `Invert Price is ${invertPrice} ${price?.invert().toSignificant()}\nPrice lower is ${lowerPrice
-  //     ?.invert()
-  //     .toSignificant()}\nPrice upper is ${upperPrice?.invert().toSignificant()}`
-  // )
-
-  // console.log(!invalidRange, lowerPrice && price?.lessThan(lowerPrice), upperPrice && price?.greaterThan(upperPrice))
   // liquidity range warning
   const outOfRange = Boolean(
     !invalidRange && price && lowerPrice && upperPrice && (price.lessThan(lowerPrice) || price.greaterThan(upperPrice))
@@ -420,83 +314,27 @@ export function useV3DerivedMintInfo(
       if (outOfRange || invalidRange) {
         return undefined
       }
-      const { token0, token1 } = poolForPosition
-      const decimalDiff =
-        token0.decimals > token1.decimals ? token0.decimals - token1.decimals : token1.decimals - token0.decimals
-      const decimalMul = JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimalDiff))
 
-      const amountToPass: JSBI = independentAmount.quotient
-
-      // console.log(`Dependent calculation tkLower ${tickLower} tkUpper ${tickUpper} amount ${amountToPass.toString()}`)
-
-      let position: Position | undefined
-
-      // console.log(JSON.stringify(poolForPosition, null, 2))
-
-      if (token0.decimals !== token1.decimals) {
-        if (token0.decimals > token1.decimals) {
-          position = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
-            ? Position.fromAmount0({
-                pool: poolForPosition,
-                tickLower,
-                tickUpper,
-                amount0: JSBI.divide(amountToPass, decimalMul),
-                useFullPrecision: true, // we want full precision for the theoretical position
-              })
-            : Position.fromAmount1({
-                pool: poolForPosition,
-                tickLower,
-                tickUpper,
-                amount1: JSBI.multiply(amountToPass, decimalMul),
-              })
-        } else {
-          position = !wrappedIndependentAmount.currency.equals(poolForPosition.token1)
-            ? Position.fromAmount0({
-                pool: poolForPosition,
-                tickLower,
-                tickUpper,
-                amount0: JSBI.multiply(amountToPass, decimalMul),
-                useFullPrecision: true, // we want full precision for the theoretical position
-              })
-            : Position.fromAmount1({
-                pool: poolForPosition,
-                tickLower,
-                tickUpper,
-                amount1: JSBI.divide(amountToPass, decimalMul),
-              })
-        }
-      } else {
-        // No decimals here
-        position = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
-          ? Position.fromAmount0({
-              pool: poolForPosition,
-              tickLower,
-              tickUpper,
-              amount0: independentAmount.quotient,
-              useFullPrecision: true, // we want full precision for the theoretical position
-            })
-          : Position.fromAmount1({
-              pool: poolForPosition,
-              tickLower,
-              tickUpper,
-              amount1: independentAmount.quotient,
-            })
-      }
-
-      console.log('MOCK POSITION', position.liquidity.toString(), position)
+      const position: Position | undefined = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
+        ? Position.fromAmount0({
+            pool: poolForPosition,
+            tickLower,
+            tickUpper,
+            amount0: independentAmount.quotient,
+            useFullPrecision: true, // we want full precision for the theoretical position
+          })
+        : Position.fromAmount1({
+            pool: poolForPosition,
+            tickLower,
+            tickUpper,
+            amount1: independentAmount.quotient,
+          })
+      // }
 
       const dependentTokenAmount = wrappedIndependentAmount.currency.equals(poolForPosition.token0)
         ? position.amount1
         : position.amount0
 
-      // console.log(
-      //   'amount1',
-      //   position.amount1.toSignificant(),
-      //   'amount0',
-      //   position.amount0.toSignificant(),
-      //   'dep amount',
-      //   dependentTokenAmount.toSignificant()
-      // )
       return dependentCurrency && CurrencyAmount.fromRawAmount(dependentCurrency, dependentTokenAmount.quotient)
     }
 
@@ -648,16 +486,7 @@ export function useRangeHopCallbacks(
   const quoteToken = useMemo(() => quoteCurrency?.wrapped, [quoteCurrency])
   const getDecrementLower = useCallback(() => {
     if (baseToken && quoteToken && typeof tickLower === 'number' && feeAmount) {
-      if (!baseToken.sortsBefore(quoteToken)) {
-        tickLower *= -1
-        if (tickUpper) {
-          tickUpper *= -1
-        }
-      }
-      console.log('NP get Decrement Lower called', baseToken.symbol, quoteToken.symbol, tickLower, tickUpper)
-      const newPrice = !baseToken.sortsBefore(quoteToken)
-        ? tickToPrice(baseToken, quoteToken, tickLower + TICK_SPACINGS[feeAmount])
-        : tickToPrice(baseToken, quoteToken, tickLower - TICK_SPACINGS[feeAmount])
+      const newPrice = tickToPrice(baseToken, quoteToken, tickLower - TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
     // use pool current tick as starting tick if we have pool but no tick input
@@ -671,16 +500,7 @@ export function useRangeHopCallbacks(
 
   const getIncrementLower = useCallback(() => {
     if (baseToken && quoteToken && typeof tickLower === 'number' && feeAmount) {
-      if (!baseToken.sortsBefore(quoteToken)) {
-        tickLower *= -1
-        if (tickUpper) {
-          tickUpper *= -1
-        }
-      }
-      console.log('NP get Increment Lower called', baseToken.symbol, quoteToken.symbol, tickLower, tickUpper)
-      const newPrice = !baseToken.sortsBefore(quoteToken)
-        ? tickToPrice(baseToken, quoteToken, tickLower - TICK_SPACINGS[feeAmount])
-        : tickToPrice(baseToken, quoteToken, tickLower + TICK_SPACINGS[feeAmount])
+      const newPrice = tickToPrice(baseToken, quoteToken, tickLower + TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
     // use pool current tick as starting tick if we have pool but no tick input
@@ -693,16 +513,7 @@ export function useRangeHopCallbacks(
 
   const getDecrementUpper = useCallback(() => {
     if (baseToken && quoteToken && typeof tickUpper === 'number' && feeAmount) {
-      if (!baseToken.sortsBefore(quoteToken)) {
-        if (tickLower) {
-          tickLower *= -1
-        }
-        tickUpper *= -1
-      }
-      console.log('NP get Decrement Upper called', baseToken.symbol, quoteToken.symbol, tickLower, tickUpper)
-      const newPrice = !baseToken.sortsBefore(quoteToken)
-        ? tickToPrice(baseToken, quoteToken, tickUpper + TICK_SPACINGS[feeAmount])
-        : tickToPrice(baseToken, quoteToken, tickUpper - TICK_SPACINGS[feeAmount])
+      const newPrice = tickToPrice(baseToken, quoteToken, tickUpper - TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
     // use pool current tick as starting tick if we have pool but no tick input
@@ -715,16 +526,7 @@ export function useRangeHopCallbacks(
 
   const getIncrementUpper = useCallback(() => {
     if (baseToken && quoteToken && typeof tickUpper === 'number' && feeAmount) {
-      if (!baseToken.sortsBefore(quoteToken)) {
-        if (tickLower) {
-          tickLower *= -1
-        }
-        tickUpper *= -1
-      }
-      console.log('NP get Increment Upper called', baseToken.symbol, quoteToken.symbol, tickLower, tickUpper)
-      const newPrice = !baseToken.sortsBefore(quoteToken)
-        ? tickToPrice(baseToken, quoteToken, tickUpper - TICK_SPACINGS[feeAmount])
-        : tickToPrice(baseToken, quoteToken, tickUpper + TICK_SPACINGS[feeAmount])
+      const newPrice = tickToPrice(baseToken, quoteToken, tickUpper + TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
     // use pool current tick as starting tick if we have pool but no tick input

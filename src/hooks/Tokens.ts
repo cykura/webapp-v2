@@ -59,6 +59,7 @@ export function useAllTokens(): { [address: string]: Token } {
       [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
       [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
       [SOL_LOCAL.address]: SOL_LOCAL,
+      [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
     return map
   } else if (network === 'mainnet-beta') {

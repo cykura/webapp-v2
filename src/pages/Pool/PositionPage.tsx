@@ -341,9 +341,6 @@ export function PositionPage({
   const position = useMemo(() => {
     console.log('position ticks', tickLower, tickUpper, pool?.tickCurrent)
     if (pool && liquidity && typeof tickLower === 'number' && typeof tickUpper === 'number') {
-      // console.log(
-      //   `POSITION PAGE\nprice is ${pool.sqrtRatioX32.toString()}\ntokenLower is ${tickLower}\ntokenUpper is ${tickUpper}`
-      // )
       return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
     }
     return undefined

@@ -75,7 +75,7 @@ const USDT = {
 }
 const CYS = {
   symbol: 'CYS',
-  address: new PublicKey('cb9GdmEo2vbNh8T8JeAGEVhmDSHZApHbea72eY4oVtk'),
+  address: new PublicKey('cxWg5RTK5AiSbBZh7NRg5btsbSrc8ETLXGf7tk3MUez'),
   decimal: 6,
   name: 'Cyclos',
   logoURI:
@@ -114,11 +114,12 @@ function Faucet() {
           })
         })
 
-      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, SOL.address]
+      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, SOL.address, CYS.address]
       const collateralsQuantities: number[] = [
         100 * 10 ** USDC.decimal,
         100 * 10 ** USDT.decimal,
         100 * 10 ** SOL.decimal,
+        100 * 10 ** CYS.decimal,
       ]
 
       const instructions: TransactionInstruction[] = []

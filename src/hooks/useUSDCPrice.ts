@@ -6,7 +6,7 @@ import { useActiveWeb3ReactSol } from './web3'
 // Stablecoin amounts used when calculating spot price for a given currency.
 // The amount is large enough to filter low liquidity pairs.
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
-  101: CurrencyAmount.fromRawAmount(SOLUSDC_MAIN, 10e6),
+  101: CurrencyAmount.fromRawAmount(SOLUSDC_MAIN, 1000_000),
   104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
   103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
 }
@@ -49,7 +49,7 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
     //handle cys
     if (currency?.wrapped.symbol === 'CYS') {
       // console.log('Fetching CYS price')
-      return new Price(currency?.wrapped, stablecoin, '1', '1')
+      return new Price(currency?.wrapped, stablecoin, '100', '52')
     }
     return undefined
   }, [currency, stablecoin])

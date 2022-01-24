@@ -24,6 +24,7 @@ import {
   SOLUSDC_LOCAL,
   SOLUSDT_MAIN,
   SOLUSDC_MAIN,
+  SOL_LOCAL,
 } from './tokens'
 
 type ChainTokenList = {
@@ -79,7 +80,7 @@ export const CUSTOM_BASES: { [chainId: number]: { [tokenAddress: string]: Token[
  */
 export const COMMON_BASES: ChainCurrencyList = {
   // [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
-  [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
+  [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL, SOLCYS_LOCAL, SOL_LOCAL],
   [103]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
   [101]: [SOLUSDT_MAIN, SOLUSDC_MAIN],
 }
