@@ -182,6 +182,25 @@ const StyledNavLink = styled(NavLink).attrs({
     color: ${({ theme }) => darken(0.1, theme.text1)};
   }
 `
+const ExternalStyledNavLink = styled('a')`
+  ${({ theme }) => theme.flexRowNoWrap}
+  align-items: left;
+  border-radius: 3rem;
+  outline: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: ${({ theme }) => theme.text2};
+  font-size: 1rem;
+  width: fit-content;
+  font-weight: 500;
+  padding: 8px 12px;
+  word-break: break-word;
+
+  :hover,
+  :focus {
+    color: ${({ theme }) => darken(0.1, theme.text1)};
+  }
+`
 
 const StyledMenuButton = styled.button`
   position: relative;
@@ -262,6 +281,9 @@ export default function Header() {
         >
           <span>Pool</span>
         </StyledNavLink>
+        <ExternalStyledNavLink href="https://app.cyclos.io/staking" target="_blank" rel="noopener noreferrer">
+          <span>Staking &#x2197;</span>
+        </ExternalStyledNavLink>
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>
