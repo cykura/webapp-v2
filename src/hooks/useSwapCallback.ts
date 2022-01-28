@@ -1,6 +1,17 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { SwapRouter, Trade as V3Trade, u32ToSeed } from '@uniswap/v3-sdk'
-import { Currency, Percent, TradeType, Token as UniToken } from '@uniswap/sdk-core'
+import JSBI from 'jsbi'
+import {
+  generateBitmapWord,
+  nextInitializedBit,
+  Pool,
+  PoolVars,
+  SwapRouter,
+  TickDataProvider,
+  tickPosition,
+  Trade as V3Trade,
+  u32ToSeed,
+} from '@uniswap/v3-sdk'
+import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@uniswap/sdk-core'
 import * as anchor from '@project-serum/anchor'
 import idl from '../constants/cyclos-core.json'
 import { useMemo } from 'react'
@@ -176,13 +187,34 @@ export function useSwapCallback(
     // 1. Find current tick from pool account
     // 2. Find swap direction
     // 3. Formula to know if a tick is consumed completely
-    const { observationIndex, observationCardinalityNext, tick, token0, token1 } =
+    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1 } =
       await cyclosCore.account.poolState.fetch(pool)
-    console.log('token0', token0.toString(), 'token1', token1.toString())
 
-    console.log('input amount', trade?.inputAmount)
+    console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
+
+    // TODO replace hardcoded fee and token decimal places
+    const fee = 500
+    const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
+      token0,
+      token1,
+      fee,
+    })
+
+    const uniToken0 = new UniToken(0, token0.toString(), 6)
+    const uniToken1 = new UniToken(0, token1.toString(), 6)
+
+    // output is one tick behind actual (8 instead of 9)
+    const uniPoolA = new Pool(
+      uniToken0,
+      uniToken1,
+      fee,
+      JSBI.BigInt(sqrtPriceX32),
+      JSBI.BigInt(liquidity),
+      tick,
+      tickDataProvider
+    )
+
     const amountIn = new BN(trade?.inputAmount.numerator[0])
-    console.log('amount in', amountIn.toNumber())
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
     const minterWallet0 = await Token.getAssociatedTokenAddress(
@@ -232,18 +264,6 @@ export function useSwapCallback(
       )
     )[0]
 
-    // must pass the bitmap for current pool price, plus additional bitmaps until an active tick
-    // is encountered
-    const bitmapAccounts = []
-    // loop until initialized tick found
-    // assume ticks are not crossed. Just valid bitmap must be passed
-
-    // TODO support other spacings
-    // currently just 10 spacing supported for 0.05% fee tier
-    let wordPos = Math.floor(tick / 10) >> 8
-    let bitPos = Math.abs(Math.floor(tick / 10)) % 256
-    let next: number | undefined
-    let currentBitmap: PublicKey | undefined
     // price = reserves_1 / reserves_0
     // token 0 -> 1 (USDT -> USDC), price down
     // token 1 -> 0 (USDC -> USDT), price up
@@ -253,84 +273,14 @@ export function useSwapCallback(
       ? [minterWallet0, minterWallet1, vault0, vault1, true]
       : [minterWallet1, minterWallet0, vault1, vault0, false]
 
-    let initialized = false
-    while (!initialized) {
-      console.log('checking in word', wordPos)
-      // bitmap containing current tick
-      currentBitmap = (
-        await PublicKey.findProgramAddress(
-          [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos)],
-          cyclosCore.programId
-        )
-      )[0]
-      bitmapAccounts.push(currentBitmap)
-      console.log('current tick bitmap', currentBitmap.toString())
+    console.log('zero for one', zeroForOne)
+    const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
+      CurrencyAmount.fromRawAmount(zeroForOne ? uniToken0 : uniToken1, amountIn.toNumber())
+    )
+    console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
 
-      console.log('tick', tick, 'word pos', wordPos, 'bit pos', bitPos)
-      const bitmapData = await cyclosCore.account.tickBitmapState.fetch(currentBitmap)
-      console.log('current bitmap', bitmapData.word) // [u64; 4]
-
-      let word = new BN(0)
-      for (let i = 0; i < bitmapData.word.length; i++) {
-        console.log('word', i, bitmapData.word[i].toString())
-        word = word.add(bitmapData.word[i].shln(64 * i))
-      }
-      console.log('got word', word.toString(), 'bit length', word.bitLength())
-      console.log('zero for one', zeroForOne)
-      if (zeroForOne) {
-        // get the next active tick less than or equal to the current tick
-        const mask = new BN(1).shln(bitPos).subn(1).add(new BN(1).shln(bitPos))
-        const masked = word.and(mask)
-        initialized = !masked.eqn(0)
-        next = -(initialized ? bitPos - mostSignificantBit(masked) : bitPos)
-        if (!initialized) {
-          wordPos -= 1 // look in the previous bitmap
-          bitPos = 255
-        }
-      } else {
-        // get the next active tick greater than the current tick
-        const mask = new BN(1).shln(bitPos).subn(1).notn(256)
-        const masked = word.and(mask)
-        initialized = !masked.eqn(0)
-        next = initialized ? leastSignificantBit(masked) - bitPos : 255 - bitPos
-        if (!initialized) {
-          wordPos += 1 // look in the next bitmap
-          bitPos = 0 // TODO handle equal to condition for bitmaps ahead of current price bitmap
-        }
-      }
-      console.log('initialized', initialized, 'next', next)
-    }
-
-    if (next) {
-      const nextTick = (wordPos << 8) + next
-      console.log('word pos', wordPos, 'bit pos', bitPos, 'got next tick', nextTick)
-    }
-
-    if (!currentBitmap) {
-      return ''
-    }
-
-    // TODO support swaps where ticks are flipped
-    // flipped tick accounts must be passed
-
-    // const [tickState, tickStateBump] = await PublicKey.findProgramAddress(
-    //   [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u32ToSeed(tick)],
-    //   cyclosCore.programId
-    // )
-    // try {
-    //   // no account for tick = 0. Tick account is needed only when price moves past an active tick
-    //   const tickData = await cyclosCore.account.tickState.fetch(tickState)
-    //   console.log('got tick account', tickData)
-    // } catch (error) {
-    //   console.error('failed to get tick account', error)
-    // }
-
-    // console.log('minter ac 0', minterWallet0.toString())
-    // console.log('minter ac 1', minterWallet1.toString())
-    // console.log('vault 0', vault0.toString())
-    // console.log('vault 1', vault1.toString())
     const deadline = new BN(Date.now() / 1000 + 100_000)
-    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([bitmapAccounts.length]), {
+    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
@@ -369,18 +319,7 @@ export function useSwapCallback(
           isSigner: false,
           isWritable: true,
         },
-        ...bitmapAccounts.map((bitmapAc) => {
-          return {
-            pubkey: bitmapAc,
-            isSigner: false,
-            isWritable: true,
-          }
-        }),
-        // {
-        //   pubkey: tickState,
-        //   isSigner: false,
-        //   isWritable: true,
-        // },
+        ...swapAccounts,
       ],
     })
 
@@ -396,4 +335,96 @@ function mostSignificantBit(x: BN) {
 
 function leastSignificantBit(x: BN) {
   return x.zeroBits()
+}
+
+export class SolanaTickDataProvider implements TickDataProvider {
+  program: anchor.Program<CyclosCore>
+  pool: PoolVars
+
+  constructor(program: anchor.Program<CyclosCore>, pool: PoolVars) {
+    this.program = program
+    this.pool = pool
+  }
+
+  async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
+    const tickState = (
+      await PublicKey.findProgramAddress(
+        [
+          TICK_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u32ToSeed(tick),
+        ],
+        this.program.programId
+      )
+    )[0]
+
+    const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
+    return {
+      liquidityNet: liquidityNet.toString(),
+    }
+  }
+
+  async getTickAddress(tick: number): Promise<anchor.web3.PublicKey> {
+    return (
+      await PublicKey.findProgramAddress(
+        [
+          TICK_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u32ToSeed(tick),
+        ],
+        this.program.programId
+      )
+    )[0]
+  }
+
+  async nextInitializedTickWithinOneWord(
+    tick: number,
+    lte: boolean,
+    tickSpacing: number
+  ): Promise<[number, boolean, number, number, PublicKey]> {
+    // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
+    let compressed = Number(BigInt(tick) / BigInt(tickSpacing))
+    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    if (tick < 0 && tick % tickSpacing !== 0) {
+      console.log('deducting from compressed.')
+      compressed -= 1
+    }
+    if (!lte) {
+      compressed += 1
+    }
+
+    const { wordPos, bitPos } = tickPosition(compressed)
+
+    const bitmapState = (
+      await PublicKey.findProgramAddress(
+        [
+          BITMAP_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u16ToSeed(wordPos),
+        ],
+        this.program.programId
+      )
+    )[0]
+
+    let nextBit = lte ? 0 : 255
+    let initialized = false
+    try {
+      const { word: wordArray } = await this.program.account.tickBitmapState.fetch(bitmapState)
+      const word = generateBitmapWord(wordArray)
+      const nextInitBit = nextInitializedBit(word, bitPos, lte)
+      nextBit = nextInitBit.next
+      initialized = nextInitBit.initialized
+    } catch (error) {
+      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+    }
+    const nextTick = (wordPos * 256 + nextBit) * tickSpacing
+    console.log('returning next tick', nextTick)
+    return [nextTick, initialized, wordPos, bitPos, bitmapState]
+  }
 }
