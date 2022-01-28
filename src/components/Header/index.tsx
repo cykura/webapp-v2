@@ -281,9 +281,9 @@ export default function Header() {
         >
           <span>Pool</span>
         </StyledNavLink>
-        <ExternalStyledNavLink href="https://app.cyclos.io/staking" target="_blank" rel="noopener noreferrer">
-          <span>Staking &#x2197;</span>
-        </ExternalStyledNavLink>
+        <StyledNavLink id={`stake-nav-link`} to={'/staking'}>
+          <span>Staking</span>
+        </StyledNavLink>
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>

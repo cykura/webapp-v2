@@ -88,7 +88,7 @@ ReactDOM.render(
         <HashRouter>
           <Updaters />
           <ThemeProvider>
-            <SnackbarProvider>
+            <SnackbarProvider autoHideDuration={1500}>
               <ThemedGlobalStyle />
               <App />
             </SnackbarProvider>

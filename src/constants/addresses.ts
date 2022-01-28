@@ -36,3 +36,26 @@ export const V3_MIGRATOR_ADDRESSES: AddressMap = constructSameAddressMap('0xA564
 
 export const PROGRAM_ID_STR = 'cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8'
 export const PROGRAM_ID = new PublicKey('cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8')
+
+// Staking Addresses - Devnet addresses
+export const STAKING_PROGRAM = new PublicKey('7XDST8WpuVzZpYqaoVsw5pYJ4NEqvFxkyegx4nK34FMP')
+export const CYS_MINT = new PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg')
+
+// No lock period
+export const NO_LOCK_POOL = new PublicKey('C8CJc3Kj3C7eU216jwWUDde3DqPukcko9W39VN1Z99TX')
+export const NO_LOCK_POOL_SIGNER = new PublicKey('8cwZrH7385Nv2TH4xB2qEgxjDsrEXxQ6QqGY2KJvSs6w')
+export const NO_LOCK_NONCE = 252
+export const NO_LOCK_STK_VAULT = new PublicKey('GvWrRhTHYQC2QNG4Hph2bRL5KUqrRoUVmapvzPst96HH')
+export const NO_LOCK_REWARDS_VAULT = new PublicKey('2p9P2i1bdSXyeFHGKMHGb7ixoJDcbTEv6VggHrt7JavK')
+
+// 2 months locking period
+export const TM_LOCK_POOL = new PublicKey('J5YMQTPAbhiyVqYF9kyeWVknfwgciM56moRYXnk3wEcK')
+export const TM_LOCK_POOL_SIGNER = new PublicKey('AcwwkAm1yCxcDKKDdogdoNSt6RzezN3qU4bjVYrG8vbg')
+export const TM_LOCK_NONCE = 251
+export const TM_LOCK_STK_VAULT = new PublicKey('HHvSez6nz1xC1d3E6sGEdXvn7bhsmQP5bGVf5Z7KRJXH')
+export const TM_LOCK_REWARDS_VAULT = new PublicKey('EUCX4QrRZv6iNdnXMmsZfJK7668Rj2nYMpfzEM1w2JvH')
+
+export enum PoolType {
+  NOLOCK,
+  TWOLOCK,
+}

@@ -1,3 +1,4 @@
+import { StakingProvider } from 'contexts/Staking'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
 import { Route, Switch } from 'react-router-dom'
 import styled from 'styled-components/macro'
@@ -64,7 +65,11 @@ export default function App() {
             <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
             <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
             <Route exact strict path="/swap" component={Swap} />
-            <Route exact strict path="/staking" component={Staking} />
+            <Route exact strict path="/staking">
+              <StakingProvider>
+                <Staking />
+              </StakingProvider>
+            </Route>
 
             <Route exact strict path="/pool" component={Pool} />
             <Route exact strict path="/pool/:tokenId" component={PositionPage} />

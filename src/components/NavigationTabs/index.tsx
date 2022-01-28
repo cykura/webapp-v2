@@ -77,7 +77,7 @@ const StyledArrowLeft = styled(ArrowLeft)`
   color: ${({ theme }) => theme.text1};
 `
 
-export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' }) {
+export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' | 'staking' }) {
   return (
     <Tabs style={{ marginBottom: '20px', display: 'none', padding: '1rem 1rem 0 1rem' }}>
       <StyledNavLink id={`swap-nav-link`} to={'/swap'} isActive={() => active === 'swap'}>
@@ -86,9 +86,9 @@ export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' }) {
       <StyledNavLink id={`pool-nav-link`} to={'/pool'} isActive={() => active === 'pool'}>
         <span>Pool</span>
       </StyledNavLink>
-      <ExternalStyledNavLink href="https://app.cyclos.io/staking" target="_blank" rel="noopener noreferrer">
-        <span>Staking &#x2197;</span>
-      </ExternalStyledNavLink>
+      <StyledNavLink id={`stake-nav-link`} to={'/staking'} isActive={() => active === 'staking'}>
+        <span>Staking</span>
+      </StyledNavLink>
     </Tabs>
   )
 }
