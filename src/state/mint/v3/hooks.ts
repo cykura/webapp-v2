@@ -290,7 +290,8 @@ export function useV3DerivedMintInfo(
       // console.log('calculated tick ', currentTick.toString())
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
       // console.log('calculated price ', currentSqrt.toString())
-      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick, [])
+
+      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
     } else {
       return undefined
     }
