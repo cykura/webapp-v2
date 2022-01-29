@@ -224,14 +224,8 @@ export function useV3DerivedMintInfo(
     if (tokenA && tokenB && token0 && token1 && feeAmount && price && !invalidPrice) {
       const currentTick = priceToClosestTick(price)
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
-<<<<<<< HEAD
-      // console.log('calculated price ', currentSqrt.toString())
-
-      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
-=======
 
       return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick, [])
->>>>>>> feat: add supp for tokens with diff decimals
     } else {
       return undefined
     }
