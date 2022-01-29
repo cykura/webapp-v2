@@ -4,6 +4,7 @@ import { Currency, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
 import { AdvancedSwapDetails } from 'components/swap/AdvancedSwapDetails'
 import { MouseoverTooltipContent } from 'components/Tooltip'
+import useVerifyATA from 'hooks/useVerifyATA'
 import JSBI from 'jsbi'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import { ArrowDown, Info } from 'react-feather'
@@ -80,6 +81,14 @@ export default function Swap({ history }: RouteComponentProps) {
     currencies,
     inputError: swapInputError,
   } = useDerivedSwapInfo()
+  const tokensList = useMemo(
+    () =>
+      [currencies[Field.INPUT]?.wrapped?.address, currencies[Field.OUTPUT]?.wrapped?.address].filter(
+        (t): t is string => !!t
+      ),
+    [currencies]
+  )
+  const { haveAllATAs, createATA } = useVerifyATA(tokensList)
 
   // let trade: V3Trade<Currency, Currency, TradeType> | undefined
   // const {
@@ -119,12 +128,13 @@ export default function Swap({ history }: RouteComponentProps) {
   )
 
   // modal and loading
-  const [{ showConfirm, tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
+  const [{ showConfirm, tradeToConfirm, swapErrorMessage, attemptingTxn, txHash, isATA }, setSwapState] = useState<{
     showConfirm: boolean
     tradeToConfirm: V3Trade<Currency, Currency, TradeType> | undefined
     attemptingTxn: boolean
     swapErrorMessage: string | undefined
     txHash: string | undefined
+    isATA?: boolean
   }>({
     showConfirm: false,
     tradeToConfirm: undefined,
@@ -158,6 +168,40 @@ export default function Swap({ history }: RouteComponentProps) {
   const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(trade, allowedSlippage, recipient)
 
   const [singleHopOnly] = useUserSingleHopOnly()
+
+  const handleCreateATA = useCallback(() => {
+    ;(async () => {
+      try {
+        setSwapState({
+          attemptingTxn: true,
+          tradeToConfirm: undefined,
+          showConfirm: true,
+          swapErrorMessage: undefined,
+          txHash: undefined,
+          isATA: true,
+        })
+        const hash = await createATA()
+        console.log(hash)
+        setSwapState({
+          attemptingTxn: false,
+          tradeToConfirm: undefined,
+          showConfirm: true,
+          swapErrorMessage: undefined,
+          txHash: hash?.signature,
+          isATA: false,
+        })
+      } catch (error) {
+        setSwapState({
+          attemptingTxn: false,
+          tradeToConfirm: undefined,
+          showConfirm: false,
+          swapErrorMessage: undefined,
+          txHash: undefined,
+          isATA: false,
+        })
+      }
+    })()
+  }, [createATA])
 
   const handleSwap = useCallback(() => {
     async function handleSwap() {
@@ -308,6 +352,7 @@ export default function Swap({ history }: RouteComponentProps) {
             onConfirm={handleSwap}
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
+            isATA={isATA}
           />
 
           <AutoColumn gap={'md'}>
@@ -399,6 +444,12 @@ export default function Swap({ history }: RouteComponentProps) {
                     )}
                   </TYPE.main>
                 </GreyCard>
+              ) : !haveAllATAs ? (
+                <ButtonError onClick={handleCreateATA}>
+                  <Text fontSize={20} fontWeight={500}>
+                    Create Accounts
+                  </Text>
+                </ButtonError>
               ) : (
                 <ButtonError
                   onClick={() => {
