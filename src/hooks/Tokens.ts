@@ -1,15 +1,17 @@
 import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOLCYS_LOCAL, SOLUSDC_MAIN, SOLUSDT_MAIN, SOL_LOCAL } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
-import { TokenAddressMap } from './../state/lists/hooks'
+import { TokenAddressMap, useAllLists, useInactiveListUrls } from './../state/lists/hooks'
 import { useActiveWeb3ReactSol } from './web3'
 import { useTokenContract } from './useContract'
-
+import { createTokenFilterFunction } from '../components/SearchModal/filtering'
 import { SOLUSDC, SOLUSDT } from '../constants/tokens'
 import { useSolana } from '@saberhq/use-solana'
+import { WrappedTokenInfo } from 'state/lists/wrappedTokenInfo'
+import { TokenList } from '@uniswap/token-lists'
 
 // reduce token map into standard address <-> Token mapping, optionally include user added tokens
 function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
@@ -53,6 +55,7 @@ export function useAllTokens(): { [address: string]: Token } {
   ///  Check for network and return corresponding coins
   /// 'devnet' | 'testnet' | 'mainnet-beta' | 'localnet'
   const { network } = useSolana()
+  const userAddedTokens = useUserAddedTokens()
 
   if (network === 'localnet') {
     const map = {
@@ -61,6 +64,9 @@ export function useAllTokens(): { [address: string]: Token } {
       [SOL_LOCAL.address]: SOL_LOCAL,
       [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
+    userAddedTokens.forEach((token) => {
+      map[token.address] = token
+    })
     return map
   } else if (network === 'mainnet-beta') {
     // return mainnet tokens
@@ -146,6 +152,51 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
     }
     return undefined
   }, [chainId, tokenAddress])
+}
+
+export function useSearchInactiveTokenLists(search: string | undefined, minResults = 10): WrappedTokenInfo[] {
+  // console.log(search, ' inside useInactiveTokens')
+
+  const { network } = useSolana()
+  const { chainId } = useActiveWeb3ReactSol()
+
+  const [allTokens, setAllTokens] = useState<TokenList>()
+
+  useEffect(() => {
+    console.log('useEffect runs')
+    fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json')
+      .then((r) => r.json())
+      .then((data) => setAllTokens(data))
+  }, [network])
+
+  // console.log(allTokens)
+
+  const lists = useAllLists()
+  const inactiveUrls = useInactiveListUrls()
+  const activeTokens = useAllTokens()
+  return useMemo(() => {
+    if (!search || search.trim().length === 0 || !allTokens) return []
+    const tokenFilter = createTokenFilterFunction(search)
+    const result: WrappedTokenInfo[] = []
+    const addressSet: { [address: string]: true } = {}
+    // for (const url of inactiveUrls) {
+    // const list = lists[url].current
+    // if (!list) continue
+    for (const tokenInfo of allTokens.tokens) {
+      // if (tokenInfo.chainId === chainId && tokenFilter(tokenInfo)) {
+      if (tokenFilter(tokenInfo)) {
+        const wrapped: any = new WrappedTokenInfo(tokenInfo, allTokens)
+        if (!(wrapped.address in activeTokens) && !addressSet[wrapped.address]) {
+          addressSet[wrapped.address] = true
+          result.push(wrapped)
+          if (result.length >= minResults) return result
+        }
+      }
+    }
+    // }
+    // console.log(result)
+    return result
+  }, [activeTokens, chainId, inactiveUrls, lists, minResults, search, allTokens])
 }
 
 export function useCurrency(currencyId: string | undefined): Currency | null | undefined {

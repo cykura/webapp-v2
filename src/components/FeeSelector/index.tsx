@@ -189,7 +189,6 @@ export default function FeeSelector({
               width="32%"
               active={feeAmount === FeeAmount.MEDIUM}
               onClick={() => handleFeePoolSelectWithEvent(FeeAmount.MEDIUM)}
-              disabled
             >
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">
@@ -208,7 +207,6 @@ export default function FeeSelector({
               width="32%"
               active={feeAmount === FeeAmount.HIGH}
               onClick={() => handleFeePoolSelectWithEvent(FeeAmount.HIGH)}
-              disabled
             >
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">

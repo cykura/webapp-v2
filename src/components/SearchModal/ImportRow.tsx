@@ -8,6 +8,8 @@ import ListLogo from 'components/ListLogo'
 import useTheme from 'hooks/useTheme'
 import styled from 'styled-components/macro'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
+import { ButtonPrimary } from 'components/Button'
+import { useIsUserAddedToken, useIsTokenActive } from 'hooks/Tokens'
 
 const TokenSection = styled.div<{ dim?: boolean }>`
   padding: 4px 20px;
@@ -28,8 +30,24 @@ const NameOverflow = styled.div`
   font-size: 12px;
 `
 
-export default function ImportRow({ token, style, dim }: { token: Token; style?: CSSProperties; dim?: boolean }) {
+export default function ImportRow({
+  token,
+  style,
+  dim,
+  showImportView,
+  setImportToken,
+}: {
+  token: Token
+  style?: CSSProperties
+  dim?: boolean
+  showImportView: () => void
+  setImportToken: (token: Token) => void
+}) {
   const theme = useTheme()
+
+  // check if already active on list or local storage tokens
+  const isAdded = useIsUserAddedToken(token)
+  const isActive = useIsTokenActive(token)
 
   const list = token instanceof WrappedTokenInfo ? token.list : undefined
 
@@ -52,6 +70,26 @@ export default function ImportRow({ token, style, dim }: { token: Token; style?:
           </RowFixed>
         )}
       </AutoColumn>
+      {!isActive && !isAdded ? (
+        <ButtonPrimary
+          width="fit-content"
+          padding="6px 12px"
+          fontWeight={500}
+          fontSize="14px"
+          onClick={() => {
+            setImportToken && setImportToken(token)
+            showImportView()
+          }}
+        >
+          <span>Import</span>
+        </ButtonPrimary>
+      ) : (
+        <RowFixed style={{ minWidth: 'fit-content' }}>
+          <TYPE.main color={theme.green1}>
+            <span>Active</span>
+          </TYPE.main>
+        </RowFixed>
+      )}
     </TokenSection>
   )
 }

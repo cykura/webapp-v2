@@ -1,4 +1,4 @@
-import { Currency, CurrencyAmount } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Token } from '@uniswap/sdk-core'
 import { CSSProperties, MutableRefObject, useCallback, useMemo } from 'react'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
@@ -10,15 +10,17 @@ import { useCurrencyBalance } from '../../state/wallet/hooks'
 import { TYPE } from '../../theme'
 import { useIsUserAddedToken } from '../../hooks/Tokens'
 import Column from '../Column'
-import { RowFixed } from '../Row'
+import { RowBetween, RowFixed } from '../Row'
 import CurrencyLogo from '../CurrencyLogo'
 import { MouseoverTooltip } from '../Tooltip'
 import { MenuItem } from './styleds'
 import Loader from '../Loader'
 import { isTokenOnList } from '../../utils'
+import ImportRow from './ImportRow'
+import { LightGreyCard } from 'components/Card'
 
 function currencyKey(currency: Currency): string {
-  return currency.isToken ? currency.address : 'ETHER'
+  return currency.isToken ? currency.address : 'wSOL'
 }
 
 const StyledBalanceText = styled(Text)`
@@ -40,6 +42,14 @@ const Tag = styled.div`
   white-space: nowrap;
   justify-self: flex-end;
   margin-right: 4px;
+`
+
+const FixedContentRow = styled.div`
+  padding: 4px 20px;
+  height: 56px;
+  display: grid;
+  grid-gap: 16px;
+  align-items: center;
 `
 
 function Balance({ balance }: { balance: CurrencyAmount<Currency> }) {
@@ -117,7 +127,11 @@ function CurrencyRow({
           {currency.symbol}
         </Text>
         <TYPE.darkGray ml="0px" fontSize={'12px'} fontWeight={300}>
-          {currency.name}
+          {!currency.isNative && !isOnSelectedList && customAdded ? (
+            <span>{currency.name} • Added by user</span>
+          ) : (
+            currency.name
+          )}
         </TYPE.darkGray>
       </Column>
       <TokenTags currency={currency} />
@@ -130,32 +144,69 @@ function CurrencyRow({
   )
 }
 
+const BREAK_LINE = 'BREAK'
+type BreakLine = typeof BREAK_LINE
+function isBreakLine(x: unknown): x is BreakLine {
+  return x === BREAK_LINE
+}
+
+function BreakLineComponent({ style }: { style: CSSProperties }) {
+  return (
+    <FixedContentRow style={style}>
+      <LightGreyCard padding="8px 12px" $borderRadius="8px">
+        <RowBetween>
+          <RowFixed>
+            <TYPE.main ml="6px" fontSize="12px">
+              <span>Results below are found from Official Solana Token List</span>
+            </TYPE.main>
+          </RowFixed>
+        </RowBetween>
+      </LightGreyCard>
+    </FixedContentRow>
+  )
+}
+
 export default function CurrencyList({
   height,
   currencies,
+  otherListTokens,
   selectedCurrency,
   onCurrencySelect,
   otherCurrency,
   fixedListRef,
+  showImportView,
+  setImportToken,
   showCurrencyAmount,
 }: {
   height: number
   currencies: Currency[]
+  otherListTokens?: WrappedTokenInfo[]
   selectedCurrency?: Currency | null
   onCurrencySelect: (currency: Currency) => void
   otherCurrency?: Currency | null
   fixedListRef?: MutableRefObject<FixedSizeList | undefined>
+  showImportView: () => void
+  setImportToken: (token: Token) => void
   showCurrencyAmount?: boolean
 }) {
   const { account } = useActiveWeb3ReactSol()
 
-  const itemData: Currency[] = useMemo(() => {
+  const itemData: (Currency | BreakLine)[] = useMemo(() => {
+    if (otherListTokens && otherListTokens?.length > 0) {
+      return [...currencies, BREAK_LINE, ...otherListTokens]
+    }
     return currencies
-  }, [currencies])
+  }, [currencies, otherListTokens])
+
+  console.log(currencies, otherListTokens)
 
   const Row = useCallback(
     function TokenRow({ data, index, style }) {
-      const row: Currency = data[index]
+      const row: Currency | BreakLine = data[index]
+
+      if (isBreakLine(row)) {
+        return <BreakLineComponent style={style} />
+      }
 
       const currency = row
 
@@ -163,7 +214,15 @@ export default function CurrencyList({
       const otherSelected = Boolean(currency && otherCurrency && otherCurrency.equals(currency))
       const handleSelect = () => currency && onCurrencySelect(currency)
 
-      if (currency) {
+      const token = currency?.wrapped
+
+      const showImport = index > currencies.length
+
+      if (showImport && token) {
+        return (
+          <ImportRow style={style} token={token} showImportView={showImportView} setImportToken={setImportToken} dim />
+        )
+      } else if (currency) {
         return account ? (
           <CurrencyRow
             style={style}
@@ -178,11 +237,20 @@ export default function CurrencyList({
         return null
       }
     },
-    [onCurrencySelect, otherCurrency, selectedCurrency, showCurrencyAmount]
+    [
+      onCurrencySelect,
+      otherCurrency,
+      currencies.length,
+      selectedCurrency,
+      setImportToken,
+      showImportView,
+      showCurrencyAmount,
+    ]
   )
 
   const itemKey = useCallback((index: number, data: typeof itemData) => {
     const currency = data[index]
+    if (isBreakLine(currency)) return BREAK_LINE
     return currencyKey(currency)
   }, [])
 

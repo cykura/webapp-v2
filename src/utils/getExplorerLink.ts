@@ -11,7 +11,7 @@ export function getExplorerLink(network: Network, data = 'dummyData', type: Expl
   let uri = `https://explorer.solana.com/${type}/${data}/?cluster=`
 
   if (network == 'localnet') {
-    uri += 'custom&customUrl=http://localhost:8899'
+    uri += 'custom&customUrl=http%3A%2F%2Flocalhost%3A8899'
   } else {
     uri += network
   }

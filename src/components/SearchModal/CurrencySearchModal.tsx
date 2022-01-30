@@ -1,8 +1,12 @@
-import { Currency } from '@uniswap/sdk-core'
+import { Currency, Token } from '@uniswap/sdk-core'
 import { useCallback, useEffect, useState } from 'react'
 import useLast from '../../hooks/useLast'
+import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import Modal from '../Modal'
 import { CurrencySearch } from './CurrencySearch'
+import { ImportToken } from './ImportToken'
+import usePrevious from 'hooks/usePrevious'
+import { TokenList } from '@uniswap/token-lists'
 
 interface CurrencySearchModalProps {
   isOpen: boolean
@@ -17,6 +21,9 @@ interface CurrencySearchModalProps {
 
 export enum CurrencyModalView {
   search,
+  manage,
+  importToken,
+  importList,
 }
 
 export default function CurrencySearchModal({
@@ -29,7 +36,7 @@ export default function CurrencySearchModal({
   showCurrencyAmount = true,
   disableNonToken = false,
 }: CurrencySearchModalProps) {
-  const [modalView, setModalView] = useState<CurrencyModalView>(CurrencyModalView.search)
+  const [modalView, setModalView] = useState<CurrencyModalView>(CurrencyModalView.manage)
   const lastOpen = useLast(isOpen)
 
   useEffect(() => {
@@ -46,8 +53,14 @@ export default function CurrencySearchModal({
     [onDismiss, onCurrencySelect]
   )
 
+  // for token import view
+  const prevView = usePrevious(modalView)
+
+  // used for import token flow
+  const [importToken, setImportToken] = useState<Token | undefined>()
+
   // change min height if not searching
-  const minHeight = 60
+  const minHeight = 80
 
   return (
     <Modal isOpen={isOpen} onDismiss={onDismiss} maxHeight={80} minHeight={minHeight}>
@@ -61,6 +74,19 @@ export default function CurrencySearchModal({
           showCommonBases={showCommonBases}
           showCurrencyAmount={showCurrencyAmount}
           disableNonToken={disableNonToken}
+          showImportView={() => setModalView(CurrencyModalView.importToken)}
+          setImportToken={setImportToken}
+          showManageView={() => setModalView(CurrencyModalView.manage)}
+        />
+      ) : modalView === CurrencyModalView.importToken && importToken ? (
+        <ImportToken
+          tokens={[importToken]}
+          onDismiss={onDismiss}
+          list={importToken instanceof WrappedTokenInfo ? importToken.list : undefined}
+          onBack={() =>
+            setModalView(prevView && prevView !== CurrencyModalView.importToken ? prevView : CurrencyModalView.search)
+          }
+          handleCurrencySelect={handleCurrencySelect}
         />
       ) : (
         ''

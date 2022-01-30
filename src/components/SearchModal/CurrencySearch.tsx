@@ -5,11 +5,11 @@ import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import { ExtendedEther } from '../../constants/tokens'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
-import { useAllTokens, useToken, useIsUserAddedToken } from '../../hooks/Tokens'
-import { CloseIcon, TYPE } from '../../theme'
+import { useAllTokens, useToken, useIsUserAddedToken, useSearchInactiveTokenLists } from '../../hooks/Tokens'
+import { CloseIcon, TYPE, ButtonText, IconWrapper } from '../../theme'
 import { isAddress } from '../../utils'
 import Column from '../Column'
-import Row, { RowBetween } from '../Row'
+import Row, { RowBetween, RowFixed } from '../Row'
 import CommonBases from './CommonBases'
 import CurrencyList from './CurrencyList'
 import { filterTokens, useSortedTokensByQuery } from './filtering'
@@ -21,6 +21,7 @@ import useToggle from 'hooks/useToggle'
 import { useOnClickOutside } from 'hooks/useOnClickOutside'
 import useTheme from 'hooks/useTheme'
 import ImportRow from './ImportRow'
+import { Edit } from 'react-feather'
 import useDebounce from 'hooks/useDebounce'
 
 const ContentWrapper = styled(Column)`
@@ -28,6 +29,17 @@ const ContentWrapper = styled(Column)`
   flex: 1 1;
   position: relative;
 `
+
+const Footer = styled.div`
+  width: 100%;
+  border-radius: 20px;
+  padding: 20px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background-color: ${({ theme }) => theme.bg1};
+  border-top: 1px solid ${({ theme }) => theme.bg2};
+`
+
 interface CurrencySearchProps {
   isOpen: boolean
   onDismiss: () => void
@@ -37,6 +49,9 @@ interface CurrencySearchProps {
   showCommonBases?: boolean
   showCurrencyAmount?: boolean
   disableNonToken?: boolean
+  showManageView: () => void
+  showImportView: () => void
+  setImportToken: (token: Token) => void
 }
 
 export function CurrencySearch({
@@ -48,6 +63,9 @@ export function CurrencySearch({
   disableNonToken,
   onDismiss,
   isOpen,
+  showManageView,
+  showImportView,
+  setImportToken,
 }: CurrencySearchProps) {
   const { chainId } = useActiveWeb3ReactSol()
   const theme = useTheme()
@@ -61,8 +79,6 @@ export function CurrencySearch({
   const [invertSearchOrder] = useState<boolean>(false)
 
   const allTokens = useAllTokens()
-  const list: Token[] = []
-  Object.keys(allTokens).map((key) => list.push(allTokens[key]))
 
   // if they input an address, use it
   const isAddressSearch = isAddress(debouncedQuery)
@@ -82,9 +98,8 @@ export function CurrencySearch({
   }, [isAddressSearch])
 
   const tokenComparator = useTokenComparator(invertSearchOrder)
-
   const filteredTokens: Token[] = useMemo(() => {
-    return list.filter((t) => t?.name?.toLowerCase()?.indexOf(debouncedQuery) !== -1)
+    return filterTokens(Object.values(allTokens), debouncedQuery)
   }, [allTokens, debouncedQuery])
 
   const sortedTokens: Token[] = useMemo(() => {
@@ -93,7 +108,9 @@ export function CurrencySearch({
 
   const filteredSortedTokens = useSortedTokensByQuery(sortedTokens, debouncedQuery)
 
-  const ether = useMemo(() => chainId && ExtendedEther.onChain(chainId), [chainId])
+  const filteredSortedTokensWithETH: Currency[] = useMemo(() => {
+    return filteredSortedTokens
+  }, [debouncedQuery, filteredSortedTokens])
 
   const handleCurrencySelect = useCallback(
     (currency: Currency) => {
@@ -117,10 +134,24 @@ export function CurrencySearch({
     fixedList.current?.scrollTo(0)
   }, [])
 
+  const handleEnter = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        console.log('Enter Pressed')
+      }
+    },
+    [debouncedQuery, filteredSortedTokensWithETH, handleCurrencySelect]
+  )
+
   // menu ui
   const [open, toggle] = useToggle(false)
   const node = useRef<HTMLDivElement>()
   useOnClickOutside(node, open ? toggle : undefined)
+
+  // if no results on main list, show option to expand into inactive
+  const filteredInactiveTokens = useSearchInactiveTokenLists(
+    filteredTokens.length === 0 || (debouncedQuery.length > 2 && !isAddressSearch) ? debouncedQuery : undefined
+  )
 
   return (
     <ContentWrapper>
@@ -135,33 +166,35 @@ export function CurrencySearch({
           <SearchInput
             type="text"
             id="token-search-input"
-            placeholder={'Search name'}
+            placeholder={`Search name or paste address`}
             autoComplete="off"
             value={searchQuery}
             ref={inputRef as RefObject<HTMLInputElement>}
             onChange={handleInput}
+            onKeyDown={handleEnter}
           />
         </Row>
-        {showCommonBases && (
-          <CommonBases chainId={chainId} onSelect={handleCurrencySelect} selectedCurrency={selectedCurrency} />
-        )}
+        {showCommonBases && <CommonBases onSelect={handleCurrencySelect} selectedCurrency={selectedCurrency} />}
       </PaddedColumn>
       <Separator />
       {searchToken && !searchTokenIsAdded ? (
         <Column style={{ padding: '20px 0', height: '100%' }}>
-          <ImportRow token={searchToken} />
+          <ImportRow token={searchToken} showImportView={showImportView} setImportToken={setImportToken} />
         </Column>
-      ) : Object.keys(filteredTokens)?.length > 0 ? (
+      ) : filteredSortedTokens?.length > 0 || filteredInactiveTokens?.length > 0 ? (
         <div style={{ flex: '1' }}>
           <AutoSizer disableWidth>
             {({ height }) => (
               <CurrencyList
                 height={height}
-                currencies={filteredTokens}
+                currencies={disableNonToken ? filteredSortedTokens : filteredSortedTokensWithETH}
+                otherListTokens={filteredInactiveTokens}
                 onCurrencySelect={handleCurrencySelect}
                 otherCurrency={otherSelectedCurrency}
                 selectedCurrency={selectedCurrency}
                 fixedListRef={fixedList}
+                showImportView={showImportView}
+                setImportToken={setImportToken}
                 showCurrencyAmount={showCurrencyAmount}
               />
             )}

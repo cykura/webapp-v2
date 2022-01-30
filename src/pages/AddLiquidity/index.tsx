@@ -208,13 +208,14 @@ export default function AddLiquidity({
 
     const fee = feeAmount ?? 500
     const tickSpacing = fee / 50
+    console.log(feeAmount, tickSpacing)
 
     // Convinence helpers
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
     const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
-    console.log(`POOL CREATION\ttoken0 ${tk0?.symbol}\rtoken1 ${tk1?.symbol}`)
+    console.log(`POOL CREATION\ttoken0 ${tk0?.symbol}\ttoken1 ${tk1?.symbol}`)
 
     const token1 = new anchor.web3.PublicKey(tk0.address)
     const token2 = new anchor.web3.PublicKey(tk1.address)
@@ -240,12 +241,12 @@ export default function AddLiquidity({
     // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
     // get init Price from UI - should encode into Q32.32
-    let nr = +startPriceTypedValue
-    if (invertPrice) {
-      nr = 1 / nr
-    }
-    nr = nr * 10e9
-    const dr = 10e9
+    // let nr = +startPriceTypedValue
+    // if (invertPrice) {
+    //   nr = 1 / nr
+    // }
+    // nr = nr * 10e9
+    // const dr = 10e9
 
     // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
     const sqrtPriceX32 = new BN(encodeSqrtRatioX32(price.numerator.toString(), price.denominator.toString()).toString())
@@ -953,7 +954,7 @@ export default function AddLiquidity({
                             )}
                           </TYPE.main>
                         </RowBetween>
-                        {/* <BlueCard
+                        <BlueCard
                           style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -971,9 +972,9 @@ export default function AddLiquidity({
                           </TYPE.body>
 
                           <TYPE.body fontWeight={500} textAlign="center" fontSize={14} style={{ opacity: 0.8 }}>
-                            The transaction cost will be much higher as it includes the rent to create the pool.
+                            The transaction cost will be relatively higher as it includes the rent to create the pool.
                           </TYPE.body>
-                        </BlueCard> */}
+                        </BlueCard>
                       </AutoColumn>
                     </DynamicSection>
                   )}
