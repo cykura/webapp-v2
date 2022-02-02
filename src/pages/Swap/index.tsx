@@ -490,7 +490,6 @@ export default function Swap({ history }: RouteComponentProps) {
           </AutoColumn>
         </Wrapper>
       </AppBody>
-      <SwitchLocaleLink />
     </>
   )
 }
