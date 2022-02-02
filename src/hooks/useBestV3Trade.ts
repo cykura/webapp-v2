@@ -1,19 +1,10 @@
 import { PublicKey } from '@solana/web3.js'
 import JSBI from 'jsbi'
 import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@uniswap/sdk-core'
-import { encodeRouteToPath, FeeAmount, Pool, Route, Trade } from '@uniswap/v3-sdk'
 import { useEffect, useMemo, useState } from 'react'
-import { useSingleContractMultipleData } from '../state/multicall/hooks'
 import { useAllV3Routes } from './useAllV3Routes'
 import { usePool } from './usePools'
 import { BN } from '@project-serum/anchor'
-import { useDerivedSwapInfo } from 'state/swap/hooks'
-import { SolanaTickDataProvider } from './useSwapCallback'
-import { useSolana } from '@saberhq/use-solana'
-import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
-import { PROGRAM_ID_STR } from 'constants/addresses'
-import { CyclosCore, IDL } from 'types/cyclos-core'
-import * as anchor from '@project-serum/anchor'
 
 export enum V3TradeState {
   LOADING,
@@ -50,11 +41,6 @@ export function useBestV3TradeExactIn(
   // console.log('input token', amountIn?.currency)
   // console.log('output token', currencyOut)
   // const quoter = useV3Quoter()
-  const { connection, wallet } = useSolana()
-  const provider = new anchor.Provider(connection, wallet as Wallet, {
-    skipPreflight: true,
-  })
-  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
 
@@ -68,7 +54,6 @@ export function useBestV3TradeExactIn(
   //     amountIn ? `0x${amountIn.quotient.toString(16)}` : undefined,
   //   ])
   // }, [amountIn, routes])
-  console.log(pool)
   const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
   // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
 
@@ -83,39 +68,16 @@ export function useBestV3TradeExactIn(
       const out = amountIn.multiply(factor)
       const amountOut = CurrencyAmount.fromFractionalAmount(currencyOut, out.numerator, out.denominator)
       try {
-        const { tick, sqrtPriceX32, liquidity, token0, token1 } = await cyclosCore.account.poolState.fetch(routes[0])
-        // TODO replace hardcoded fee and token decimal places
-        const fee = 500
-        const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-          token0,
-          token1,
-          fee,
-        })
-
-        const uniToken0 = new UniToken(0, token0.toString(), 6)
-        const uniToken1 = new UniToken(0, token1.toString(), 6)
-
-        // output is one tick behind actual (8 instead of 9)
-        const uniPoolA = new Pool(
-          uniToken0,
-          uniToken1,
-          fee,
-          JSBI.BigInt(sqrtPriceX32),
-          JSBI.BigInt(liquidity),
-          tick,
-          tickDataProvider
-        )
-        const zeroForOne = new PublicKey(amountIn?.currency?.wrapped?.address).equals(token0)
         const amntIn = new BN(amountIn.numerator[0])
-        const [expectedAmountOut] = await uniPoolA.getOutputAmount(
-          CurrencyAmount.fromRawAmount(zeroForOne ? uniToken0 : uniToken1, amntIn.toNumber())
+        const [expectedAmountOut] = await pool.getOutputAmount(
+          CurrencyAmount.fromRawAmount(amountIn?.currency?.wrapped, amntIn.toNumber())
         )
         setAmntOut(expectedAmountOut ?? amountOut)
       } catch (err) {
         console.error('No tick data provider was given')
       }
     })()
-  }, [pool, routes[0]])
+  }, [pool])
 
   return useMemo(() => {
     if (!amountIn || !currencyOut || !pool) {
