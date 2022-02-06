@@ -1,11 +1,10 @@
 import { PublicKey } from '@solana/web3.js'
 import JSBI from 'jsbi'
 import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@uniswap/sdk-core'
-import { encodeRouteToPath, FeeAmount, Route, Trade } from '@uniswap/v3-sdk'
-import { useMemo } from 'react'
-import { useSingleContractMultipleData } from '../state/multicall/hooks'
+import { useEffect, useMemo, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
 import { usePool } from './usePools'
+import { BN } from '@project-serum/anchor'
 
 export enum V3TradeState {
   LOADING,
@@ -42,6 +41,7 @@ export function useBestV3TradeExactIn(
   // console.log('input token', amountIn?.currency)
   // console.log('output token', currencyOut)
   // const quoter = useV3Quoter()
+
   const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
 
   // Hacky solution to find output amount based on current pool price
@@ -56,6 +56,29 @@ export function useBestV3TradeExactIn(
   // }, [amountIn, routes])
 
   // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
+  const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
+
+  useEffect(() => {
+    if (!amountIn || !currencyOut || !pool || !routes[0]) return
+    ;(async () => {
+      const MaxU32 = JSBI.BigInt('0xffffffff')
+      const factor =
+        (amountIn.currency as UniToken).address === pool.token0.address
+          ? new Fraction(pool.sqrtRatioX32, MaxU32)
+          : new Fraction(MaxU32, pool.sqrtRatioX32)
+      const out = amountIn.multiply(factor)
+      const amountOut = CurrencyAmount.fromFractionalAmount(currencyOut, out.numerator, out.denominator)
+      try {
+        const amntIn = new BN(amountIn.numerator[0])
+        const [expectedAmountOut] = await pool.getOutputAmount(
+          CurrencyAmount.fromRawAmount(amountIn?.currency?.wrapped, amntIn.toNumber())
+        )
+        setAmntOut(expectedAmountOut ?? amountOut)
+      } catch (err) {
+        console.error('No tick data provider was given')
+      }
+    })()
+  }, [pool])
 
   return useMemo(() => {
     if (!amountIn || !currencyOut || !pool) {
@@ -65,7 +88,7 @@ export function useBestV3TradeExactIn(
       }
     }
 
-    if (routesLoading) {
+    if (routesLoading || !amntOut) {
       return {
         state: V3TradeState.LOADING,
         trade: null,
@@ -105,21 +128,21 @@ export function useBestV3TradeExactIn(
 
     // const isSyncing = quotesResults.some(({ syncing }) => syncing)
 
-    const MaxU32 = JSBI.BigInt('0xffffffff')
-    const factor =
-      (amountIn.currency as UniToken).address === pool.token0.address
-        ? new Fraction(pool.sqrtRatioX32, MaxU32)
-        : new Fraction(MaxU32, pool.sqrtRatioX32)
-    console.log('price factor', factor.quotient)
-    const out = amountIn.multiply(factor)
-    const amountOut = CurrencyAmount.fromFractionalAmount(currencyOut, out.numerator, out.denominator)
+    // const MaxU32 = JSBI.BigInt('0xffffffff')
+    // const factor =
+    //   (amountIn.currency as UniToken).address === pool.token0.address
+    //     ? new Fraction(pool.sqrtRatioX32, MaxU32)
+    //     : new Fraction(MaxU32, pool.sqrtRatioX32)
+    // console.log('price factor', factor.quotient)
+    // const out = amountIn.multiply(factor)
+    // const amountOut = CurrencyAmount.fromFractionalAmount(currencyOut, out.numerator, out.denominator)
 
     return {
       state: V3TradeState.VALID,
       trade: {
         route: routes[0],
         inputAmount: amountIn,
-        outputAmount: amountOut,
+        outputAmount: amntOut,
       },
       // trade: Trade.createUncheckedTrade({
       //   route: bestRoute,
@@ -128,7 +151,7 @@ export function useBestV3TradeExactIn(
       //   outputAmount: CurrencyAmount.fromRawAmount(currencyOut, amountOut.toString()),
       // }),
     }
-  }, [amountIn, currencyOut, routes, routesLoading, pool])
+  }, [amountIn, currencyOut, amntOut, routes, routesLoading, pool])
 }
 
 // /**
