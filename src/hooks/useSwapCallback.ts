@@ -255,7 +255,7 @@ export function useSwapCallback(
     )
     const latestObservationState = (
       await PublicKey.findProgramAddress(
-        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(observationIndex)],
+        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
@@ -265,7 +265,7 @@ export function useSwapCallback(
           OBSERVATION_SEED,
           token0.toBuffer(),
           token1.toBuffer(),
-          u32ToSeed(500),
+          u32ToSeed(fee),
           u16ToSeed((observationIndex + 1) % observationCardinalityNext),
         ],
         cyclosCore.programId
@@ -291,8 +291,17 @@ export function useSwapCallback(
 
     const tx = new Transaction()
 
+    const isSol = inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL'
+
     // 1. Check if respective ATA's accounts.
     // Check for all mints except SOL, as wrap and unwrap is used for SOL
+    // Get ATA for WSOL Account
+    const WSOL_ATA = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(WSOL_LOCAL.address),
+      signer
+    )
     ;[inputCurrency, outputCurrency].forEach(async (currency) => {
       if (currency.symbol != 'SOL') {
         const ata = await Token.getAssociatedTokenAddress(
@@ -320,7 +329,7 @@ export function useSwapCallback(
     })
 
     // 2. Wrap and Unwrap native SOL is one of the input tokens is SOL
-    if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
+    if (isSol) {
       console.log(`Wrapping native SOL`)
 
       // WRAP NATIVE SOL
@@ -361,11 +370,14 @@ export function useSwapCallback(
       )
     }
 
+    const iAccount = isSol ? WSOL_ATA : inputTokenAccount
+    const oAccount = isSol ? WSOL_ATA : outputTokenAccount
+
     const ix = cyclosCore.instruction.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
-        inputTokenAccount,
+        inputTokenAccount: iAccount,
         coreProgram: cyclosCore.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
@@ -376,7 +388,7 @@ export function useSwapCallback(
           isWritable: true,
         },
         {
-          pubkey: outputTokenAccount,
+          pubkey: oAccount,
           isSigner: false,
           isWritable: true,
         },
@@ -407,7 +419,7 @@ export function useSwapCallback(
     tx.add(ix)
 
     // UNWRAP NATIVE SOL
-    if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
+    if (isSol) {
       console.log(`Unwrapping native SOL`)
 
       const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
