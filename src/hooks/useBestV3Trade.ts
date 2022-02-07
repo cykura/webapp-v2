@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 import JSBI from 'jsbi'
 import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@uniswap/sdk-core'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
 import { usePool } from './usePools'
 import { BN } from '@project-serum/anchor'
@@ -13,6 +13,7 @@ import { PROGRAM_ID_STR } from 'constants/addresses'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import * as anchor from '@project-serum/anchor'
 import { Pool } from '@uniswap/v3-sdk'
+import usePrevious from './usePrevious'
 
 export enum V3TradeState {
   LOADING,
@@ -47,6 +48,20 @@ export function useBestV3TradeExactIn(
   // ): { state: V3TradeState; trade: Trade<Currency, Currency, TradeType.EXACT_INPUT> | null } {
 ): CyclosTrade {
   const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
+  const prevState = usePrevious(routes)
+  // console.log(prevState, ' is the previous State')
+
+  // This checks to see if the routes have been updated with newer values
+  // by comparing each array value to the previous state.
+  const dontRender = useMemo(() => {
+    const routesSorted = routes.sort()
+    const prevStateSorted = prevState?.sort()
+    if (!prevStateSorted) return false
+    const changed = routesSorted.map((ele, i) => ele == prevStateSorted[i])
+    return changed.every((ele) => ele == true)
+  }, [prevState, routes])
+  // console.log(dontRender)
+
   const { connection, wallet } = useSolana()
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: true,
@@ -57,13 +72,13 @@ export function useBestV3TradeExactIn(
   const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
   // by default returning route[0] for now since type conflict is there.
   const [bestRoute, setBestRoute] = useState<PublicKey>(routes[0])
+  const amntIn = amountIn && new BN(amountIn.numerator[0])
 
   useEffect(() => {
-    if (!amountIn || !currencyOut || !routes) return
+    if (!amountIn || !currencyOut || !routes || !amntIn) return
     ;(async () => {
       setBestRoute(routes[0])
 
-      const amntIn = new BN(amountIn.numerator[0])
       let bestAmount: CurrencyAmount<typeof currencyOut> = CurrencyAmount.fromRawAmount(currencyOut, JSBI.BigInt(0))
 
       try {
@@ -114,7 +129,7 @@ export function useBestV3TradeExactIn(
         console.error('Error', err)
       }
     })()
-  }, [routes, amountIn])
+  }, [dontRender, amountIn?.toSignificant()])
 
   return useMemo(() => {
     if (!amountIn || !currencyOut || !routes[0]) {
@@ -138,7 +153,7 @@ export function useBestV3TradeExactIn(
         outputAmount: amntOut,
       },
     }
-  }, [amountIn, currencyOut, amntOut, routes, routesLoading, routes])
+  }, [amountIn, currencyOut, amntOut, dontRender, routesLoading])
 }
 
 // /**
