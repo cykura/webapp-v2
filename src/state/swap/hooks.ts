@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
-import { useBestV3TradeExactIn, V3TradeState } from '../../hooks/useBestV3Trade'
+import { useBestV3TradeExactIn, useBestV3TradeExactOut, V3TradeState } from '../../hooks/useBestV3Trade'
 import { parseUnits } from '@ethersproject/units'
 import { Currency, CurrencyAmount, Percent, TradeType } from '@uniswap/sdk-core'
 import { ParsedQs } from 'qs'
@@ -119,11 +119,12 @@ export function useDerivedSwapInfo() {
     outputCurrency ?? undefined,
   ])
 
-  // const isExactIn: boolean = independentField === Field.INPUT
-  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
+  const isExactIn: boolean = independentField === Field.INPUT
+  const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
-  const bestV3TradeExactIn = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
-  const { state, trade } = bestV3TradeExactIn
+  const bestV3TradeExactIn = useBestV3TradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
+  const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
+  // const { state, trade } = bestV3TradeExactIn
   // console.log(
   //   state,
   //   trade?.inputAmount?.toSignificant(),
@@ -131,8 +132,7 @@ export function useDerivedSwapInfo() {
   //   trade?.route?.toString()
   // )
 
-  // const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
-  // const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
+  const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
 
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],
@@ -146,7 +146,7 @@ export function useDerivedSwapInfo() {
 
   let inputError: string | undefined
   if (!account) {
-    inputError = 'Connect Ethereum Wallet'
+    inputError = 'Connect Wallet'
   }
 
   if (!parsedAmount) {
@@ -166,7 +166,7 @@ export function useDerivedSwapInfo() {
     }
   }
 
-  const toggledTrade = bestV3TradeExactIn?.trade ?? undefined
+  const toggledTrade = v3Trade?.trade ?? undefined
   // const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
   const allowedSlippage = new Percent(10)
 
