@@ -2,7 +2,16 @@ import { parseBytes32String } from '@ethersproject/strings'
 import { Currency, Token, WSOL } from '@uniswap/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useEffect, useMemo, useState } from 'react'
-import { SOLUSDC_LOCAL, SOLUSDT_LOCAL, SOLCYS_LOCAL, SOLUSDC_MAIN, SOLUSDT_MAIN, SOL_LOCAL } from '../constants/tokens'
+import {
+  SOLUSDC_LOCAL,
+  SOLUSDT_LOCAL,
+  SOLCYS_LOCAL,
+  SOLUSDC_MAIN,
+  SOLUSDT_MAIN,
+  SOL_LOCAL,
+  CYS_MAIN,
+  WSOL_MAIN,
+} from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { TokenAddressMap, useAllLists, useInactiveListUrls } from './../state/lists/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -73,8 +82,12 @@ export function useAllTokens(): { [address: string]: Token } {
     const map = {
       [SOLUSDC_MAIN.address]: SOLUSDC_MAIN,
       [SOLUSDT_MAIN.address]: SOLUSDT_MAIN,
-      // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
+      [CYS_MAIN.address]: CYS_MAIN,
+      [WSOL_MAIN.address]: WSOL_MAIN,
     }
+    userAddedTokens.forEach((token) => {
+      map[token.address] = token
+    })
     return map
   } else if (network === 'devnet') {
     // return devnet tokens

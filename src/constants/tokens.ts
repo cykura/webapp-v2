@@ -164,8 +164,10 @@ export class ExtendedEther extends Ether {
 
 // SOLANA TOKENS
 
-export const SOLUSDC_MAIN = new Token(101, 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', 6, 'USDC', 'USDC Coin')
-export const SOLUSDT_MAIN = new Token(101, 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', 6, 'USDT', 'USDT Coin')
+export const SOLUSDC_MAIN = new Token(101, 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', 6, 'USDC', 'USD Coin')
+export const SOLUSDT_MAIN = new Token(101, 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', 6, 'USDT', 'USDT')
+export const CYS_MAIN = new Token(101, 'BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg', 6, 'CYS', 'Cyclos')
+export const WSOL_MAIN = new Token(101, 'So11111111111111111111111111111111111111112', 9, 'SOL', 'Wrapped SOL')
 
 // SOLANA TOKENS
 

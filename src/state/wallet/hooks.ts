@@ -1,53 +1,42 @@
-import { Connection, PublicKey } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
 import { useSolana } from '@saberhq/use-solana'
 
-import { Currency, Token, CurrencyAmount, Ether } from '@uniswap/sdk-core'
+import { Currency, Token, CurrencyAmount } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import { useEffect, useMemo, useState } from 'react'
-import { UNI } from '../../constants/tokens'
+import { UNI, WSOL_MAIN } from '../../constants/tokens'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
-import { useMulticall2Contract } from '../../hooks/useContract'
-import { isAddress } from '../../utils'
-import { useSingleContractMultipleData } from '../multicall/hooks'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
  */
-export function useETHBalances(uncheckedAddresses?: (string | undefined)[]): {
+export function useSOLBalance(uncheckedAddress: string | undefined): {
   [address: string]: CurrencyAmount<Currency> | undefined
 } {
-  const { chainId } = useActiveWeb3ReactSol()
-  const multicallContract = useMulticall2Contract()
+  const { chainId, account } = useActiveWeb3ReactSol()
 
-  const addresses: string[] = useMemo(
-    () =>
-      uncheckedAddresses
-        ? uncheckedAddresses
-            .map(isAddress)
-            .filter((a): a is string => a !== false)
-            .sort()
-        : [],
-    [uncheckedAddresses]
-  )
+  const { connection, connected } = useSolana()
+  const [balance, setBalance] = useState<any>(0)
 
-  const results = useSingleContractMultipleData(
-    multicallContract,
-    'getEthBalance',
-    addresses.map((address) => [address])
-  )
+  useEffect(() => {
+    if (!uncheckedAddress) return
+    // Native Sol balance
+    connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
+      console.log(data / LAMPORTS_PER_SOL)
+      setBalance(data)
+    })
+  }, [account, chainId, uncheckedAddress, connected])
 
-  return useMemo(
-    () =>
-      addresses.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, address, i) => {
-        const value = results?.[i]?.result?.[0]
-        if (value && chainId)
-          memo[address] = CurrencyAmount.fromRawAmount(Ether.onChain(chainId), JSBI.BigInt(value.toString()))
-        return memo
-      }, {}),
-    [addresses, chainId, results]
-  )
+  return useMemo(() => {
+    return {
+      ['So11111111111111111111111111111111111111112']: CurrencyAmount.fromRawAmount(
+        WSOL_MAIN,
+        JSBI.BigInt(balance.toString())
+      ),
+    }
+  }, [account, chainId, uncheckedAddress, balance, connected])
 }
 
 /**
@@ -134,6 +123,7 @@ export function useTokenBalancesWithLoadingIndicator(
         setLoading(false)
       })
   }, [address])
+  // console.log(tokenBalanceList)
   return [tokenBalanceList, loading]
 }
 
@@ -161,18 +151,19 @@ export function useCurrencyBalances(
   const allTokenBalances = useTokenBalances(account, arrAllTokens)
 
   // const tokenBalances = useTokenBalances(account, tokens)
-  const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
-  const ethBalance = useETHBalances(containsETH ? [account] : [])
+  // const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
+  // const ethBalance = useETHBalances(containsETH ? [account] : [])
+  const solBalance = useSOLBalance(account)
 
   return useMemo(
     () =>
       currencies?.map((currency) => {
         if (!account || !currency) return undefined
+        if (currency.symbol == 'SOL') return solBalance[WSOL_MAIN.address]
         if (currency.isToken) return allTokenBalances[currency.address]
-        if (currency.isNative) return ethBalance[account]
         return undefined
       }) ?? [],
-    [account, currencies, ethBalance, allTokenBalances]
+    [account, currencies, solBalance, allTokenBalances]
   )
 }
 
