@@ -123,6 +123,14 @@ export function useDerivedSwapInfo() {
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
 
   const bestV3TradeExactIn = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
+  const { state, trade } = bestV3TradeExactIn
+  // console.log(
+  //   state,
+  //   trade?.inputAmount?.toSignificant(),
+  //   trade?.outputAmount?.toSignificant(),
+  //   trade?.route?.toString()
+  // )
+
   // const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
   // const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
 

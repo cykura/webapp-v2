@@ -198,8 +198,6 @@ export default function CurrencyList({
     return currencies
   }, [currencies, otherListTokens])
 
-  console.log(currencies, otherListTokens)
-
   const Row = useCallback(
     function TokenRow({ data, index, style }) {
       const row: Currency | BreakLine = data[index]

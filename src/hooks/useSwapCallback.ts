@@ -388,9 +388,9 @@ export class SolanaTickDataProvider implements TickDataProvider {
   ): Promise<[number, boolean, number, number, PublicKey]> {
     // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
     let compressed = Number(BigInt(tick) / BigInt(tickSpacing))
-    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    // console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
     if (tick < 0 && tick % tickSpacing !== 0) {
-      console.log('deducting from compressed.')
+      // console.log('deducting from compressed.')
       compressed -= 1
     }
     if (!lte) {
@@ -424,7 +424,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
       console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
-    console.log('returning next tick', nextTick)
+    // console.log('returning next tick', nextTick)
     return [nextTick, initialized, wordPos, bitPos, bitmapState]
   }
 }

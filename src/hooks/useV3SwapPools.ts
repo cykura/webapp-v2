@@ -21,7 +21,7 @@ export function useV3SwapPools(
   loading: boolean
 } {
   const { connection } = useSolana()
-  const [poolAddr, setAddr] = useState<PublicKey>()
+  const [poolAddr, setAddr] = useState<PublicKey[]>([])
 
   useEffect(() => {
     async function fetchPool() {
@@ -35,22 +35,23 @@ export function useV3SwapPools(
 
         const token0 = new PublicKey((tk0 as Token).address)
         const token1 = new PublicKey((tk1 as Token).address)
-
-        const generatedAddr = (
-          await PublicKey.findProgramAddress(
-            [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500)],
-            PROGRAM_ID
-          )
-        )[0]
-        console.log('generated address', generatedAddr.toString())
-        try {
-          const poolInfo = await connection.getAccountInfo(generatedAddr)
-          if (poolInfo) {
-            setAddr(generatedAddr)
+        ;[500, 3000, 10_000].forEach(async (fee) => {
+          const generatedAddr = (
+            await PublicKey.findProgramAddress(
+              [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
+              PROGRAM_ID
+            )
+          )[0]
+          console.log('generated address', generatedAddr.toString(), ' for fee', fee)
+          try {
+            const poolInfo = await connection.getAccountInfo(generatedAddr)
+            if (poolInfo) {
+              setAddr((prevState) => [...prevState, generatedAddr])
+            }
+          } catch (error) {
+            console.log('failed to get pool info', error)
           }
-        } catch (error) {
-          console.log('failed to get pool info', error)
-        }
+        })
       }
     }
 
@@ -58,7 +59,7 @@ export function useV3SwapPools(
   }, [currencyIn, currencyOut])
 
   return {
-    pools: poolAddr ? [poolAddr] : [],
+    pools: poolAddr,
     loading: false,
   }
 
