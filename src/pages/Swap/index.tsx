@@ -154,7 +154,6 @@ export default function Swap({ history }: RouteComponentProps) {
   const routeNotFound = !trade?.route
   const isLoadingRoute = false
   // const isLoadingRoute = V3TradeState.LOADING === v3TradeState
-
   // const {
   //   state: signatureState,
   //   signatureData,
@@ -437,20 +436,23 @@ export default function Swap({ history }: RouteComponentProps) {
                       <Dots>
                         <span>Loading</span>
                       </Dots>
-                    ) : singleHopOnly ? (
-                      <span>Insufficient liquidity for this trade. Try enabling multi-hop trades.</span>
                     ) : (
+                      // : singleHopOnly ? (
+                      //   <span>Insufficient liquidity for this trade. Try enabling multi-hop trades.</span>
+                      // )
                       <span>Insufficient liquidity for this trade.</span>
                     )}
                   </TYPE.main>
                 </GreyCard>
-              ) : !haveAllATAs ? (
-                <ButtonError onClick={handleCreateATA}>
-                  <Text fontSize={20} fontWeight={500}>
-                    Create Accounts
-                  </Text>
-                </ButtonError>
               ) : (
+                // ATA check and creation handled within the swap txn
+                // : !haveAllATAs && !isValid ? (
+                //   <ButtonError onClick={handleCreateATA}>
+                //     <Text fontSize={20} fontWeight={500}>
+                //       Create Accounts
+                //     </Text>
+                //   </ButtonError>
+                // ) :
                 <ButtonError
                   onClick={() => {
                     handleSwap()
@@ -468,7 +470,7 @@ export default function Swap({ history }: RouteComponentProps) {
                     // }
                   }}
                   id="swap-button"
-                  // disabled={!isValid}
+                  disabled={!isValid}
                   // disabled={!isValid || priceImpactTooHigh || !!swapCallbackError}
                   // error={isValid && priceImpactSeverity > 2 && !swapCallbackError}
                 >

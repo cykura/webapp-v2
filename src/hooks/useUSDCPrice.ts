@@ -46,6 +46,11 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
       // console.log('Fetching SOL price')
       return new Price(currency?.wrapped, stablecoin, '1000', '170')
     }
+    //handle sol
+    if (currency?.wrapped.symbol === 'SOL') {
+      // console.log('Fetching SOL price')
+      return new Price(currency?.wrapped, stablecoin, '1000', '170')
+    }
     //handle cys
     if (currency?.wrapped.symbol === 'CYS') {
       // console.log('Fetching CYS price')

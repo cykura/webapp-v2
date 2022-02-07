@@ -149,12 +149,12 @@ export function useDerivedSwapInfo() {
     inputError = 'Connect Wallet'
   }
 
-  if (!parsedAmount) {
-    inputError = inputError ?? 'Enter an amount'
+  if (!currencies[Field.INPUT] || !currencies[Field.OUTPUT]) {
+    inputError = inputError ?? 'Select a token'
   }
 
-  if (!currencies[Field.INPUT] || !currencies[Field.OUTPUT]) {
-    inputError = inputError ?? 'Select a tokent'
+  if (!parsedAmount) {
+    inputError = inputError ?? 'Enter an amount'
   }
 
   const formattedTo = isAddress(to)

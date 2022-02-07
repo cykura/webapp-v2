@@ -130,7 +130,7 @@ export default function Pool() {
           <span>Create a pool</span>
         </MenuItem>
       ),
-      link: '/add/wSOL',
+      link: '/add/SOL',
       external: false,
     },
     {
@@ -158,7 +158,7 @@ export default function Pool() {
                 </TYPE.largeHeader>
               </HideSmall>
               <ButtonRow>
-                <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/wSOL">
+                <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/SOL">
                   + <span>New Position</span>
                 </ResponsiveButtonPrimary>
                 <Menu

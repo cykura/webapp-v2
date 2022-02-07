@@ -11,6 +11,7 @@ import {
   SOL_LOCAL,
   CYS_MAIN,
   WSOL_MAIN,
+  WSOL_LOCAL,
 } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { TokenAddressMap, useAllLists, useInactiveListUrls } from './../state/lists/hooks'
@@ -70,7 +71,7 @@ export function useAllTokens(): { [address: string]: Token } {
     const map = {
       [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
       [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
-      [SOL_LOCAL.address]: SOL_LOCAL,
+      [WSOL_LOCAL.address]: WSOL_LOCAL,
       [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
     userAddedTokens.forEach((token) => {
@@ -176,7 +177,7 @@ export function useSearchInactiveTokenLists(search: string | undefined, minResul
   const [allTokens, setAllTokens] = useState<TokenList>()
 
   useEffect(() => {
-    console.log('useEffect runs')
+    // console.log('useEffect runs')
     fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json')
       .then((r) => r.json())
       .then((data) => setAllTokens(data))

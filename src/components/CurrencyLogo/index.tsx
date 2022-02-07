@@ -62,6 +62,8 @@ export default function CurrencyLogo({
       ? USDT_ICON
       : currency?.symbol === 'wSOL'
       ? SOL_ICON
+      : currency?.symbol === 'SOL'
+      ? SOL_ICON
       : currency?.symbol === 'CYS'
       ? CYS_ICON
       : currency

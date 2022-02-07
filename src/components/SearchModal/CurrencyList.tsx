@@ -20,7 +20,7 @@ import ImportRow from './ImportRow'
 import { LightGreyCard } from 'components/Card'
 
 function currencyKey(currency: Currency): string {
-  return currency.isToken ? currency.address : 'wSOL'
+  return currency.isToken ? currency.address : 'SOL'
 }
 
 const StyledBalanceText = styled(Text)`

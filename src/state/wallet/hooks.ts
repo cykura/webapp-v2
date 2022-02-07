@@ -24,7 +24,7 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
     if (!uncheckedAddress) return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
-      console.log(data / LAMPORTS_PER_SOL)
+      // console.log(data / LAMPORTS_PER_SOL)
       setBalance(data)
     })
   }, [account, chainId, uncheckedAddress, connected])

@@ -23,14 +23,16 @@ import { isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import useTransactionDeadline from './useTransactionDeadline'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
 import { CysTrade } from './useBestV3Trade'
 import { useSolana } from '@saberhq/use-solana'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { BN } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { u16ToSeed } from 'state/mint/v3/utils'
-import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED } from 'constants/tokens'
+import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED, WSOL_LOCAL } from 'constants/tokens'
+import { useSwapState } from 'state/swap/hooks'
+import { useCurrency } from './Tokens'
 
 enum SwapCallbackState {
   INVALID,
@@ -169,9 +171,15 @@ export function useSwapCallback(
   // TODO fix output token address in trade- currently it's the same as input token address
   // console.log('building callback for', trade)
 
-  const { connection, wallet } = useSolana()
+  const { connection, wallet, providerMut } = useSolana()
+  const {
+    INPUT: { currencyId: inputCurrencyId },
+    OUTPUT: { currencyId: outputCurrencyId },
+  } = useSwapState()
+  const inputCurrency = useCurrency(inputCurrencyId)
+  const outputCurrency = useCurrency(outputCurrencyId)
 
-  if (!trade || !trade.route || !wallet?.publicKey) {
+  if (!trade || !trade.route || !wallet?.publicKey || !inputCurrency || !outputCurrency) {
     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
   }
 
@@ -187,21 +195,21 @@ export function useSwapCallback(
     // 1. Find current tick from pool account
     // 2. Find swap direction
     // 3. Formula to know if a tick is consumed completely
-    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1 } =
+    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1, fee } =
       await cyclosCore.account.poolState.fetch(pool)
 
     console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
 
     // TODO replace hardcoded fee and token decimal places
-    const fee = 500
+    // const fee = 500
     const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
       token0,
       token1,
       fee,
     })
 
-    const uniToken0 = new UniToken(0, token0.toString(), 6)
-    const uniToken1 = new UniToken(0, token1.toString(), 6)
+    const uniToken0 = inputCurrency?.wrapped
+    const uniToken1 = outputCurrency?.wrapped
 
     // output is one tick behind actual (8 instead of 9)
     const uniPoolA = new Pool(
@@ -280,7 +288,80 @@ export function useSwapCallback(
     console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
 
     const deadline = new BN(Date.now() / 1000 + 100_000)
-    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
+
+    const tx = new Transaction()
+
+    // 1. Check if respective ATA's accounts.
+    // Check for all mints except SOL, as wrap and unwrap is used for SOL
+    ;[inputCurrency, outputCurrency].forEach(async (currency) => {
+      if (currency.symbol != 'SOL') {
+        const ata = await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(currency.wrapped.address),
+          signer
+        )
+        const accountInfo = await connection.getAccountInfo(ata)
+
+        if (!accountInfo) {
+          console.log(`Creating ATA for ${currency.name}`)
+          tx.instructions.push(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              new PublicKey(currency.wrapped.address),
+              ata,
+              signer,
+              signer
+            )
+          )
+        }
+      }
+    })
+
+    // 2. Wrap and Unwrap native SOL is one of the input tokens is SOL
+    if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
+      console.log(`Wrapping native SOL`)
+
+      // WRAP NATIVE SOL
+      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(WSOL_LOCAL.address),
+        signer
+      )
+      tx.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(WSOL_LOCAL.address),
+          wrappedSolPubkey,
+          signer,
+          signer
+        )
+      )
+      // If swapping from SOL
+      if (inputCurrency.symbol == 'SOL') {
+        tx.add(
+          SystemProgram.transfer({
+            fromPubkey: signer,
+            toPubkey: wrappedSolPubkey,
+            lamports: amountIn.toNumber(),
+          })
+        )
+      }
+      // Initialize the account.
+      tx.add(
+        Token.createInitAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          new PublicKey(WSOL_LOCAL.address),
+          wrappedSolPubkey,
+          signer
+        )
+      )
+    }
+
+    const ix = cyclosCore.instruction.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
@@ -323,8 +404,32 @@ export function useSwapCallback(
       ],
     })
 
+    tx.add(ix)
+
+    // UNWRAP NATIVE SOL
+    if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
+      console.log(`Unwrapping native SOL`)
+
+      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(WSOL_LOCAL.address),
+        signer
+      )
+      tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wrappedSolPubkey, signer, signer, []))
+    }
+
+    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+    tx.feePayer = signer
+
+    const str = tx.serializeMessage().toString('base64')
+    console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
+
+    await wallet?.signTransaction(tx)
+    const hash = await providerMut?.send(tx)
+
     console.log('swap hash', hash)
-    return hash
+    return hash?.signature ?? '' // This should not be the case. Check types, should not get empty string here
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
 }
