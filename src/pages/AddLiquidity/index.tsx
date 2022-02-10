@@ -10,13 +10,13 @@ import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, PROGRAM_ID_STR } from '../../co
 import {
   BITMAP_SEED,
   FEE_SEED,
-  METADATA_SEED,
   OBSERVATION_SEED,
   POOL_SEED,
   POSITION_SEED,
   SOLCYS_LOCAL,
   SOLUSDT,
   TICK_SEED,
+  METADATA_SEED,
 } from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
@@ -48,7 +48,7 @@ import {
   useRangeHopCallbacks,
   useV3DerivedMintInfo,
 } from 'state/mint/v3/hooks'
-import { FeeAmount, NonfungiblePositionManager, u32ToSeed } from '@uniswap/v3-sdk'
+import { encodeSqrtRatioX32, FeeAmount, NonfungiblePositionManager, u32ToSeed } from '@uniswap/v3-sdk'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { useDerivedPositionInfo } from 'hooks/useDerivedPositionInfo'
 import { PositionPreview } from 'components/PositionPreview'
@@ -215,7 +215,11 @@ export default function AddLiquidity({
     // Convinence helpers
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
-    const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    let [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+
+    if (tk1.symbol === 'CYS' || tk2.symbol === 'CYS') {
+      ;[tk1, tk2] = [tokenA, tokenB]
+    }
 
     const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
 
@@ -247,29 +251,40 @@ export default function AddLiquidity({
     // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
     // get init Price from UI - should encode into Q32.32
-    // taken from test file
-    // const initPrice = new BN((+startPriceTypedValue * Math.pow(2, 32)).toFixed(0))
-    const sqrtPriceX32 = new BN(
-      sqrt(
-        JSBI.BigInt(new BN(startPriceTypedValue).shln(64).muln(Math.pow(10, tk1?.decimals - tk2?.decimals)))
-      ).toString()
-    )
+    // Need to handle decimals here
+    // NOTE. We shouldn't be flipping ticks here to sync with UI.
+    // This calls the contract and we should supply ticks that will satisfy the contract instead.
+    let nr = +startPriceTypedValue
+    if (invertPrice) {
+      nr = 1 / nr
+    }
+    nr = nr * 10e6
+    const dr = 10e6
+    let sqrtPriceX32 = new BN('4294967295')
+    try {
+      sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
+    } catch (error) {
+      console.log('TODO fix sqrtPriceX32 error', error)
+    }
+    // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
     console.log('sqrtpricex32 -> ', sqrtPriceX32.toString())
 
     // taken as contants in test file
-    let tickLower = ticks.LOWER ?? 0
-    let tickUpper = ticks.UPPER ?? 10
+    const tickLower = ticks.LOWER ?? 0
+    const tickUpper = ticks.UPPER ?? 10
+    // const tickLower = -10
+    // const tickUpper = 10
     // flipping ticks according to token sorted order
-    if (!invertPrice && tickUpper && tickLower) {
-      console.log('Invert Price is true and hence we flip ticks?')
-      ;[tickLower, tickUpper] = [tickLower, tickUpper]
-      // console.log(`tickLower is ${tickLower} and tickUpper is ${tickUpper}`)
-    } else {
-      console.log('Invert Price is false and hence we negate ticks?')
-      ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
-    }
+    // if (!invertPrice && tickUpper && tickLower) {
+    //   console.log('Invert Price is true and hence we flip ticks?')
+    //   ;[tickLower, tickUpper] = [tickLower, tickUpper]
+    //   // console.log(`tickLower is ${tickLower} and tickUpper is ${tickUpper}`)
+    // } else {
+    //   console.log('Invert Price is false and hence we negate ticks?')
+    //   ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
+    // }
     // tickLower should be less than tickUpper
-    ;[tickLower, tickUpper] = tickLower < tickUpper ? [tickLower, tickUpper] : [tickUpper, tickLower]
+    // ;[tickLower, tickUpper] = tickLower < tickUpper ? [tickLower, tickUpper] : [tickUpper, tickLower]
     console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper)
     // const tickLower = 0
     // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
@@ -737,10 +752,11 @@ export default function AddLiquidity({
         return [currencyIdNew, undefined]
       } else {
         // prevent weth + eth
-        const isETHOrWETHNew = currencyIdNew === 'USDT' || (chainId !== undefined && currencyIdNew === SOLUSDT.address)
+        const isETHOrWETHNew =
+          currencyIdNew === 'CYS' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address)
         const isETHOrWETHOther =
           currencyIdOther !== undefined &&
-          (currencyIdOther === 'USDT' || (chainId !== undefined && currencyIdOther === SOLUSDT.address))
+          (currencyIdOther === 'CYS' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address))
 
         if (isETHOrWETHNew && isETHOrWETHOther) {
           return [currencyIdNew, undefined]

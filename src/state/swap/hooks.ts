@@ -72,7 +72,7 @@ export function tryParseAmount<T extends Currency>(value?: string, currency?: T)
     return undefined
   }
   try {
-    const typedValueParsed = parseFloat(value) * Math.pow(10, currency?.decimals)
+    const typedValueParsed = +(parseFloat(value) * Math.pow(10, currency.decimals)).toFixed(currency?.decimals)
     if (typeof value === 'string' && typedValueParsed != 0.0) {
       return CurrencyAmount.fromRawAmount(currency, JSBI.BigInt(typedValueParsed))
     }
@@ -186,7 +186,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'USDT') return SOLUSDT.address
+    if (urlParam.toUpperCase() === 'CYS') return SOLCYS_LOCAL.address
   }
   return ''
 }

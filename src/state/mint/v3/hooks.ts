@@ -244,7 +244,6 @@ export function useV3DerivedMintInfo(
       } else {
         if (invertPrice) {
           if (token0.decimals < token1.decimals) {
-            console.log('True and True')
             modifiedPrice = new Price(
               price.baseCurrency,
               price.quoteCurrency,
@@ -252,7 +251,6 @@ export function useV3DerivedMintInfo(
               price.denominator
             )
           } else {
-            console.log('True and False')
             modifiedPrice = new Price(
               price.baseCurrency,
               price.quoteCurrency,
@@ -262,7 +260,6 @@ export function useV3DerivedMintInfo(
           }
         } else {
           if (token0.decimals < token1.decimals) {
-            console.log('False and True')
             modifiedPrice = new Price(
               price.baseCurrency,
               price.quoteCurrency,
@@ -270,7 +267,6 @@ export function useV3DerivedMintInfo(
               JSBI.divide(price.numerator, JSBI.BigInt(1000))
             )
           } else {
-            console.log('False and False')
             modifiedPrice = new Price(
               price.baseCurrency,
               price.quoteCurrency,
@@ -290,7 +286,8 @@ export function useV3DerivedMintInfo(
       // console.log('calculated tick ', currentTick.toString())
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
       // console.log('calculated price ', currentSqrt.toString())
-      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick, [])
+
+      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
     } else {
       return undefined
     }
@@ -544,15 +541,12 @@ export function useRangeHopCallbacks(
   const quoteToken = useMemo(() => quoteCurrency?.wrapped, [quoteCurrency])
 
   const getDecrementLower = useCallback(() => {
-    console.log('get Decrement Lower called')
     if (baseToken && quoteToken && typeof tickLower === 'number' && feeAmount) {
-      console.log('No Pool present')
       const newPrice = tickToPrice(baseToken, quoteToken, tickLower - TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
     // use pool current tick as starting tick if we have pool but no tick input
     if (!(typeof tickLower === 'number') && baseToken && quoteToken && feeAmount && pool) {
-      console.log('Pool present')
       const newPrice = tickToPrice(baseToken, quoteToken, pool.tickCurrent - TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)
     }
@@ -560,7 +554,6 @@ export function useRangeHopCallbacks(
   }, [baseToken, quoteToken, tickLower, feeAmount, pool])
 
   const getIncrementLower = useCallback(() => {
-    console.log('get Increment Lower called')
     if (baseToken && quoteToken && typeof tickLower === 'number' && feeAmount) {
       const newPrice = tickToPrice(baseToken, quoteToken, tickLower + TICK_SPACINGS[feeAmount])
       return newPrice.toSignificant(5, undefined, Rounding.ROUND_UP)

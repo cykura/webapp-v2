@@ -106,8 +106,12 @@ function Faucet() {
           })
         })
 
-      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address]
-      const collateralsQuantities: number[] = [100 * 10 ** USDC.decimal, 100 * 10 ** USDT.decimal]
+      const tokensAddresses: PublicKey[] = [USDC.address, USDT.address, CYS.address]
+      const collateralsQuantities: number[] = [
+        100 * 10 ** USDC.decimal,
+        100 * 10 ** USDT.decimal,
+        100 * 10 ** CYS.decimal,
+      ]
 
       const instructions: TransactionInstruction[] = []
       try {

@@ -10,6 +10,9 @@ import { useActiveWeb3ReactSol } from './web3'
 import { Pool, FeeAmount } from '@uniswap/v3-sdk'
 import { POOL_SEED, SOLUSDC, SOLUSDT } from 'constants/tokens'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
+import JSBI from 'jsbi'
+import { SolanaTickDataProvider } from './useSwapCallback'
+import { CyclosCore, IDL } from 'types/cyclos-core'
 
 // const POOL_STATE_INTERFACE = new Interface(IUniswapV3PoolStateABI) as IUniswapV3PoolStateInterface
 
@@ -129,7 +132,7 @@ export function usePool(
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: false,
   })
-  const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   const [poolState, setPoolState] = useState<Pool | null>(null)
 
@@ -156,8 +159,22 @@ export function usePool(
         // console.log(poolState.toString())
         const slot0 = await cyclosCore.account.poolState.fetch(poolState)
 
+        const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
+          token0: slot0.token0,
+          token1: slot0.token1,
+          fee: slot0.fee,
+        })
+
         setPoolState(
-          new Pool(currencyA.wrapped, currencyB.wrapped, feeAmount, slot0.sqrtPriceX32, slot0.liquidity, slot0.tick)
+          new Pool(
+            currencyA.wrapped,
+            currencyB.wrapped,
+            feeAmount,
+            JSBI.BigInt(slot0.sqrtPriceX32),
+            JSBI.BigInt(slot0.liquidity),
+            slot0.tick,
+            tickDataProvider
+          )
         )
       } catch (e) {
         console.log('Something went wrong!', e)

@@ -1,12 +1,12 @@
 import { Currency, CurrencyAmount, Price, Token } from '@uniswap/sdk-core'
 import { useMemo } from 'react'
-import { SOLUSDC, SOLUSDC_LOCAL } from '../constants/tokens'
+import { SOLUSDC, SOLUSDC_LOCAL, SOLUSDC_MAIN } from '../constants/tokens'
 import { useActiveWeb3ReactSol } from './web3'
 
 // Stablecoin amounts used when calculating spot price for a given currency.
 // The amount is large enough to filter low liquidity pairs.
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
-  101: CurrencyAmount.fromRawAmount(SOLUSDC, 10e6),
+  101: CurrencyAmount.fromRawAmount(SOLUSDC_MAIN, 10e6),
   104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
   103: CurrencyAmount.fromRawAmount(SOLUSDC, 1000_000),
 }

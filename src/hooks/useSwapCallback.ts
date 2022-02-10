@@ -1,6 +1,17 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { SwapRouter, Trade as V3Trade, u32ToSeed } from '@uniswap/v3-sdk'
-import { Currency, Percent, TradeType, Token as UniToken } from '@uniswap/sdk-core'
+import JSBI from 'jsbi'
+import {
+  generateBitmapWord,
+  nextInitializedBit,
+  Pool,
+  PoolVars,
+  SwapRouter,
+  TickDataProvider,
+  tickPosition,
+  Trade as V3Trade,
+  u32ToSeed,
+} from '@uniswap/v3-sdk'
+import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@uniswap/sdk-core'
 import * as anchor from '@project-serum/anchor'
 import idl from '../constants/cyclos-core.json'
 import { useMemo } from 'react'
@@ -172,13 +183,38 @@ export function useSwapCallback(
     const signer = wallet.publicKey!
     const pool = trade.route
 
-    const { observationIndex, observationCardinalityNext, tick, token0, token1 } =
+    // Find bitmap and tick accounts required to consume the input amount
+    // 1. Find current tick from pool account
+    // 2. Find swap direction
+    // 3. Formula to know if a tick is consumed completely
+    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1 } =
       await cyclosCore.account.poolState.fetch(pool)
-    console.log('token0', token0.toString(), 'token1', token1.toString())
 
-    console.log('input amount', trade?.inputAmount)
+    console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
+
+    // TODO replace hardcoded fee and token decimal places
+    const fee = 500
+    const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
+      token0,
+      token1,
+      fee,
+    })
+
+    const uniToken0 = new UniToken(0, token0.toString(), 6)
+    const uniToken1 = new UniToken(0, token1.toString(), 6)
+
+    // output is one tick behind actual (8 instead of 9)
+    const uniPoolA = new Pool(
+      uniToken0,
+      uniToken1,
+      fee,
+      JSBI.BigInt(sqrtPriceX32),
+      JSBI.BigInt(liquidity),
+      tick,
+      tickDataProvider
+    )
+
     const amountIn = new BN(trade?.inputAmount.numerator[0])
-    console.log('amount in', amountIn.toNumber())
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
     const minterWallet0 = await Token.getAssociatedTokenAddress(
@@ -209,16 +245,12 @@ export function useSwapCallback(
       pool,
       true
     )
-
-    const wordPos = (tick / 10) >> 8
-
     const latestObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
-
     const nextObservationState = (
       await PublicKey.findProgramAddress(
         [
@@ -232,34 +264,23 @@ export function useSwapCallback(
       )
     )[0]
 
-    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos + 1)],
-      cyclosCore.programId
-    )
-    console.log('bitmap upper', bitmapUpperState.toString())
-
-    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(wordPos)],
-      cyclosCore.programId
-    )
-    console.log('bitmap lower', bitmapLowerState.toString())
-
-    const [tickState, tickStateBump] = await PublicKey.findProgramAddress(
-      [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u32ToSeed(tick)],
-      cyclosCore.programId
-    )
+    // price = reserves_1 / reserves_0
+    // token 0 -> 1 (USDT -> USDC), price down
+    // token 1 -> 0 (USDC -> USDT), price up
 
     const inputToken = new PublicKey((trade.inputAmount.currency as UniToken).address)
-    const [inputTokenAccount, outputTokenAccount, inputVault, outputVault] = inputToken.equals(token0)
-      ? [minterWallet0, minterWallet1, vault0, vault1]
-      : [minterWallet1, minterWallet0, vault1, vault0]
+    const [inputTokenAccount, outputTokenAccount, inputVault, outputVault, zeroForOne] = inputToken.equals(token0)
+      ? [minterWallet0, minterWallet1, vault0, vault1, true]
+      : [minterWallet1, minterWallet0, vault1, vault0, false]
 
-    console.log('minter ac 0', minterWallet0.toString())
-    console.log('minter ac 1', minterWallet1.toString())
-    console.log('vault 0', vault0.toString())
-    console.log('vault 1', vault1.toString())
+    console.log('zero for one', zeroForOne)
+    const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
+      CurrencyAmount.fromRawAmount(zeroForOne ? uniToken0 : uniToken1, amountIn.toNumber())
+    )
+    console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
+
     const deadline = new BN(Date.now() / 1000 + 100_000)
-    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([1]), {
+    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
@@ -274,17 +295,17 @@ export function useSwapCallback(
           isWritable: true,
         },
         {
-          pubkey: outputTokenAccount, // outputTokenAccount
+          pubkey: outputTokenAccount,
           isSigner: false,
           isWritable: true,
         },
         {
-          pubkey: inputVault, // input vault
+          pubkey: inputVault,
           isSigner: false,
           isWritable: true,
         },
         {
-          pubkey: outputVault, // output vault
+          pubkey: outputVault,
           isSigner: false,
           isWritable: true,
         },
@@ -298,16 +319,7 @@ export function useSwapCallback(
           isSigner: false,
           isWritable: true,
         },
-        {
-          pubkey: bitmapLowerState,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: tickState,
-          isSigner: false,
-          isWritable: true,
-        },
+        ...swapAccounts,
       ],
     })
 
@@ -315,127 +327,104 @@ export function useSwapCallback(
     return hash
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
+}
 
-  // return useMemo(() => {
-  //   if (!trade || !librarySol || !account || !chainId) {
-  //     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
-  //   }
-  //   if (!recipient) {
-  //     if (recipientAddress !== null) {
-  //       return { state: SwapCallbackState.INVALID, callback: null, error: 'Invalid recipient' }
-  //     } else {
-  //       return { state: SwapCallbackState.LOADING, callback: null, error: null }
-  //     }
-  //   }
+function mostSignificantBit(x: BN) {
+  return x.bitLength() - 1
+}
 
-  //   return {
-  //     state: SwapCallbackState.VALID,
-  //     callback: async function onSwap(): Promise<string> {
-  //       const estimatedCalls: SwapCallEstimate[] = await Promise.all(
-  //         swapCalls.map((call) => {
-  //           const { address, calldata, value } = call
+function leastSignificantBit(x: BN) {
+  return x.zeroBits()
+}
 
-  //           const tx =
-  //             !value || isZero(value)
-  //               ? { from: account, to: address, data: calldata }
-  //               : {
-  //                   from: account,
-  //                   to: address,
-  //                   data: calldata,
-  //                   value,
-  //                 }
+export class SolanaTickDataProvider implements TickDataProvider {
+  program: anchor.Program<CyclosCore>
+  pool: PoolVars
 
-  //           return librarySol
-  //             ?.estimateGas(tx)
-  //             .then((gasEstimate: any) => {
-  //               return {
-  //                 call,
-  //                 gasEstimate,
-  //               }
-  //             })
-  //             .catch((gasError: any) => {
-  //               console.debug('Gas estimate failed, trying eth_call to extract error', call)
+  constructor(program: anchor.Program<CyclosCore>, pool: PoolVars) {
+    this.program = program
+    this.pool = pool
+  }
 
-  //               return librarySol
-  //                 ?.call(tx)
-  //                 .then((result: any) => {
-  //                   console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
-  //                   return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
-  //                 })
-  //                 .catch((callError: any) => {
-  //                   console.debug('Call threw error', call, callError)
-  //                   return { call, error: new Error(swapErrorToUserReadableMessage(callError)) }
-  //                 })
-  //             })
-  //         })
-  //       )
+  async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
+    const tickState = (
+      await PublicKey.findProgramAddress(
+        [
+          TICK_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u32ToSeed(tick),
+        ],
+        this.program.programId
+      )
+    )[0]
 
-  //       // a successful estimation is a bignumber gas estimate and the next call is also a bignumber gas estimate
-  //       let bestCallOption: SuccessfulCall | SwapCallEstimate | undefined = estimatedCalls.find(
-  //         (el, ix, list): el is SuccessfulCall =>
-  //           'gasEstimate' in el && (ix === list.length - 1 || 'gasEstimate' in list[ix + 1])
-  //       )
+    const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
+    return {
+      liquidityNet: liquidityNet.toString(),
+    }
+  }
 
-  //       // check if any calls errored with a recognizable error
-  //       if (!bestCallOption) {
-  //         const errorCalls = estimatedCalls.filter((call): call is FailedCall => 'error' in call)
-  //         if (errorCalls.length > 0) throw errorCalls[errorCalls.length - 1].error
-  //         const firstNoErrorCall = estimatedCalls.find<SwapCallEstimate>(
-  //           (call): call is SwapCallEstimate => !('error' in call)
-  //         )
-  //         if (!firstNoErrorCall) throw new Error('Unexpected error. Could not estimate gas for the swap.')
-  //         bestCallOption = firstNoErrorCall
-  //       }
+  async getTickAddress(tick: number): Promise<anchor.web3.PublicKey> {
+    return (
+      await PublicKey.findProgramAddress(
+        [
+          TICK_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u32ToSeed(tick),
+        ],
+        this.program.programId
+      )
+    )[0]
+  }
 
-  //       const {
-  //         call: { address, calldata, value },
-  //       } = bestCallOption
+  async nextInitializedTickWithinOneWord(
+    tick: number,
+    lte: boolean,
+    tickSpacing: number
+  ): Promise<[number, boolean, number, number, PublicKey]> {
+    // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
+    let compressed = Number(BigInt(tick) / BigInt(tickSpacing))
+    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    if (tick < 0 && tick % tickSpacing !== 0) {
+      console.log('deducting from compressed.')
+      compressed -= 1
+    }
+    if (!lte) {
+      compressed += 1
+    }
 
-  //       return librarySol
-  //         ?.getSigner()
-  //         .sendTransaction({
-  //           from: account,
-  //           to: address,
-  //           data: calldata,
-  //           // let the wallet try if we can't estimate the gas
-  //           ...('gasEstimate' in bestCallOption ? { gasLimit: calculateGasMargin(bestCallOption.gasEstimate) } : {}),
-  //           ...(value && !isZero(value) ? { value } : {}),
-  //         })
-  //         .then((response: any) => {
-  //           const inputSymbol = trade.inputAmount.currency.symbol
-  //           const outputSymbol = trade.outputAmount.currency.symbol
-  //           const inputAmount = trade.inputAmount.toSignificant(4)
-  //           const outputAmount = trade.outputAmount.toSignificant(4)
+    const { wordPos, bitPos } = tickPosition(compressed)
 
-  //           const base = `Swap ${inputAmount} ${inputSymbol} for ${outputAmount} ${outputSymbol}`
-  //           const withRecipient =
-  //             recipient === account
-  //               ? base
-  //               : `${base} to ${
-  //                   recipientAddress && isAddress(recipientAddress)
-  //                     ? shortenAddress(recipientAddress)
-  //                     : recipientAddress
-  //                 }`
+    const bitmapState = (
+      await PublicKey.findProgramAddress(
+        [
+          BITMAP_SEED,
+          this.pool.token0.toBuffer(),
+          this.pool.token1.toBuffer(),
+          u32ToSeed(this.pool.fee),
+          u16ToSeed(wordPos),
+        ],
+        this.program.programId
+      )
+    )[0]
 
-  //           addTransaction(response, {
-  //             summary: withRecipient,
-  //           })
-
-  //           return response.hash
-  //         })
-  //         .catch((error: any) => {
-  //           // if the user rejected the tx, pass this along
-  //           if (error?.code === 4001) {
-  //             throw new Error('Transaction rejected.')
-  //           } else {
-  //             // otherwise, the error was unexpected and we need to convey that
-  //             console.error(`Swap failed`, error, address, calldata, value)
-
-  //             throw new Error(`Swap failed: ${swapErrorToUserReadableMessage(error)}`)
-  //           }
-  //         })
-  //     },
-  //     error: null,
-  //   }
-  // }, [trade, librarySol, account, chainId, recipient, recipientAddress, swapCalls, addTransaction])
+    let nextBit = lte ? 0 : 255
+    let initialized = false
+    try {
+      const { word: wordArray } = await this.program.account.tickBitmapState.fetch(bitmapState)
+      const word = generateBitmapWord(wordArray)
+      const nextInitBit = nextInitializedBit(word, bitPos, lte)
+      nextBit = nextInitBit.next
+      initialized = nextInitBit.initialized
+    } catch (error) {
+      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+    }
+    const nextTick = (wordPos * 256 + nextBit) * tickSpacing
+    console.log('returning next tick', nextTick)
+    return [nextTick, initialized, wordPos, bitPos, bitmapState]
+  }
 }

@@ -120,7 +120,7 @@ function CurrencyRow({
           {currency.name}
         </TYPE.darkGray>
       </Column>
-      {/* <TokenTags currency={currency} /> */}
+      <TokenTags currency={currency} />
       {showCurrencyAmount && (
         <RowFixed style={{ justifySelf: 'flex-end' }}>
           {balance ? <Balance balance={balance} /> : account ? <Loader /> : null}

@@ -140,11 +140,6 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
       const positionList = await Promise.all(
         nfts.map(async (nft: any) => {
           try {
-            // const pda = await Metadata.getPDA(nft.mint)
-            // const metadata = (await Metadata.load(connection, pda)).data
-            // if (metadata.updateAuthority !== mintAuthority?.toString()) {
-            //   return null
-            // }
             const [tokenizedPositionState, _] = await PublicKey.findProgramAddress(
               [POSITION_SEED, new PublicKey(nft.mint).toBuffer()],
               cyclosCore.programId

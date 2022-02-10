@@ -1,3 +1,4 @@
+import { StakingProvider } from 'contexts/Staking'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
 import { Route, Switch } from 'react-router-dom'
 import styled from 'styled-components/macro'
@@ -11,6 +12,7 @@ import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
 import Pool from './Pool'
 import { PositionPage } from './Pool/PositionPage'
 import RemoveLiquidityV3 from './RemoveLiquidity/V3'
+import Staking from './Staking'
 import Swap from './Swap'
 import { RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
 
@@ -63,6 +65,11 @@ export default function App() {
             <Route exact strict path="/send" component={RedirectPathToSwapOnly} />
             <Route exact strict path="/swap/:outputCurrency" component={RedirectToSwap} />
             <Route exact strict path="/swap" component={Swap} />
+            <Route exact strict path="/staking">
+              <StakingProvider>
+                <Staking />
+              </StakingProvider>
+            </Route>
 
             <Route exact strict path="/pool" component={Pool} />
             <Route exact strict path="/pool/:tokenId" component={PositionPage} />

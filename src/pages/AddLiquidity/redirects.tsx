@@ -16,8 +16,8 @@ export function RedirectDuplicateTokenIds(
   // const chainId = 103;
 
   // prevent weth + eth
-  const isETHOrWETHA = currencyIdA === 'USDT' || (chainId !== undefined && currencyIdA === SOLUSDT.address)
-  const isETHOrWETHB = currencyIdB === 'USDT' || (chainId !== undefined && currencyIdB === SOLUSDT.address)
+  const isETHOrWETHA = currencyIdA === 'CYS' || (chainId !== undefined && currencyIdA === SOLCYS_LOCAL.address)
+  const isETHOrWETHB = currencyIdB === 'CYS' || (chainId !== undefined && currencyIdB === SOLCYS_LOCAL.address)
 
   if (
     currencyIdA &&

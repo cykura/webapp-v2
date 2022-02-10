@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
-import { Redirect, RouteComponentProps } from 'react-router-dom'
+import { Redirect, RouteComponentProps, useHistory } from 'react-router-dom'
 import {
   BITMAP_SEED,
   OBSERVATION_SEED,
@@ -346,6 +346,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     }
   }
 
+  const history = useHistory()
+
   const handleDismissConfirmation = useCallback(() => {
     setShowConfirm(false)
     // if there was a tx hash, we want to clear the input
@@ -354,6 +356,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     }
     setAttemptingTxn(false)
     setTxnHash('')
+    history.push(`/pool/${tokenId}`)
   }, [onPercentSelectForSlider, txnHash])
 
   const pendingText = `Removing ${liquidityValue0?.toSignificant(6)} ${

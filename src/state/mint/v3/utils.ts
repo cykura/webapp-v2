@@ -32,7 +32,6 @@ export function tryParseTick(
   let modifiedPrice = new Price(baseToken, quoteToken, amountOne.quotient, amount.quotient)
 
   if (baseToken.decimals == quoteToken.decimals) {
-    console.log('Goes here')
     modifiedPrice = price
   } else {
     // check for different decimals

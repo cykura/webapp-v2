@@ -1,3 +1,0 @@
-[submodule "contract"]
-	path = contract
-	url = https://github.com/cyclos-io/cyclos-protocol-v2.git
