@@ -1,5 +1,5 @@
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, Token as SplToken, NATIVE_MINT } from '@solana/spl-token'
 import { useSolana } from '@saberhq/use-solana'
 
 import { Currency, Token, CurrencyAmount } from '@uniswap/sdk-core'
@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { UNI, WSOL_LOCAL, WSOL_MAIN } from '../../constants/tokens'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
+import useInterval from 'hooks/useInterval'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
@@ -20,20 +21,21 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   const { connection, connected } = useSolana()
   const [balance, setBalance] = useState<any>(0)
 
-  useEffect(() => {
+  // useEffect(() => {
+
+  useInterval(() => {
     if (!uncheckedAddress) return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
       setBalance(data)
     })
-  }, [account, chainId, uncheckedAddress, connected])
+  }, 10000)
+
+  // }, [account, chainId, uncheckedAddress, connected])
 
   return useMemo(() => {
     return {
-      ['So11111111111111111111111111111111111111112']: CurrencyAmount.fromRawAmount(
-        WSOL_LOCAL,
-        JSBI.BigInt(balance.toString())
-      ),
+      [NATIVE_MINT.toString()]: CurrencyAmount.fromRawAmount(WSOL_LOCAL, balance),
     }
   }, [account, chainId, uncheckedAddress, balance, connected])
 }
@@ -68,9 +70,10 @@ export function useTokenBalancesWithLoadingIndicator(
   )
 
   // Store all spl token balances here
-  useEffect(() => {
-    if (!address) return
+  // useEffect(() => {
 
+  useInterval(() => {
+    if (!address) return
     connection
       .getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
@@ -121,7 +124,9 @@ export function useTokenBalancesWithLoadingIndicator(
       .finally(() => {
         setLoading(false)
       })
-  }, [address])
+  }, 10000)
+
+  // }, [address])
   // console.log(tokenBalanceList)
   return [tokenBalanceList, loading]
 }

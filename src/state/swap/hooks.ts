@@ -16,6 +16,7 @@ import { Field, replaceSwapState, selectCurrency, setRecipient, switchCurrencies
 import { SwapState } from './reducer'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { SOLCYS_LOCAL } from 'constants/tokens'
+import useDebounce from 'hooks/useDebounce'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -110,6 +111,8 @@ export function useDerivedSwapInfo() {
     recipient,
   } = useSwapState()
 
+  const debouncedTypedValue = useDebounce(typedValue, 500)
+  // const debouncedTypedValue = typedValue
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
   const to: string | null = recipient ?? account
@@ -120,7 +123,7 @@ export function useDerivedSwapInfo() {
   ])
 
   const isExactIn: boolean = independentField === Field.INPUT
-  const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
+  const parsedAmount = tryParseAmount(debouncedTypedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
   const bestV3TradeExactIn = useBestV3TradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
   const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)

@@ -221,7 +221,7 @@ export default function CurrencyList({
           <ImportRow style={style} token={token} showImportView={showImportView} setImportToken={setImportToken} dim />
         )
       } else if (currency) {
-        return account ? (
+        return (
           <CurrencyRow
             style={style}
             currency={currency}
@@ -230,7 +230,7 @@ export default function CurrencyList({
             otherSelected={otherSelected}
             showCurrencyAmount={showCurrencyAmount}
           />
-        ) : null
+        )
       } else {
         return null
       }

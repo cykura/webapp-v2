@@ -98,18 +98,16 @@ export function useAllTokens(): { [address: string]: Token } {
       // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
     }
     return map
+  } else {
+    // return localnet by default
+    const map = {
+      [SOLUSDC_LOCAL.address]: SOLUSDC_LOCAL,
+      [SOLUSDT_LOCAL.address]: SOLUSDT_LOCAL,
+      [WSOL_LOCAL.address]: WSOL_LOCAL,
+      [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
+    }
+    return map
   }
-
-  // DEV TOKENS
-  const SOL = WSOL[103]
-  // const allTokens = useCombinedActiveList()
-  // return useTokensFromMap(allTokens, true)
-  const map = {
-    [SOLUSDC.address]: SOLUSDC,
-    [SOLUSDT.address]: SOLUSDT,
-    [SOL.address]: SOL,
-  }
-  return map
 }
 
 export function useIsTokenActive(token: Token | undefined | null): boolean {

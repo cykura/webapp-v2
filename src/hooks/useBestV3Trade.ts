@@ -140,7 +140,7 @@ export function useBestV3TradeExactIn(
     if (!amountIn || !currencyOut || !routes[0] || amntOut?.lessThan(new Fraction(0, 1))) {
       // Throw Illiquid error message for negative trades too
       if (amntOut?.lessThan(new Fraction(0, 1))) {
-        console.log('Getting -ve price for this trade!')
+        console.log('Getting -ve price for this trade!', amntOut.toSignificant())
       }
       return {
         state: V3TradeState.INVALID,

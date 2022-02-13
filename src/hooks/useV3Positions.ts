@@ -68,6 +68,7 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
         setLoading(false)
         setpositionDetail(undefined)
         console.log(`Something went wrong fetching ${tokenId}`, e)
+        return
       }
       // console.log(pState)
       // console.log(tokenState)
@@ -128,9 +129,9 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
   }
 
   useEffect(() => {
-    setLoading(true)
     ;(async () => {
       if (!account) return
+      setLoading(true)
       // const [mintAuthority, _] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
       // console.log("NFT's")
