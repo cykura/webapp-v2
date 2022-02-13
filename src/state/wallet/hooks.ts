@@ -5,7 +5,7 @@ import { useSolana } from '@saberhq/use-solana'
 import { Currency, Token, CurrencyAmount } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import { useEffect, useMemo, useState } from 'react'
-import { UNI, WSOL_MAIN } from '../../constants/tokens'
+import { UNI, WSOL_LOCAL, WSOL_MAIN } from '../../constants/tokens'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
 
@@ -24,7 +24,6 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
     if (!uncheckedAddress) return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
-      // console.log(data / LAMPORTS_PER_SOL)
       setBalance(data)
     })
   }, [account, chainId, uncheckedAddress, connected])
@@ -32,7 +31,7 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   return useMemo(() => {
     return {
       ['So11111111111111111111111111111111111111112']: CurrencyAmount.fromRawAmount(
-        WSOL_MAIN,
+        WSOL_LOCAL,
         JSBI.BigInt(balance.toString())
       ),
     }

@@ -152,7 +152,8 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
   const { chainId } = useActiveWeb3ReactSol()
   const tokens = useAllTokens()
   // console.log(tokenAddress)
-  const token: Token | undefined | any = tokenAddress ? tokens[tokenAddress] : undefined
+  const tokenAdd = tokenAddress == SOL_LOCAL.address ? WSOL_LOCAL.address : tokenAddress
+  const token: Token | undefined | any = tokenAdd ? tokens[tokenAdd] : undefined
 
   return useMemo(() => {
     if (!chainId || !tokenAddress || !token) return undefined

@@ -1,9 +1,10 @@
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
-import { Currency, CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Fraction, Token, TradeType } from '@uniswap/sdk-core'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
 import { AdvancedSwapDetails } from 'components/swap/AdvancedSwapDetails'
 import { MouseoverTooltipContent } from 'components/Tooltip'
+import useDebounce from 'hooks/useDebounce'
 import useVerifyATA from 'hooks/useVerifyATA'
 import JSBI from 'jsbi'
 import { useCallback, useContext, useMemo, useState } from 'react'
@@ -88,8 +89,8 @@ export default function Swap({ history }: RouteComponentProps) {
       ),
     [currencies]
   )
-  const { haveAllATAs, createATA } = useVerifyATA(tokensList)
-
+  // const { haveAllATAs, createATA } = useVerifyATA(tokensList)
+  // console.log(trade?.inputAmount.toSignificant(), trade?.outputAmount.toSignificant())
   // let trade: V3Trade<Currency, Currency, TradeType> | undefined
   // const {
   //   wrapType,
@@ -149,7 +150,9 @@ export default function Swap({ history }: RouteComponentProps) {
   }
 
   const userHasSpecifiedInputOutput = Boolean(
-    currencies[Field.INPUT] && currencies[Field.OUTPUT] && parsedAmounts[independentField]?.greaterThan(JSBI.BigInt(0))
+    currencies[Field.INPUT] &&
+      currencies[Field.OUTPUT] &&
+      parsedAmounts[independentField]?.greaterThan(new Fraction(0, 1))
   )
   const routeNotFound = !trade?.route
   const isLoadingRoute = false
@@ -167,40 +170,6 @@ export default function Swap({ history }: RouteComponentProps) {
   const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(trade, allowedSlippage, recipient)
 
   const [singleHopOnly] = useUserSingleHopOnly()
-
-  const handleCreateATA = useCallback(() => {
-    ;(async () => {
-      try {
-        setSwapState({
-          attemptingTxn: true,
-          tradeToConfirm: undefined,
-          showConfirm: true,
-          swapErrorMessage: undefined,
-          txHash: undefined,
-          isATA: true,
-        })
-        const hash = await createATA()
-        console.log(hash)
-        setSwapState({
-          attemptingTxn: false,
-          tradeToConfirm: undefined,
-          showConfirm: true,
-          swapErrorMessage: undefined,
-          txHash: hash?.signature,
-          isATA: false,
-        })
-      } catch (error) {
-        setSwapState({
-          attemptingTxn: false,
-          tradeToConfirm: undefined,
-          showConfirm: false,
-          swapErrorMessage: undefined,
-          txHash: undefined,
-          isATA: false,
-        })
-      }
-    })()
-  }, [createATA])
 
   const handleSwap = useCallback(() => {
     async function handleSwap() {

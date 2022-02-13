@@ -49,7 +49,15 @@ import { useSolana } from '@saberhq/use-solana'
 import idl from '../../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token as SPLToken } from '@solana/spl-token'
-import { TICK_SEED, POOL_SEED, POSITION_SEED, BITMAP_SEED, OBSERVATION_SEED } from 'constants/tokens'
+import {
+  TICK_SEED,
+  POOL_SEED,
+  POSITION_SEED,
+  BITMAP_SEED,
+  OBSERVATION_SEED,
+  SOL_LOCAL,
+  WSOL_LOCAL,
+} from 'constants/tokens'
 import { u16ToSeed } from 'state/mint/v3/utils'
 
 const { BN, web3 } = anchor
@@ -632,6 +640,7 @@ export function PositionPage({
   // usdc prices always in terms of tokens
   const price0 = useUSDCPrice(token0 ?? undefined)
   const price1 = useUSDCPrice(token1 ?? undefined)
+  // console.log(price0?.toSignificant(), price1?.toSignificant())
 
   const fiatValueOfFees: CurrencyAmount<Currency> | null = useMemo(() => {
     if (!price0 || !price1 || !feeValue0 || !feeValue1) return null

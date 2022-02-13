@@ -14,6 +14,7 @@ import { CyclosCore, IDL } from 'types/cyclos-core'
 import * as anchor from '@project-serum/anchor'
 import { Pool } from '@uniswap/v3-sdk'
 import usePrevious from './usePrevious'
+import { SOL_LOCAL, WSOL_LOCAL } from 'constants/tokens'
 
 export enum V3TradeState {
   LOADING,
@@ -85,9 +86,12 @@ export function useBestV3TradeExactIn(
         routes.forEach(async (route) => {
           const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
 
+          const t0 = token0.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token0
+          const t1 = token1.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token1
+
           const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-            token0: token0,
-            token1: token1,
+            token0: t0,
+            token1: t1,
             fee: fee,
           })
 
@@ -132,7 +136,12 @@ export function useBestV3TradeExactIn(
   }, [dontRender, amountIn?.toSignificant()])
 
   return useMemo(() => {
-    if (!amountIn || !currencyOut || !routes[0]) {
+    // if (!amountIn || !currencyOut || !routes[0]) {
+    if (!amountIn || !currencyOut || !routes[0] || amntOut?.lessThan(new Fraction(0, 1))) {
+      // Throw Illiquid error message for negative trades too
+      if (amntOut?.lessThan(new Fraction(0, 1))) {
+        console.log('Getting -ve price for this trade!')
+      }
       return {
         state: V3TradeState.INVALID,
         trade: null,
@@ -204,9 +213,12 @@ export function useBestV3TradeExactOut(
         routes.forEach(async (route) => {
           const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
 
+          const t0 = token0.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token0
+          const t1 = token1.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token1
+
           const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-            token0: token0,
-            token1: token1,
+            token0: t0,
+            token1: t1,
             fee: fee,
           })
 
@@ -251,7 +263,11 @@ export function useBestV3TradeExactOut(
   }, [dontRender, amountOut?.toSignificant()])
 
   return useMemo(() => {
-    if (!amountOut || !currencyIn || !routes[0]) {
+    if (!amountOut || !currencyIn || !routes[0] || amntOut?.lessThan(new Fraction(0, 1))) {
+      // Throw Illiquid error message for negative trades too
+      if (amntOut?.lessThan(new Fraction(0, 1))) {
+        console.log('Getting -ve price for this trade')
+      }
       return {
         state: V3TradeState.INVALID,
         trade: null,

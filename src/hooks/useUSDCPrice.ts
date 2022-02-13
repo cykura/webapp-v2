@@ -40,18 +40,30 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
       return new Price(stablecoin, stablecoin, '1', '1')
     }
 
-    // Not sure if this is right
-    if (v3USDCTrade.trade) {
+    // Works for CYS, USDX, SOL
+    if (v3USDCTrade.trade && v3USDCTrade.trade.inputAmount.toSignificant().toString() !== '0') {
       // console.log('fetching price of', currency.name)
       const { numerator, denominator } = v3USDCTrade.trade.inputAmount
+      // console.log(v3USDCTrade.trade.inputAmount.toSignificant())
+      // console.log(v3USDCTrade.trade.outputAmount.toSignificant())
       // const { numerator, denominator } = v3USDCTrade.trade.route.midPrice
-      // return new Price(currency, stablecoin, denominator, numerator)
+      if (currency.symbol === 'SOL') {
+        // console.log('Comes here')
+        return new Price(
+          currency,
+          stablecoin,
+          numerator,
+          // denominator
+          JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(6))) // Is this always 6 though?
+        )
+      }
       // Could break for other tokens, Tested only for CYS. Need to test extensively.
       const price = new Price(
         currency,
         stablecoin,
         numerator,
         JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(currency.decimals)))
+        // denominator
       )
       console.log('$', price.toSignificant())
       return price
