@@ -836,7 +836,7 @@ export function PositionPage({
                         <LinkedCurrency network={network} currency={currencyQuote} />
                         <RowFixed>
                           <TYPE.main>
-                            {inverted ? position?.amount0.toSignificant(4) : position?.amount1.toSignificant(4)}
+                            {inverted ? position?.amount0.toFixed(2) : position?.amount1.toFixed(2)}
                           </TYPE.main>
                           {typeof ratio === 'number' && !removed ? (
                             <Badge style={{ marginLeft: '10px' }}>
@@ -851,7 +851,7 @@ export function PositionPage({
                         <LinkedCurrency network={network} currency={currencyBase} />
                         <RowFixed>
                           <TYPE.main>
-                            {inverted ? position?.amount1.toSignificant(4) : position?.amount0.toSignificant(4)}
+                            {inverted ? position?.amount1.toFixed(2) : position?.amount0.toFixed(2)}
                           </TYPE.main>
                           {typeof ratio === 'number' && !removed ? (
                             <Badge style={{ marginLeft: '10px' }}>

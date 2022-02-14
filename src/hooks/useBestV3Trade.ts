@@ -73,10 +73,9 @@ export function useBestV3TradeExactIn(
   const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
   // by default returning route[0] for now since type conflict is there.
   const [bestRoute, setBestRoute] = useState<PublicKey>(routes[0])
-  const amntIn = amountIn && new BN(amountIn.numerator[0])
 
   useEffect(() => {
-    if (!amountIn || !currencyOut || !routes || !amntIn) return
+    if (!amountIn || !currencyOut || !routes) return
     ;(async () => {
       setBestRoute(routes[0])
 
@@ -106,7 +105,7 @@ export function useBestV3TradeExactIn(
           )
 
           const [expectedAmountOut] = await pool.getOutputAmount(
-            CurrencyAmount.fromRawAmount(amountIn?.currency?.wrapped, amntIn.toNumber())
+            CurrencyAmount.fromFractionalAmount(amountIn?.currency?.wrapped, amountIn.numerator, amountIn.denominator)
           )
 
           console.log(expectedAmountOut.toSignificant(), fee)
@@ -200,10 +199,9 @@ export function useBestV3TradeExactOut(
   const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
   // by default returning route[0] for now since type conflict is there.
   const [bestRoute, setBestRoute] = useState<PublicKey>(routes[0])
-  const amntIn = amountOut && new BN(amountOut.numerator[0])
 
   useEffect(() => {
-    if (!amountOut || !currencyIn || !routes || !amntIn) return
+    if (!amountOut || !currencyIn || !routes) return
     ;(async () => {
       setBestRoute(routes[0])
 
@@ -233,7 +231,11 @@ export function useBestV3TradeExactOut(
           )
 
           const [expectedAmountOut] = await pool.getInputAmount(
-            CurrencyAmount.fromRawAmount(amountOut?.currency?.wrapped, amntIn.toNumber())
+            CurrencyAmount.fromFractionalAmount(
+              amountOut?.currency?.wrapped,
+              amountOut.numerator,
+              amountOut.denominator
+            )
           )
 
           console.log(expectedAmountOut.toSignificant(), fee)
