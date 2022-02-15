@@ -21,17 +21,19 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   const { connection, connected } = useSolana()
   const [balance, setBalance] = useState<any>(0)
 
-  // useEffect(() => {
+  useEffect(() => {
+    fetchSolBalance()
+  }, [account, connected])
 
-  useInterval(() => {
+  const fetchSolBalance = () => {
     if (!uncheckedAddress) return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
       setBalance(data)
     })
-  }, 10000)
+  }
 
-  // }, [account, chainId, uncheckedAddress, connected])
+  useInterval(fetchSolBalance, 10000)
 
   return useMemo(() => {
     return {
@@ -70,9 +72,11 @@ export function useTokenBalancesWithLoadingIndicator(
   )
 
   // Store all spl token balances here
-  // useEffect(() => {
+  useEffect(() => {
+    fetchTokenBalances()
+  }, [address, connected])
 
-  useInterval(() => {
+  const fetchTokenBalances = () => {
     if (!address) return
     connection
       .getParsedTokenAccountsByOwner(new PublicKey(address), {
@@ -124,10 +128,9 @@ export function useTokenBalancesWithLoadingIndicator(
       .finally(() => {
         setLoading(false)
       })
-  }, 10000)
+  }
 
-  // }, [address])
-  // console.log(tokenBalanceList)
+  useInterval(fetchTokenBalances, 10000)
   return [tokenBalanceList, loading]
 }
 
