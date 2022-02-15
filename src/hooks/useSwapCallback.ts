@@ -168,7 +168,6 @@ export function useSwapCallback(
   allowedSlippage: Percent, // in bips
   recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
-  // TODO fix output token address in trade- currently it's the same as input token address
   // console.log('building callback for', trade)
 
   const { connection, wallet, providerMut } = useSolana()
@@ -179,7 +178,12 @@ export function useSwapCallback(
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
 
-  if (!trade || !trade.route || !wallet?.publicKey || !inputCurrency || !outputCurrency) {
+  const pool = trade?.route
+  const signer = wallet?.publicKey
+  // Need to calculate the allowed slippage amount to pass it in as sqrtPriceLimitX32 along with the swap txn
+  const slippagePriceLimitX32 = allowedSlippage
+
+  if (!trade || !pool || !signer || !inputCurrency || !outputCurrency) {
     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
   }
 
@@ -188,9 +192,6 @@ export function useSwapCallback(
   })
   const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
   const callback = async () => {
-    const signer = wallet.publicKey!
-    const pool = trade.route
-
     // Find bitmap and tick accounts required to consume the input amount
     // 1. Find current tick from pool account
     // 2. Find swap direction
@@ -200,8 +201,6 @@ export function useSwapCallback(
 
     console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
 
-    // TODO replace hardcoded fee and token decimal places
-    // const fee = 500
     const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
       token0,
       token1,
@@ -464,18 +463,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
   }
 
   async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
-    const tickState = (
-      await PublicKey.findProgramAddress(
-        [
-          TICK_SEED,
-          this.pool.token0.toBuffer(),
-          this.pool.token1.toBuffer(),
-          u32ToSeed(this.pool.fee),
-          u32ToSeed(tick),
-        ],
-        this.program.programId
-      )
-    )[0]
+    const tickState = await this.getTickAddress(tick)
 
     const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
     return {

@@ -170,8 +170,7 @@ export function useDerivedSwapInfo() {
   }
 
   const toggledTrade = v3Trade?.trade ?? undefined
-  // const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
-  const allowedSlippage = new Percent(10)
+  const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
 
   // compare input balance to max input
   const balanceIn = currencyBalances[Field.INPUT]

@@ -126,7 +126,7 @@ export default function TransactionSettings({ placeholderSlippage }: Transaction
   }
 
   const tooLow = userSlippageTolerance !== 'auto' && userSlippageTolerance.lessThan(new Percent(5, 10_000))
-  const tooHigh = userSlippageTolerance !== 'auto' && userSlippageTolerance.greaterThan(new Percent(1, 100))
+  // const tooHigh = userSlippageTolerance !== 'auto' && userSlippageTolerance.greaterThan(new Percent(1, 100))
 
   function parseCustomDeadline(value: string) {
     // populate what the user typed and clear the error
@@ -174,7 +174,8 @@ export default function TransactionSettings({ placeholderSlippage }: Transaction
           </Option>
           <OptionCustom active={userSlippageTolerance !== 'auto'} warning={!!slippageError} tabIndex={-1}>
             <RowBetween>
-              {tooLow || tooHigh ? (
+              {/* {tooLow || tooHigh ? ( */}
+              {tooLow ? (
                 <SlippageEmojiContainer>
                   <span role="img" aria-label="warning">
                     ⚠️
@@ -201,7 +202,8 @@ export default function TransactionSettings({ placeholderSlippage }: Transaction
             </RowBetween>
           </OptionCustom>
         </RowBetween>
-        {slippageError || tooLow || tooHigh ? (
+        {/* {slippageError || tooLow || tooHigh ? ( */}
+        {slippageError || tooLow ? (
           <RowBetween
             style={{
               fontSize: '14px',
@@ -209,18 +211,12 @@ export default function TransactionSettings({ placeholderSlippage }: Transaction
               color: slippageError ? 'red' : '#F3841E',
             }}
           >
-            {slippageError ? (
-              <span>Enter a valid slippage percentage</span>
-            ) : tooLow ? (
-              <span>Your transaction may fail</span>
-            ) : (
-              <span>Your transaction may be frontrun</span>
-            )}
+            {slippageError ? <span>Enter a valid slippage percentage</span> : <span>Your transaction may fail</span>}
           </RowBetween>
         ) : null}
       </AutoColumn>
 
-      <AutoColumn gap="sm">
+      {/* <AutoColumn gap="sm">
         <RowFixed>
           <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
             <span>Transaction deadline</span>
@@ -250,7 +246,7 @@ export default function TransactionSettings({ placeholderSlippage }: Transaction
             <span>minutes</span>
           </TYPE.body>
         </RowFixed>
-      </AutoColumn>
+      </AutoColumn> */}
     </AutoColumn>
   )
 }

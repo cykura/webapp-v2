@@ -26,7 +26,7 @@ export enum V3TradeState {
 
 export type CysTrade =
   | {
-      route: PublicKey
+      route: PublicKey | null
       inputAmount: CurrencyAmount<Currency>
       outputAmount: CurrencyAmount<Currency>
     }
@@ -70,15 +70,12 @@ export function useBestV3TradeExactIn(
   const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
-  const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
-  // by default returning route[0] for now since type conflict is there.
-  const [bestRoute, setBestRoute] = useState<PublicKey>(routes[0])
+  const [amountOut, setAmountOut] = useState<CurrencyAmount<Currency> | null>(null)
+  const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
 
   useEffect(() => {
     if (!amountIn || !currencyOut || !routes) return
     ;(async () => {
-      setBestRoute(routes[0])
-
       let bestAmount: CurrencyAmount<typeof currencyOut> = CurrencyAmount.fromRawAmount(currencyOut, JSBI.BigInt(0))
 
       try {
@@ -112,20 +109,16 @@ export function useBestV3TradeExactIn(
           if (bestAmount.equalTo(bestAmount)) {
             // console.log('initial loop')
             bestAmount = expectedAmountOut
+            setBestRoute(route)
           }
           // If we get a better quote of other pool
           if (expectedAmountOut.lessThan(bestAmount)) {
-            // console.log('better route found', route, expectedAmountOut.toSignificant())
             bestAmount = expectedAmountOut
-            // console.log(route, ' is the best route now')
-            setAmntOut(expectedAmountOut)
+            setAmountOut(expectedAmountOut)
             setBestRoute(route)
           } else {
             // Already have the best quote
-            // console.log('already is the best route', bestRoute, bestAmount)
-            // bestAmount = bestAmount
-            setAmntOut(bestAmount)
-            // setBestRoute(route)
+            setAmountOut(bestAmount)
           }
         })
       } catch (err) {
@@ -135,11 +128,14 @@ export function useBestV3TradeExactIn(
   }, [dontRender, amountIn?.toSignificant()])
 
   return useMemo(() => {
+    console.log(
+      `TradeIn ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
+    )
     // if (!amountIn || !currencyOut || !routes[0]) {
-    if (!amountIn || !currencyOut || !routes[0] || amntOut?.lessThan(new Fraction(0, 1))) {
+    if (!amountIn || !currencyOut || !routes[0] || amountOut?.lessThan(new Fraction(0, 1))) {
       // Throw Illiquid error message for negative trades too
-      if (amntOut?.lessThan(new Fraction(0, 1))) {
-        console.log('Getting -ve price for this trade!', amntOut.toSignificant())
+      if (amountOut?.lessThan(new Fraction(0, 1))) {
+        console.log('Getting -ve price for this trade!', amountOut.toSignificant())
       }
       return {
         state: V3TradeState.INVALID,
@@ -147,7 +143,7 @@ export function useBestV3TradeExactIn(
       }
     }
 
-    if (routesLoading || !amntOut) {
+    if (routesLoading || !amountOut) {
       return {
         state: V3TradeState.LOADING,
         trade: null,
@@ -158,10 +154,10 @@ export function useBestV3TradeExactIn(
       trade: {
         route: bestRoute,
         inputAmount: amountIn,
-        outputAmount: amntOut,
+        outputAmount: amountOut,
       },
     }
-  }, [amountIn, currencyOut, amntOut, dontRender, routesLoading])
+  }, [amountIn, currencyOut, amountOut, dontRender, routesLoading])
 }
 
 // /**
@@ -196,15 +192,12 @@ export function useBestV3TradeExactOut(
   const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
-  const [amntOut, setAmntOut] = useState<CurrencyAmount<Currency> | null>(null)
-  // by default returning route[0] for now since type conflict is there.
-  const [bestRoute, setBestRoute] = useState<PublicKey>(routes[0])
+  const [amountIn, setAmountIn] = useState<CurrencyAmount<Currency> | null>(null)
+  const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
 
   useEffect(() => {
     if (!amountOut || !currencyIn || !routes) return
     ;(async () => {
-      setBestRoute(routes[0])
-
       let bestAmount: CurrencyAmount<typeof currencyIn> = CurrencyAmount.fromRawAmount(currencyIn, JSBI.BigInt(0))
 
       try {
@@ -242,20 +235,16 @@ export function useBestV3TradeExactOut(
           if (bestAmount.equalTo(bestAmount)) {
             // console.log('initial loop')
             bestAmount = expectedAmountOut
+            setBestRoute(route)
           }
           // If we get a better quote of other pool
           if (expectedAmountOut.lessThan(bestAmount)) {
-            // console.log('better route found', route, expectedAmountOut.toSignificant())
             bestAmount = expectedAmountOut
-            // console.log(route, ' is the best route now')
-            setAmntOut(expectedAmountOut)
+            setAmountIn(expectedAmountOut)
             setBestRoute(route)
           } else {
             // Already have the best quote
-            // console.log('already is the best route', bestRoute, bestAmount)
-            // bestAmount = bestAmount
-            setAmntOut(bestAmount)
-            // setBestRoute(route)
+            setAmountIn(bestAmount)
           }
         })
       } catch (err) {
@@ -265,9 +254,12 @@ export function useBestV3TradeExactOut(
   }, [dontRender, amountOut?.toSignificant()])
 
   return useMemo(() => {
-    if (!amountOut || !currencyIn || !routes[0] || amntOut?.lessThan(new Fraction(0, 1))) {
+    console.log(
+      `TradeOut ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
+    )
+    if (!amountOut || !currencyIn || !routes[0] || amountIn?.lessThan(new Fraction(0, 1))) {
       // Throw Illiquid error message for negative trades too
-      if (amntOut?.lessThan(new Fraction(0, 1))) {
+      if (amountIn?.lessThan(new Fraction(0, 1))) {
         console.log('Getting -ve price for this trade')
       }
       return {
@@ -276,7 +268,7 @@ export function useBestV3TradeExactOut(
       }
     }
 
-    if (routesLoading || !amntOut) {
+    if (routesLoading || !amountIn) {
       return {
         state: V3TradeState.LOADING,
         trade: null,
@@ -286,11 +278,11 @@ export function useBestV3TradeExactOut(
       state: V3TradeState.VALID,
       trade: {
         route: bestRoute,
-        inputAmount: amntOut,
+        inputAmount: amountIn,
         outputAmount: amountOut,
       },
     }
-  }, [amountOut, currencyIn, amntOut, dontRender, routesLoading])
+  }, [amountOut, currencyIn, amountIn, dontRender, routesLoading])
   //   const quoter = useV3Quoter()
   //   const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
 
