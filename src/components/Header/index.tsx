@@ -281,8 +281,12 @@ export default function Header() {
         >
           <span>Pool</span>
         </StyledNavLink>
-        <StyledNavLink id={`stake-nav-link`} to={'/staking'}>
-          <span>Staking</span>
+        <StyledNavLink
+          id={`vote-nav-link`}
+          to={'/vote-locker'}
+          isActive={(match, { pathname }) => !!match || pathname.startsWith('/staking')}
+        >
+          <span>Locker</span>
         </StyledNavLink>
       </HeaderLinks>
       <HeaderControls>

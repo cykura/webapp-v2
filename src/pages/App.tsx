@@ -1,4 +1,5 @@
 import { StakingProvider } from 'contexts/Staking'
+import { VoteLockerProvider } from 'contexts/VoteLocker'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
 import { Route, Switch } from 'react-router-dom'
 import styled from 'styled-components/macro'
@@ -15,6 +16,7 @@ import RemoveLiquidityV3 from './RemoveLiquidity/V3'
 import Staking from './Staking'
 import Swap from './Swap'
 import { RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
+import VoteLocker from './VoteLocker'
 
 const AppWrapper = styled.div`
   display: flex;
@@ -69,6 +71,11 @@ export default function App() {
               <StakingProvider>
                 <Staking />
               </StakingProvider>
+            </Route>
+            <Route exact strict path="/vote-locker">
+              <VoteLockerProvider>
+                <VoteLocker />
+              </VoteLockerProvider>
             </Route>
 
             <Route exact strict path="/pool" component={Pool} />

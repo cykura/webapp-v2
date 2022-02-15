@@ -83,6 +83,7 @@ interface ModalProps {
   maxHeight?: number
   initialFocusRef?: React.RefObject<any>
   children?: React.ReactNode
+  closeOnOutsideClick?: boolean
 }
 
 export default function Modal({
@@ -92,6 +93,7 @@ export default function Modal({
   maxHeight = 90,
   initialFocusRef,
   children,
+  closeOnOutsideClick,
 }: ModalProps) {
   const fadeTransition = useTransition(isOpen, null, {
     config: { duration: 200 },
@@ -120,7 +122,7 @@ export default function Modal({
             <StyledDialogOverlay
               key={key}
               style={props}
-              // onDismiss={onDismiss}
+              onDismiss={() => closeOnOutsideClick && onDismiss()}
               initialFocusRef={initialFocusRef}
               unstable_lockFocusAcrossFrames={false}
             >
