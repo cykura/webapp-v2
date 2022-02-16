@@ -528,7 +528,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
       nextBit = nextInitBit.next
       initialized = nextInitBit.initialized
     } catch (error) {
-      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+      // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
     // console.log(

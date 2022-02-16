@@ -9,7 +9,7 @@ import JSBI from 'jsbi'
 // The amount is large enough to filter low liquidity pairs.
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
   101: CurrencyAmount.fromRawAmount(SOLUSDC_MAIN, 1000_000),
-  104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
+  104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1),
   103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
 }
 
@@ -47,23 +47,23 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
       // console.log(v3USDCTrade.trade.inputAmount.toSignificant())
       // console.log(v3USDCTrade.trade.outputAmount.toSignificant())
       // const { numerator, denominator } = v3USDCTrade.trade.route.midPrice
-      if (currency.symbol === 'SOL') {
-        // console.log('Comes here')
-        return new Price(
-          currency,
-          stablecoin,
-          numerator,
-          // denominator
-          JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(6))) // Is this always 6 though?
-        )
-      }
+      // if (currency.symbol === 'SOL') {
+      //   // console.log('Comes here')
+      //   return new Price(
+      //     currency,
+      //     stablecoin,
+      //     numerator,
+      //     // denominator
+      //     JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(6))) // Is this always 6 though?
+      //   )
+      // }
       // Could break for other tokens, Tested only for CYS. Need to test extensively.
       const price = new Price(
         currency,
         stablecoin,
         numerator,
-        JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(currency.decimals)))
-        // denominator
+        // JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(currency.decimals)))
+        denominator
       )
       // console.log('$', price.toSignificant())
       return price

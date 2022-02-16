@@ -132,13 +132,19 @@ export function useBestV3TradeExactIn(
     // console.log(
     //   `TradeIn ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
     // )
-    // console.log(amountIn?.toSignificant(), currencyOut?.name, routes[0], amountOut?.toSignificant())
+    // console.log(
+    //   amountIn?.toSignificant(),
+    //   currencyOut?.name,
+    //   ...routes.map((r) => r.toString()),
+    //   amountOut?.toSignificant()
+    // )
     // if (!amountIn || !currencyOut || !routes[0]) {
-    if (!amountIn || !currencyOut || !routes[0] || amountOut?.lessThan(new Fraction(0, 1))) {
-      // Throw Illiquid error message for negative trades too
-      if (amountOut?.lessThan(new Fraction(0, 1))) {
-        console.log('Getting -ve price for this trade!', amountOut.toSignificant())
-      }
+    if (!amountIn || !currencyOut || !routes[0]) {
+      // // Throw Illiquid error message for negative trades too
+      // if (amountOut?.lessThan(new Fraction(0, 1))) {
+      //   console.log('Getting -ve price for this trade!', amountOut.toSignificant())
+      // }
+      // console.log('INVALID TRADE', ...routes.map((r) => r.toString()))
       return {
         state: V3TradeState.INVALID,
         trade: null,
@@ -146,6 +152,7 @@ export function useBestV3TradeExactIn(
     }
 
     if (routesLoading || !amountOut) {
+      // console.log('LOADING TRADE')
       return {
         state: V3TradeState.LOADING,
         trade: null,
@@ -234,7 +241,7 @@ export function useBestV3TradeExactOut(
             )
           )
 
-          console.log(expectedAmountIn.toSignificant(), fee)
+          // console.log(expectedAmountIn.toSignificant(), fee)
           if (bestAmount.equalTo(bestAmount)) {
             // console.log('initial loop')
             bestAmount = expectedAmountIn
@@ -260,11 +267,11 @@ export function useBestV3TradeExactOut(
     // console.log(
     //   `TradeOut ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
     // )
-    if (!amountOut || !currencyIn || !routes[0] || amountIn?.lessThan(new Fraction(0, 1))) {
+    if (!amountOut || !currencyIn || !routes[0]) {
       // Throw Illiquid error message for negative trades too
-      if (amountIn?.lessThan(new Fraction(0, 1))) {
-        console.log('Getting -ve price for this trade')
-      }
+      // if (amountIn?.lessThan(new Fraction(0, 1))) {
+      //   console.log('Getting -ve price for this trade')
+      // }
       return {
         state: V3TradeState.INVALID,
         trade: null,
