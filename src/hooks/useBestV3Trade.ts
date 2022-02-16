@@ -104,8 +104,9 @@ export function useBestV3TradeExactIn(
           const [expectedAmountOut] = await pool.getOutputAmount(
             CurrencyAmount.fromFractionalAmount(amountIn?.currency?.wrapped, amountIn.numerator, amountIn.denominator)
           )
+          // console.log(expectedAmountOut.toSignificant(), ' is coming from the calculation')
 
-          console.log(expectedAmountOut.toSignificant(), fee)
+          // console.log(expectedAmountOut.toSignificant(), fee)
           if (bestAmount.equalTo(bestAmount)) {
             // console.log('initial loop')
             bestAmount = expectedAmountOut
@@ -128,9 +129,10 @@ export function useBestV3TradeExactIn(
   }, [dontRender, amountIn?.toSignificant()])
 
   return useMemo(() => {
-    console.log(
-      `TradeIn ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
-    )
+    // console.log(
+    //   `TradeIn ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
+    // )
+    // console.log(amountIn?.toSignificant(), currencyOut?.name, routes[0], amountOut?.toSignificant())
     // if (!amountIn || !currencyOut || !routes[0]) {
     if (!amountIn || !currencyOut || !routes[0] || amountOut?.lessThan(new Fraction(0, 1))) {
       // Throw Illiquid error message for negative trades too
@@ -149,6 +151,7 @@ export function useBestV3TradeExactIn(
         trade: null,
       }
     }
+    // console.log('FOUND A VALID TRADE?')
     return {
       state: V3TradeState.VALID,
       trade: {
@@ -223,7 +226,7 @@ export function useBestV3TradeExactOut(
             tickDataProvider
           )
 
-          const [expectedAmountOut] = await pool.getInputAmount(
+          const [expectedAmountIn] = await pool.getInputAmount(
             CurrencyAmount.fromFractionalAmount(
               amountOut?.currency?.wrapped,
               amountOut.numerator,
@@ -231,16 +234,16 @@ export function useBestV3TradeExactOut(
             )
           )
 
-          console.log(expectedAmountOut.toSignificant(), fee)
+          console.log(expectedAmountIn.toSignificant(), fee)
           if (bestAmount.equalTo(bestAmount)) {
             // console.log('initial loop')
-            bestAmount = expectedAmountOut
+            bestAmount = expectedAmountIn
             setBestRoute(route)
           }
           // If we get a better quote of other pool
-          if (expectedAmountOut.lessThan(bestAmount)) {
-            bestAmount = expectedAmountOut
-            setAmountIn(expectedAmountOut)
+          if (expectedAmountIn.lessThan(bestAmount)) {
+            bestAmount = expectedAmountIn
+            setAmountIn(expectedAmountIn)
             setBestRoute(route)
           } else {
             // Already have the best quote
@@ -254,9 +257,9 @@ export function useBestV3TradeExactOut(
   }, [dontRender, amountOut?.toSignificant()])
 
   return useMemo(() => {
-    console.log(
-      `TradeOut ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
-    )
+    // console.log(
+    //   `TradeOut ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
+    // )
     if (!amountOut || !currencyIn || !routes[0] || amountIn?.lessThan(new Fraction(0, 1))) {
       // Throw Illiquid error message for negative trades too
       if (amountIn?.lessThan(new Fraction(0, 1))) {

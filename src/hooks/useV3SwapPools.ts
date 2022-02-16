@@ -42,7 +42,7 @@ export function useV3SwapPools(
               PROGRAM_ID
             )
           )[0]
-          console.log('generated address', generatedAddr.toString(), ' for fee', fee)
+          // console.log('generated address', generatedAddr.toString(), ' for fee', fee)
           try {
             const poolInfo = await connection.getAccountInfo(generatedAddr)
             if (poolInfo) {

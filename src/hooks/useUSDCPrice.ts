@@ -65,7 +65,7 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
         JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(currency.decimals)))
         // denominator
       )
-      console.log('$', price.toSignificant())
+      // console.log('$', price.toSignificant())
       return price
     }
 
