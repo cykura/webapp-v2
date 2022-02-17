@@ -9,6 +9,7 @@ import Slider from 'components/Slider'
 import Toggle from 'components/Toggle'
 import { CYS_ICON } from 'constants/tokens'
 import useDebouncedChangeHandler from 'hooks/useDebouncedChangeHandler'
+import { MaxButton } from 'pages/Pool/styleds'
 import { ResponsiveHeaderText, SmallMaxButton } from 'pages/RemoveLiquidity/styled'
 import { useCallback, useState } from 'react'
 import { MoreVertical } from 'react-feather'
@@ -44,7 +45,7 @@ const ResponsiveButtonPrimary = styled(ButtonPrimary)`
   margin: auto;
   margin-top: 1rem;
   padding: 12px;
-  width: calc(100% - 2rem);
+  width: calc(50% - 1rem);
   color: ${({ theme }) => theme.text5};
   ${({ theme }) => theme.mediaWidth.upToSmall`
     flex: 1 1 auto;
@@ -158,12 +159,12 @@ const StyledInput = styled.input<{ disabled?: boolean; fontSize?: string; align?
   }
 `
 
-function LockTokensModal({ onDismiss }: any) {
+function LockTokensModal({ onDismiss, extend }: any) {
   const [depositAmount, setDepositAmount] = useState(0)
   const [percent, onPercentSelect] = useState(7)
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)
 
-  const formattedStakeAmount = depositAmount
+  const formattedDepositAmount = depositAmount
     ? depositAmount?.toLocaleString('fullwide', {
         maximumFractionDigits: 6,
         useGrouping: false,
@@ -178,34 +179,42 @@ function LockTokensModal({ onDismiss }: any) {
       </RowBetween>
       <Divider />
       <ColumnCenter style={{ padding: '1rem' }}>
-        <RowBetween>
-          <TYPE.subHeader color="text2">Deposit Amount</TYPE.subHeader>
-          <AutoRow style={{ width: 'max-content' }}>
-            <TYPE.subHeader color="text2">Balance:&nbsp;</TYPE.subHeader>
-            <StyledLink>
-              <TYPE.link>
-                {(0.0).toFixed(3)} <small>CYS</small>
-              </TYPE.link>
-            </StyledLink>
-          </AutoRow>
-        </RowBetween>
-        <RowBetween style={{ gap: 10 }}>
-          <LightCard width="50%" padding="0.5rem" $borderRadius="0.3rem">
-            <AutoRow gap="5px">
-              <IconWrapper size={24}>
-                <img src={CYS_ICON} />
-              </IconWrapper>
-              <TYPE.main>CYS</TYPE.main>
-            </AutoRow>
-          </LightCard>
-          <StyledInput
-            type="number"
-            min={0}
-            step={0.1}
-            value={depositAmount ?? null}
-            onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
-          />
-        </RowBetween>
+        {extend ? (
+          <SmallMaxButton width="100%" style={{ border: '0' }}>
+            Extend your lockup to increase the voting power of your current token stake.
+          </SmallMaxButton>
+        ) : (
+          <>
+            <RowBetween>
+              <TYPE.subHeader color="text2">Deposit Amount</TYPE.subHeader>
+              <AutoRow style={{ width: 'max-content' }}>
+                <TYPE.subHeader color="text2">Balance:&nbsp;</TYPE.subHeader>
+                <StyledLink>
+                  <TYPE.link>
+                    {(0.0).toFixed(3)} <small>CYS</small>
+                  </TYPE.link>
+                </StyledLink>
+              </AutoRow>
+            </RowBetween>
+            <RowBetween style={{ gap: 10 }}>
+              <LightCard width="50%" padding="0.5rem" $borderRadius="0.3rem">
+                <AutoRow gap="5px">
+                  <IconWrapper size={24}>
+                    <img src={CYS_ICON} />
+                  </IconWrapper>
+                  <TYPE.main>CYS</TYPE.main>
+                </AutoRow>
+              </LightCard>
+              <StyledInput
+                type="number"
+                min={0}
+                step={0.1}
+                value={formattedDepositAmount ?? null}
+                onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
+              />
+            </RowBetween>
+          </>
+        )}
         <TYPE.subHeader color="text2" width="100%" marginTop={3}>
           Lock Period
         </TYPE.subHeader>
@@ -265,7 +274,9 @@ function LockTokensModal({ onDismiss }: any) {
             </AutoColumn>
           </AutoRow>
         </OutlineCard>
-        <ResponsiveButtonPrimary style={{ marginTop: 0, width: '100%' }}>Lock Tokens</ResponsiveButtonPrimary>
+        <ResponsiveButtonPrimary style={{ marginTop: 0, width: '100%' }}>
+          {extend ? 'Extend Lockup' : 'Lock Tokens'}
+        </ResponsiveButtonPrimary>
       </ColumnCenter>
     </ColumnCenter>
   )
@@ -273,12 +284,14 @@ function LockTokensModal({ onDismiss }: any) {
 
 function VoteLocker() {
   const history = useHistory()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isLockOpen, setIsLockOpen] = useState(false)
+  const [isExtendOpen, setIsExtendOpen] = useState(false)
   const [isNewUser, setIsNewUser] = useState(true)
 
   const onDismiss = useCallback(() => {
-    setIsOpen(false)
-  }, [setIsOpen])
+    setIsLockOpen(false)
+    setIsExtendOpen(false)
+  }, [setIsLockOpen])
 
   const handleStakingRedirect = () => {
     history.push('/staking')
@@ -286,8 +299,11 @@ function VoteLocker() {
 
   return (
     <>
-      <Modal isOpen={isOpen} onDismiss={onDismiss} closeOnOutsideClick maxHeight={80} minHeight={60}>
+      <Modal isOpen={isLockOpen} onDismiss={onDismiss} closeOnOutsideClick maxHeight={80} minHeight={60}>
         <LockTokensModal onDismiss={onDismiss} />
+      </Modal>
+      <Modal isOpen={isExtendOpen} onDismiss={onDismiss} closeOnOutsideClick maxHeight={80} minHeight={60}>
+        <LockTokensModal onDismiss={onDismiss} extend />
       </Modal>
       <PageWrapper>
         <AutoColumn gap="md" justify="center">
@@ -332,7 +348,12 @@ function VoteLocker() {
                 </TYPE.mediumHeader>
               </AutoColumn>
               <Divider />
-              <ResponsiveButtonPrimary onClick={() => setIsOpen(true)}>Lock</ResponsiveButtonPrimary>
+              <AutoRow>
+                <ResponsiveButtonPrimary onClick={() => setIsLockOpen(true)}>Lock</ResponsiveButtonPrimary>
+                <ResponsiveButtonPrimary disabled={isNewUser} onClick={() => setIsExtendOpen(true)}>
+                  Extend
+                </ResponsiveButtonPrimary>
+              </AutoRow>
             </MainContentWrapper>
             <MainContentWrapper flex="5">
               <TYPE.mediumHeader
@@ -358,7 +379,7 @@ function VoteLocker() {
                   <ExternalLink href="https://docs.tribeca.so/voting-escrow/#voting-escrow-tokens" target="_blank">
                     <TYPE.link fontSize={13}>Learn More &#8599;</TYPE.link>
                   </ExternalLink>
-                  <GetStartedBtn onClick={() => setIsOpen(true)}>Get Started</GetStartedBtn>
+                  <GetStartedBtn onClick={() => setIsLockOpen(true)}>Get Started</GetStartedBtn>
                 </AutoColumn>
               ) : (
                 <AutoColumn gap="md" style={{ padding: '0 1rem', marginTop: '1rem' }}>
