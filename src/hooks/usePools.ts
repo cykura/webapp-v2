@@ -32,7 +32,7 @@ export function usePools(
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: false,
   })
-  const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   const [poolAddresses, setPoolAddresses] = useState<(string | undefined)[]>([])
 

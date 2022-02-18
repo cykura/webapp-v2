@@ -15,7 +15,7 @@ import { unwrappedToken } from 'utils/unwrappedToken'
 import RangeBadge from 'components/Badge/RangeBadge'
 import { RowFixed } from 'components/Row'
 import HoverInlineText from 'components/HoverInlineText'
-import { SOLUSDC_MAIN } from '../../constants/tokens'
+import { SOLUSDC_LOCAL, SOLUSDC_MAIN, SOLUSDT_LOCAL } from '../../constants/tokens'
 
 import JSBI from 'jsbi'
 
@@ -134,11 +134,11 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
 
   const token0 = position.amount0.currency
   const token1 = position.amount1.currency
-
+  // console.log(position)
   // console.log(`GET PRICE FROM POSITION\ntoken0 is ${token0?.symbol}\ntoken1 is ${token1?.symbol}`)
 
   // if token0 is a dollar-stable asset, set it as the quote token
-  const stables = [SOLUSDC_MAIN]
+  const stables = [SOLUSDC_MAIN, SOLUSDC_LOCAL, SOLUSDT_LOCAL]
   if (stables.some((stable) => stable.equals(token0))) {
     // console.log('STABLE LOOP')
     return {
@@ -199,19 +199,20 @@ export default function PositionListItem({ positionDetails }: PositionListItemPr
 
   // construct Position from details returned
   const pool = usePool(currency0 ?? undefined, currency1 ?? undefined, feeAmount)
-
+  // console.log(pool)
   const position = useMemo(() => {
     if (pool) {
       return new Position({ pool, liquidity: liquidity.toString(), tickLower, tickUpper })
     }
     return undefined
   }, [liquidity, pool, tickLower, tickUpper])
-
+  // console.log(position)
   // prices
   const { priceLower, priceUpper, quote, base } = getPriceOrderingFromPositionForUI(position)
 
   const currencyQuote = quote && unwrappedToken(quote)
   const currencyBase = base && unwrappedToken(base)
+  // console.log(currencyQuote?.symbol, currencyBase?.symbol)
 
   // check if price is within range
   const outOfRange: boolean = pool ? pool.tickCurrent < tickLower || pool.tickCurrent >= tickUpper : false

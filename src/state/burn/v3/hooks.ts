@@ -53,10 +53,10 @@ export function useDerivedV3BurnInfo(
   const liquidityPercentage = new Percent(percent, 100)
 
   const discountedAmount0 = positionSDK
-    ? liquidityPercentage.multiply(JSBI.BigInt(positionSDK.amount0.quotient)).quotient
+    ? liquidityPercentage.multiply(positionSDK.amount0.quotient).quotient
     : undefined
   const discountedAmount1 = positionSDK
-    ? liquidityPercentage.multiply(JSBI.BigInt(positionSDK.amount1.quotient)).quotient
+    ? liquidityPercentage.multiply(positionSDK.amount1.quotient).quotient
     : undefined
 
   const liquidityValue0 =

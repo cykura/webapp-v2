@@ -23,14 +23,16 @@ import { isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import useTransactionDeadline from './useTransactionDeadline'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
 import { CysTrade } from './useBestV3Trade'
 import { useSolana } from '@saberhq/use-solana'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { BN } from '@project-serum/anchor'
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { u16ToSeed } from 'state/mint/v3/utils'
-import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED } from 'constants/tokens'
+import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED, WSOL_LOCAL } from 'constants/tokens'
+import { useSwapState } from 'state/swap/hooks'
+import { useCurrency } from './Tokens'
 
 enum SwapCallbackState {
   INVALID,
@@ -166,12 +168,22 @@ export function useSwapCallback(
   allowedSlippage: Percent, // in bips
   recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
-  // TODO fix output token address in trade- currently it's the same as input token address
   // console.log('building callback for', trade)
 
-  const { connection, wallet } = useSolana()
+  const { connection, wallet, providerMut } = useSolana()
+  const {
+    INPUT: { currencyId: inputCurrencyId },
+    OUTPUT: { currencyId: outputCurrencyId },
+  } = useSwapState()
+  const inputCurrency = useCurrency(inputCurrencyId)
+  const outputCurrency = useCurrency(outputCurrencyId)
 
-  if (!trade || !trade.route || !wallet?.publicKey) {
+  const pool = trade?.route
+  const signer = wallet?.publicKey
+  // Need to calculate the allowed slippage amount to pass it in as sqrtPriceLimitX32 along with the swap txn
+  const slippagePriceLimitX32 = allowedSlippage
+
+  if (!trade || !pool || !signer || !inputCurrency || !outputCurrency) {
     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
   }
 
@@ -180,28 +192,23 @@ export function useSwapCallback(
   })
   const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
   const callback = async () => {
-    const signer = wallet.publicKey!
-    const pool = trade.route
-
     // Find bitmap and tick accounts required to consume the input amount
     // 1. Find current tick from pool account
     // 2. Find swap direction
     // 3. Formula to know if a tick is consumed completely
-    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1 } =
+    const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1, fee } =
       await cyclosCore.account.poolState.fetch(pool)
 
     console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
 
-    // TODO replace hardcoded fee and token decimal places
-    const fee = 500
     const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
       token0,
       token1,
       fee,
     })
 
-    const uniToken0 = new UniToken(0, token0.toString(), 6)
-    const uniToken1 = new UniToken(0, token1.toString(), 6)
+    const uniToken0 = inputCurrency?.wrapped
+    const uniToken1 = outputCurrency?.wrapped
 
     // output is one tick behind actual (8 instead of 9)
     const uniPoolA = new Pool(
@@ -247,7 +254,7 @@ export function useSwapCallback(
     )
     const latestObservationState = (
       await PublicKey.findProgramAddress(
-        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(500), u16ToSeed(observationIndex)],
+        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
@@ -257,7 +264,7 @@ export function useSwapCallback(
           OBSERVATION_SEED,
           token0.toBuffer(),
           token1.toBuffer(),
-          u32ToSeed(500),
+          u32ToSeed(fee),
           u16ToSeed((observationIndex + 1) % observationCardinalityNext),
         ],
         cyclosCore.programId
@@ -280,11 +287,96 @@ export function useSwapCallback(
     console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
 
     const deadline = new BN(Date.now() / 1000 + 100_000)
-    const hash = await cyclosCore.rpc.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
+
+    const tx = new Transaction()
+
+    const isSol = inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL'
+
+    // 1. Check if respective ATA's accounts.
+    // Check for all mints except SOL, as wrap and unwrap is used for SOL
+    // Get ATA for WSOL Account
+    const WSOL_ATA = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(WSOL_LOCAL.address),
+      signer
+    )
+    ;[inputCurrency, outputCurrency].forEach(async (currency) => {
+      if (currency.symbol != 'SOL') {
+        const ata = await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(currency.wrapped.address),
+          signer
+        )
+        const accountInfo = await connection.getAccountInfo(ata)
+
+        if (!accountInfo) {
+          console.log(`Creating ATA for ${currency.name}`)
+          tx.instructions.push(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              new PublicKey(currency.wrapped.address),
+              ata,
+              signer,
+              signer
+            )
+          )
+        }
+      }
+    })
+
+    // 2. Wrap and Unwrap native SOL is one of the input tokens is SOL
+    if (isSol) {
+      console.log(`Wrapping native SOL`)
+
+      // WRAP NATIVE SOL
+      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(WSOL_LOCAL.address),
+        signer
+      )
+      tx.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          new PublicKey(WSOL_LOCAL.address),
+          wrappedSolPubkey,
+          signer,
+          signer
+        )
+      )
+      // If swapping from SOL
+      if (inputCurrency.symbol == 'SOL') {
+        tx.add(
+          SystemProgram.transfer({
+            fromPubkey: signer,
+            toPubkey: wrappedSolPubkey,
+            lamports: amountIn.toNumber(),
+          })
+        )
+      }
+      // Initialize the account.
+      tx.add(
+        Token.createInitAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          new PublicKey(WSOL_LOCAL.address),
+          wrappedSolPubkey,
+          signer
+        )
+      )
+    }
+
+    const iAccount = isSol ? WSOL_ATA : inputTokenAccount
+    const oAccount = isSol ? WSOL_ATA : outputTokenAccount
+
+    const ix = cyclosCore.instruction.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
       accounts: {
         signer,
         factoryState,
-        inputTokenAccount,
+        inputTokenAccount: iAccount,
         coreProgram: cyclosCore.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
@@ -295,7 +387,7 @@ export function useSwapCallback(
           isWritable: true,
         },
         {
-          pubkey: outputTokenAccount,
+          pubkey: oAccount,
           isSigner: false,
           isWritable: true,
         },
@@ -323,8 +415,32 @@ export function useSwapCallback(
       ],
     })
 
+    tx.add(ix)
+
+    // UNWRAP NATIVE SOL
+    if (isSol) {
+      console.log(`Unwrapping native SOL`)
+
+      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(WSOL_LOCAL.address),
+        signer
+      )
+      tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wrappedSolPubkey, signer, signer, []))
+    }
+
+    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+    tx.feePayer = signer
+
+    const str = tx.serializeMessage().toString('base64')
+    console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
+
+    await wallet?.signTransaction(tx)
+    const hash = await providerMut?.send(tx)
+
     console.log('swap hash', hash)
-    return hash
+    return hash?.signature ?? '' // This should not be the case. Check types, should not get empty string here
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
 }
@@ -347,18 +463,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
   }
 
   async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
-    const tickState = (
-      await PublicKey.findProgramAddress(
-        [
-          TICK_SEED,
-          this.pool.token0.toBuffer(),
-          this.pool.token1.toBuffer(),
-          u32ToSeed(this.pool.fee),
-          u32ToSeed(tick),
-        ],
-        this.program.programId
-      )
-    )[0]
+    const tickState = await this.getTickAddress(tick)
 
     const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
     return {
@@ -387,10 +492,12 @@ export class SolanaTickDataProvider implements TickDataProvider {
     tickSpacing: number
   ): Promise<[number, boolean, number, number, PublicKey]> {
     // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
-    let compressed = Number(BigInt(tick) / BigInt(tickSpacing))
-    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    // console.log(tick, tickSpacing)
+    let compressed = Number(JSBI.divide(JSBI.BigInt(tick), JSBI.BigInt(tickSpacing)))
+    // console.log(compressed, 'compresssed')
+    // console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
     if (tick < 0 && tick % tickSpacing !== 0) {
-      console.log('deducting from compressed.')
+      // console.log('deducting from compressed.')
       compressed -= 1
     }
     if (!lte) {
@@ -421,10 +528,20 @@ export class SolanaTickDataProvider implements TickDataProvider {
       nextBit = nextInitBit.next
       initialized = nextInitBit.initialized
     } catch (error) {
-      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+      // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
-    console.log('returning next tick', nextTick)
+    // console.log(
+    //   'netxTick',
+    //   nextTick,
+    //   'init',
+    //   initialized,
+    //   'wordPos',
+    //   wordPos,
+    //   'bitPos',
+    //   nextBit,
+    //   bitmapState.toString()
+    // )
     return [nextTick, initialized, wordPos, bitPos, bitmapState]
   }
 }

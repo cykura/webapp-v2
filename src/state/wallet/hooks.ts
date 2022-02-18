@@ -1,53 +1,45 @@
-import { Connection, PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, Token as SplToken, NATIVE_MINT } from '@solana/spl-token'
 import { useSolana } from '@saberhq/use-solana'
 
-import { Currency, Token, CurrencyAmount, Ether } from '@uniswap/sdk-core'
+import { Currency, Token, CurrencyAmount } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import { useEffect, useMemo, useState } from 'react'
-import { UNI } from '../../constants/tokens'
+import { UNI, WSOL_LOCAL, WSOL_MAIN } from '../../constants/tokens'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens } from '../../hooks/Tokens'
-import { useMulticall2Contract } from '../../hooks/useContract'
-import { isAddress } from '../../utils'
-import { useSingleContractMultipleData } from '../multicall/hooks'
+import useInterval from 'hooks/useInterval'
 
 /**
  * Returns a map of the given addresses to their eventually consistent ETH balances.
  */
-export function useETHBalances(uncheckedAddresses?: (string | undefined)[]): {
+export function useSOLBalance(uncheckedAddress: string | undefined): {
   [address: string]: CurrencyAmount<Currency> | undefined
 } {
-  const { chainId } = useActiveWeb3ReactSol()
-  const multicallContract = useMulticall2Contract()
+  const { chainId, account } = useActiveWeb3ReactSol()
 
-  const addresses: string[] = useMemo(
-    () =>
-      uncheckedAddresses
-        ? uncheckedAddresses
-            .map(isAddress)
-            .filter((a): a is string => a !== false)
-            .sort()
-        : [],
-    [uncheckedAddresses]
-  )
+  const { connection, connected } = useSolana()
+  const [balance, setBalance] = useState<any>(0)
 
-  const results = useSingleContractMultipleData(
-    multicallContract,
-    'getEthBalance',
-    addresses.map((address) => [address])
-  )
+  useEffect(() => {
+    fetchSolBalance()
+  }, [account, connected])
 
-  return useMemo(
-    () =>
-      addresses.reduce<{ [address: string]: CurrencyAmount<Currency> }>((memo, address, i) => {
-        const value = results?.[i]?.result?.[0]
-        if (value && chainId)
-          memo[address] = CurrencyAmount.fromRawAmount(Ether.onChain(chainId), JSBI.BigInt(value.toString()))
-        return memo
-      }, {}),
-    [addresses, chainId, results]
-  )
+  const fetchSolBalance = () => {
+    if (!uncheckedAddress) return
+    // Native Sol balance
+    connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
+      setBalance(data)
+    })
+  }
+
+  useInterval(fetchSolBalance, 10000)
+
+  return useMemo(() => {
+    return {
+      [NATIVE_MINT.toString()]: CurrencyAmount.fromRawAmount(WSOL_LOCAL, balance),
+    }
+  }, [account, chainId, uncheckedAddress, balance, connected])
 }
 
 /**
@@ -80,8 +72,11 @@ export function useTokenBalancesWithLoadingIndicator(
 
   // Store all spl token balances here
   useEffect(() => {
-    if (!address || address === '11111111111111111111111111111111') return
+    fetchTokenBalances()
+  }, [address, connected])
 
+  const fetchTokenBalances = () => {
+    if (!address) return
     connection
       .getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
@@ -111,7 +106,9 @@ export function useTokenBalancesWithLoadingIndicator(
       .finally(() => {
         setLoading(false)
       })
-  }, [address])
+  }
+
+  useInterval(fetchTokenBalances, 10000)
   return [tokenBalanceList, loading]
 }
 
@@ -139,18 +136,19 @@ export function useCurrencyBalances(
   const allTokenBalances = useTokenBalances(account, arrAllTokens)
 
   // const tokenBalances = useTokenBalances(account, tokens)
-  const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
-  const ethBalance = useETHBalances(containsETH ? [account] : [])
+  // const containsETH: boolean = useMemo(() => currencies?.some((currency) => currency?.isNative) ?? false, [currencies])
+  // const ethBalance = useETHBalances(containsETH ? [account] : [])
+  const solBalance = useSOLBalance(account)
 
   return useMemo(
     () =>
       currencies?.map((currency) => {
         if (!account || !currency) return undefined
+        if (currency.symbol == 'SOL') return solBalance[WSOL_MAIN.address]
         if (currency.isToken) return allTokenBalances[currency.address]
-        if (currency.isNative) return ethBalance[account]
         return undefined
       }) ?? [],
-    [account, currencies, ethBalance, allTokenBalances]
+    [account, currencies, solBalance, allTokenBalances]
   )
 }
 

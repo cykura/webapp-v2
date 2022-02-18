@@ -17,6 +17,7 @@ import { ExternalLink } from '../../theme/components'
 import ListLogo from 'components/ListLogo'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
 import { PaddedColumn } from './styleds'
+import { useSolana } from '@saberhq/use-solana'
 
 const Wrapper = styled.div`
   position: relative;
@@ -50,6 +51,7 @@ export function ImportToken({ tokens, list, onBack, onDismiss, handleCurrencySel
   const theme = useTheme()
 
   const { chainId } = useActiveWeb3ReactSol()
+  const { network } = useSolana()
 
   const addToken = useAddUserToken()
 
@@ -95,7 +97,7 @@ export function ImportToken({ tokens, list, onBack, onDismiss, handleCurrencySel
                   </TYPE.darkGray>
                 </AutoColumn>
                 {chainId && (
-                  <ExternalLink href={getExplorerLink(chainId, token.address, ExplorerDataType.ADDRESS)}>
+                  <ExternalLink href={getExplorerLink(network, token.address, ExplorerDataType.ADDRESS)}>
                     <AddressText fontSize={12}>{token.address}</AddressText>
                   </ExternalLink>
                 )}

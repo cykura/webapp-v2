@@ -2,7 +2,7 @@ import { useCallback, useContext, useMemo, useState } from 'react'
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
 import { TransactionResponse } from '@ethersproject/providers'
-import { Currency, CurrencyAmount, Percent } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Percent } from '@uniswap/v3-sdk/node_modules/@uniswap/sdk-core/dist'
 import { AlertTriangle, AlertCircle } from 'react-feather'
 import ReactGA from 'react-ga'
 import { ZERO_PERCENT } from '../../constants/misc'
@@ -16,6 +16,8 @@ import {
   SOLCYS_LOCAL,
   TICK_SEED,
   METADATA_SEED,
+  WSOL_LOCAL,
+  SOL_LOCAL,
 } from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
@@ -54,20 +56,18 @@ import { PositionPreview } from 'components/PositionPreview'
 import FeeSelector from 'components/FeeSelector'
 import RangeSelector from 'components/RangeSelector'
 import RateToggle from 'components/RateToggle'
-import { BigNumber } from '@ethersproject/bignumber'
 import { AddRemoveTabs } from 'components/NavigationTabs'
 import HoverInlineText from 'components/HoverInlineText'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import * as anchor from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import idl from '../../constants/cyclos-core.json'
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'
-import { sqrt } from '@uniswap/sdk-core'
-import JSBI from 'jsbi'
 import * as metaplex from '@metaplex/js'
+import { TransactionInstruction } from '@solana/web3.js'
+import JSBI from 'jsbi'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -193,13 +193,11 @@ export default function AddLiquidity({
   // get value and prices at ticks
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks
   const { [Bound.LOWER]: priceLower, [Bound.UPPER]: priceUpper } = pricesAtTicks
-  // console.log(priceLower?.toSignificant())
-  // console.log(priceUpper?.toSignificant())
 
   // console.log(+formattedAmounts[Field.CURRENCY_A])
   // console.log(+formattedAmounts[Field.CURRENCY_B])
   async function OnAdd() {
-    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address) return
+    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address || !price) return
 
     setAttemptingTxn(true)
 
@@ -210,24 +208,28 @@ export default function AddLiquidity({
 
     const fee = feeAmount ?? 500
     const tickSpacing = fee / 50
+    console.log(feeAmount, tickSpacing)
 
     // Convinence helpers
     const tokenA = currencyA?.wrapped
     const tokenB = currencyB?.wrapped
-    let [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
-    if (tk1.symbol === 'CYS' || tk2.symbol === 'CYS') {
-      ;[tk1, tk2] = [tokenA, tokenB]
-    }
+    console.log(`POOL CREATION\ttoken0 ${tk0?.address} ${tk0.symbol}\ttoken1 ${tk1?.address} ${tk1.symbol}`)
 
-    const newInvertPrice = Boolean(tokenA && tk1 && !tokenA.equals(tk1))
+    // const token1 = new anchor.web3.PublicKey(tk0.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk0.address)
+    // const token2 = new anchor.web3.PublicKey(tk1.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk1.address)
+    const token1 = tk0.symbol == 'SOL' ? NATIVE_MINT : new anchor.web3.PublicKey(tk0.address)
+    const token2 = tk1.symbol == 'SOL' ? NATIVE_MINT : new anchor.web3.PublicKey(tk1.address)
+    // console.log(token1.toString(), token2.toString())
 
-    console.log(
-      `POOL CREATION\ntokenA ${tokenA?.symbol}\ntokenB ${tokenB?.symbol}\ntoken1 ${tk1?.symbol}\ntoken2 ${tk2?.symbol}\ninvertPrice ${invertPrice}\nnew invert price ${newInvertPrice}`
+    const WSOL_ATA = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      NATIVE_MINT,
+      wallet?.publicKey
     )
-
-    const token1 = new anchor.web3.PublicKey(tk1.address)
-    const token2 = new anchor.web3.PublicKey(tk2.address)
+    // console.log(WSOL_ATA.toString(), ' WSOL ATA')
 
     // create fee state
     const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -250,46 +252,35 @@ export default function AddLiquidity({
     // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
     // get init Price from UI - should encode into Q32.32
-    // Need to handle decimals here
-    // NOTE. We shouldn't be flipping ticks here to sync with UI.
-    // This calls the contract and we should supply ticks that will satisfy the contract instead.
-    let nr = +startPriceTypedValue
-    if (invertPrice) {
-      nr = 1 / nr
-    }
-    nr = nr * 10e6
-    const dr = 10e6
-    let sqrtPriceX32 = new BN('4294967295')
-    try {
-      sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    } catch (error) {
-      console.log('TODO fix sqrtPriceX32 error', error)
-    }
-    // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    console.log('sqrtpricex32 -> ', sqrtPriceX32.toString())
+    // let nr = +startPriceTypedValue
+    // if (invertPrice) {
+    //   nr = 1 / nr
+    // }
+    // nr = nr * 10e9
+    // const dr = 10e9
+
+    // console.log(price.numerator.toString(), price.denominator.toString())
+    const nr = JSBI.BigInt(price.numerator.toString())
+    const dr = JSBI.BigInt(price.denominator.toString())
+    const sqrtPriceX32 = new BN(
+      encodeSqrtRatioX32(
+        JSBI.multiply(nr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.baseCurrency.decimals))),
+        JSBI.multiply(dr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.quoteCurrency.decimals)))
+      ).toString()
+    )
+
+    console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
+    console.log('price', price?.toSignificant())
 
     // taken as contants in test file
     const tickLower = ticks.LOWER ?? 0
     const tickUpper = ticks.UPPER ?? 10
-    // const tickLower = -10
-    // const tickUpper = 10
-    // flipping ticks according to token sorted order
-    // if (!invertPrice && tickUpper && tickLower) {
-    //   console.log('Invert Price is true and hence we flip ticks?')
-    //   ;[tickLower, tickUpper] = [tickLower, tickUpper]
-    //   // console.log(`tickLower is ${tickLower} and tickUpper is ${tickUpper}`)
-    // } else {
-    //   console.log('Invert Price is false and hence we negate ticks?')
-    //   ;[tickLower, tickUpper] = [-tickUpper, -tickLower]
-    // }
-    // tickLower should be less than tickUpper
-    // ;[tickLower, tickUpper] = tickLower < tickUpper ? [tickLower, tickUpper] : [tickUpper, tickLower]
+
+    console.log(pool)
     console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper)
-    // const tickLower = 0
-    // const tickUpper = 10 % tickSpacing == 0 ? 10 : tickSpacing * 1
+
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
-    // console.log(tickLower, tickUpper, wordPosLower, wordPosUpper)
 
     //fetch ATA of pool tokens
     const vault1 = await Token.getAssociatedTokenAddress(
@@ -327,14 +318,63 @@ export default function AddLiquidity({
     )
     // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
+    const amount0Desired = new BN(
+      +formattedAmounts[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B] *
+        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B]?.decimals ?? 0)
+    )
+    const amount1Desired = new BN(
+      +formattedAmounts[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A] *
+        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A]?.decimals ?? 0)
+    )
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
+    console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
 
     // Create and init pool
     if (noLiquidity) {
       console.log('Creating and init pool')
       try {
-        const createHash = await cyclosCore.rpc.createAndInitPool(poolStateBump, initialObservationBump, sqrtPriceX32, {
+        const tx = new Transaction()
+
+        const account = await connection.getAccountInfo(WSOL_ATA)
+        // If swapping from SOL
+        if (token1.toString() == NATIVE_MINT.toString() || token2.toString() == NATIVE_MINT.toString()) {
+          const amount =
+            token1?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
+          console.log(amount)
+          if (!account) {
+            tx.add(
+              Token.createAssociatedTokenAccountInstruction(
+                ASSOCIATED_TOKEN_PROGRAM_ID,
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                WSOL_ATA,
+                wallet?.publicKey,
+                wallet?.publicKey
+              )
+            )
+          }
+          tx.add(
+            SystemProgram.transfer({
+              fromPubkey: wallet?.publicKey,
+              toPubkey: WSOL_ATA,
+              lamports: amount,
+            }),
+            new TransactionInstruction({
+              keys: [
+                {
+                  pubkey: WSOL_ATA,
+                  isSigner: false,
+                  isWritable: true,
+                },
+              ],
+              data: Buffer.from(new Uint8Array([17])),
+              programId: TOKEN_PROGRAM_ID,
+            })
+          )
+        }
+
+        const ix = cyclosCore.instruction.createAndInitPool(poolStateBump, initialObservationBump, sqrtPriceX32, {
           accounts: {
             poolCreator: wallet?.publicKey,
             token0: token1,
@@ -350,11 +390,23 @@ export default function AddLiquidity({
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           },
         })
-        const pState = await cyclosCore.account.poolState.fetch(poolState)
-        console.log(pState)
-        console.log('Position created with tick', pState.tick.toString())
-        console.log('Position created with price', pState.sqrtPriceX32.toString())
-        console.log(createHash, ' txn hash for create Pool')
+
+        tx.add(ix)
+        tx.feePayer = wallet?.publicKey
+        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        // console.log(tx)
+
+        // const str1 = tx.serializeMessage().toString('base64')
+        // console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
+
+        // const txnHash1 = await providerMut?.send(tx1)
+        const createHash = await providerMut?.send(tx)
+
+        // const pState = await cyclosCore.account.poolState.fetch(poolState)
+        // console.log(pState)
+        // console.log('Position created with tick', pState.tick.toString())
+        // console.log('Position created with price', pState.sqrtPriceX32.toString())
+        console.log(`https://explorer.solana.com/tx/${createHash?.signature}?cluster=custom`)
         enqueueSnackbar('Pool Created', {
           variant: 'success',
         })
@@ -413,13 +465,13 @@ export default function AddLiquidity({
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
 
-    console.log(
-      tickLowerStateInfo,
-      tickUpperStateInfo,
-      bitmapLowerStateInfo,
-      bitmapUpperStateInfo,
-      corePositionStateInfo
-    )
+    // console.log(
+    //   tickLowerStateInfo,
+    //   tickUpperStateInfo,
+    //   bitmapLowerStateInfo,
+    //   bitmapUpperStateInfo,
+    //   corePositionStateInfo
+    // )
 
     // Build the transaction
     if (
@@ -531,13 +583,7 @@ export default function AddLiquidity({
 
     // const amount0Desired = new BN(1_000_000)
     // const amount1Desired = new BN(1_000_000)
-    const amount0Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    )
-    const amount1Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
-    )
-    console.log(amount0Desired.toString(), amount1Desired.toString())
+    // console.log(amount0Desired.toString(), amount1Desired.toString())
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
@@ -577,17 +623,40 @@ export default function AddLiquidity({
     )[0]
 
     if (noLiquidity || !existingPosition) {
-      console.log(
-        tickLowerState.toString(),
-        tickUpperState.toString(),
-        bitmapLowerState.toString(),
-        bitmapUpperState.toString(),
-        corePositionState.toString()
-      )
+      // console.log(
+      //   tickLowerState.toString(),
+      //   tickUpperState.toString(),
+      //   bitmapLowerState.toString(),
+      //   bitmapUpperState.toString(),
+      //   corePositionState.toString()
+      // )
       // Create new position
       console.log('Creating new position')
       try {
-        const txnHash = await cyclosCore.rpc.mintTokenizedPosition(
+        const tx = new Transaction()
+
+        // console.log(
+        //   `
+        //   pool addr ${poolState.toString()}
+        //   factoryState ${factoryState.toString()}
+        //   nftMint ${nftMintKeypair.toString()}
+        //   nftAccount ${positionNftAccount.toString()}
+        //   poolState ${poolState.toString()}
+        //   userATA0 ${userATA0.toString()}
+        //   userATA1 ${userATA1.toString()}
+        //   vault0 ${vault0.toString()}
+        //   vault1 ${vault1.toString()}
+        //   tickLowerState ${tickLowerState.toString()}
+        //   tickUpperState ${tickUpperState.toString()}
+        //   bitmapLower ${bitmapLowerState.toString()}
+        //   bitmapUpper ${bitmapUpperState.toString()}
+        //   corePosition ${corePositionState.toString()}
+        //   latestObservationState ${latestObservationState.toString()}
+        //   nextObservationState ${nextObservationState.toString()}
+        //   tokenizedPositionState ${tokenizedPositionState.toString()}
+        //   `
+        // )
+        const ix = cyclosCore.instruction.mintTokenizedPosition(
           tokenizedPositionBump,
           amount0Desired,
           amount1Desired,
@@ -620,16 +689,25 @@ export default function AddLiquidity({
               tokenProgram: TOKEN_PROGRAM_ID,
               associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             },
-            signers: [nftMintKeypair],
           }
         )
+
+        tx.add(ix)
+
+        tx.feePayer = wallet?.publicKey
+        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.sign(nftMintKeypair)
+
+        const txnHash2 = await providerMut?.send(tx)
         setAttemptingTxn(true)
-        setTxHash(txnHash)
+        console.log(`https://explorer.solana.com/tx/${txnHash2?.signature}?cluster=custom`)
+        setTxHash(txnHash2?.signature ?? '')
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
+          autoHideDuration: 10000,
         })
         return
       }
@@ -803,6 +881,9 @@ export default function AddLiquidity({
     // if there was a tx hash, we want to clear the input
     if (txHash) {
       onFieldAInput('')
+      if (tokenId) {
+        return history.push(`/pool/${tokenId}`)
+      }
       history.push('/pool')
     }
     setTxHash('')
@@ -981,7 +1062,7 @@ export default function AddLiquidity({
                             )}
                           </TYPE.main>
                         </RowBetween>
-                        {/* <BlueCard
+                        <BlueCard
                           style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -999,9 +1080,9 @@ export default function AddLiquidity({
                           </TYPE.body>
 
                           <TYPE.body fontWeight={500} textAlign="center" fontSize={14} style={{ opacity: 0.8 }}>
-                            The transaction cost will be much higher as it includes the rent to create the pool.
+                            The transaction cost will be relatively higher as it includes the rent to create the pool.
                           </TYPE.body>
-                        </BlueCard> */}
+                        </BlueCard>
                       </AutoColumn>
                     </DynamicSection>
                   )}

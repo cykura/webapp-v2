@@ -1,6 +1,6 @@
 import { Currency } from '@uniswap/sdk-core'
 import { Pool, Route } from '@uniswap/v3-sdk'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useUserSingleHopOnly } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
 import { useV3SwapPools } from './useV3SwapPools'
@@ -55,16 +55,23 @@ export function useAllV3Routes(
   const { chainId } = useActiveWeb3ReactSol()
 
   // return Cyclos liquidity pool addresses
-  const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
-  // console.log('fetched pools', pools)
 
   const [singleHopOnly] = useUserSingleHopOnly()
+  // console.log('Inside useAllV3Routes', currencyIn?.name, currencyOut?.name)
+
+  const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
+
+  // const [p, setP] = useState<PublicKey[]>([])
+  // setP(pools)
+
+  // console.log('fetched pools', pools, poolsLoading)
 
   return useMemo(() => {
     if (poolsLoading || !chainId || !pools || !currencyIn || !currencyOut) return { loading: true, routes: [] }
     // console.log('fetched pools', pools)
-    return { loading: false, routes: [pools[0]] }
+    return { loading: false, routes: pools }
     // const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
     // return { loading: false, routes }
-  }, [chainId, currencyIn, currencyOut, pools, singleHopOnly])
+    // }, [chainId, currencyIn, currencyOut, [...pools], singleHopOnly])
+  }, [chainId, currencyIn, currencyOut, [...pools]])
 }

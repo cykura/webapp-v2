@@ -162,7 +162,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
         ? new BN(positionSDK.liquidity.toString())
         : new BN(
             liquidityPercentage
-              ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity), JSBI.BigInt(100)))
+              ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity.toString()), JSBI.BigInt(100)).toString())
               .toSignificant()
           )
 

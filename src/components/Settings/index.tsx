@@ -132,7 +132,7 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
   return (
     // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/30451
     <StyledMenu ref={node as any}>
-      <Modal isOpen={showConfirmation} onDismiss={() => setShowConfirmation(false)} maxHeight={100}>
+      {/* <Modal isOpen={showConfirmation} onDismiss={() => setShowConfirmation(false)} maxHeight={100}>
         <ModalContentWrapper>
           <AutoColumn gap="lg">
             <RowBetween style={{ padding: '0 2rem' }}>
@@ -171,7 +171,7 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
             </AutoColumn>
           </AutoColumn>
         </ModalContentWrapper>
-      </Modal>
+      </Modal> */}
       <StyledMenuButton onClick={toggle} id="open-settings-dialog-button">
         <StyledMenuIcon />
         {expertMode ? (
@@ -189,7 +189,7 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
               <span>Transaction Settings</span>
             </Text>
             <TransactionSettings placeholderSlippage={placeholderSlippage} />
-            <Text fontWeight={600} fontSize={14}>
+            {/* <Text fontWeight={600} fontSize={14}>
               <span>Interface Settings</span>
             </Text>
             <RowBetween>
@@ -216,8 +216,8 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
                       }
                 }
               />
-            </RowBetween>
-            <RowBetween>
+            </RowBetween> */}
+            {/* <RowBetween>
               <RowFixed>
                 <TYPE.black fontWeight={400} fontSize={14} color={theme.text2}>
                   <span>Disable Multihops</span>
@@ -235,7 +235,7 @@ export default function SettingsTab({ placeholderSlippage }: { placeholderSlippa
                   setSingleHopOnly(!singleHopOnly)
                 }}
               />
-            </RowBetween>
+            </RowBetween> */}
           </AutoColumn>
         </MenuFlyout>
       )}

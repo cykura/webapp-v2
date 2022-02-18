@@ -1,18 +1,21 @@
 import useScrollPosition from '@react-hook/window-scroll'
 import { useConnectedWallet, useSolana } from '@saberhq/use-solana'
 import { darken } from 'polished'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Moon, Sun } from 'react-feather'
 import { NavLink } from 'react-router-dom'
 import { Text } from 'rebass'
 import { useDarkModeManager } from 'state/user/hooks'
 import styled from 'styled-components/macro'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import Logo from '../../assets/svg/logo.svg'
 import LogoDark from '../../assets/svg/logo_white.svg'
 import Row, { RowFixed } from '../Row'
 import Web3Status from '../Web3Status'
 import Faucet from './Faucet'
+import { useSOLBalance } from 'state/wallet/hooks'
+import { NATIVE_MINT } from '@solana/spl-token'
+import { useActiveWeb3ReactSol } from 'hooks/web3'
+import { CurrencyAmount, Currency } from '@uniswap/v3-sdk/node_modules/@uniswap/sdk-core'
 
 const HeaderFrame = styled.div<{ showBackground: boolean }>`
   display: grid;
@@ -232,9 +235,9 @@ const StyledMenuButton = styled.button`
 `
 
 export default function Header() {
-  const { connection } = useSolana()
+  const { account, connected } = useActiveWeb3ReactSol()
   const wallet = useConnectedWallet()
-  const [solBalance, setSolBalance] = useState(0)
+  const [solBalance, setSolBalance] = useState<CurrencyAmount<Currency> | undefined>(undefined)
   const [reload, setReload] = useState(false)
 
   // const [isDark] = useDarkModeManager()
@@ -242,18 +245,15 @@ export default function Header() {
 
   const scrollY = useScrollPosition()
 
-  useEffect(() => {
-    if (wallet?.publicKey) {
-      ;(async () => {
-        try {
-          const balance = await connection.getBalance(wallet.publicKey)
-          setSolBalance(balance / LAMPORTS_PER_SOL)
-        } catch (err) {
-          console.log(err)
-        }
-      })()
-    }
-  }, [wallet, connection, reload])
+  const solBal = useSOLBalance(account)
+  useMemo(() => {
+    setSolBalance(solBal[NATIVE_MINT.toString()])
+  }, [account, connected, solBal])
+
+  // useEffect(() => {
+  //   if (wallet?.publicKey) {
+  //   }
+  // }, [wallet, connection, reload])
 
   return (
     <HeaderFrame showBackground={scrollY > 45}>
@@ -295,7 +295,7 @@ export default function Header() {
             {wallet?.connected ? (
               // <Tooltip text="Refresh Balance" show={true}>
               <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
-                <span>{solBalance.toFixed(3) ?? 0} SOL</span>
+                <span>{solBalance?.toFixed(3) ?? 0} SOL</span>
               </BalanceText>
             ) : // </Tooltip>
             null}

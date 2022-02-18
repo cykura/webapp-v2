@@ -41,13 +41,13 @@ export const PositionPreview = ({
       : currency0
   )
 
-  const sorted = baseCurrency === currency1
-  const quoteCurrency = sorted ? currency0 : currency1
+  const sorted = baseCurrency === currency0
+  const quoteCurrency = sorted ? currency1 : currency0
 
-  const price = !sorted ? position.pool?.priceOf(position.pool.token0) : position.pool?.priceOf(position.pool.token1)
+  const price = sorted ? position.pool?.priceOf(position.pool.token0) : position.pool?.priceOf(position.pool.token1)
 
-  const priceLower = !sorted ? position.token0PriceLower : position.token0PriceUpper.invert()
-  const priceUpper = !sorted ? position.token0PriceUpper : position.token0PriceLower.invert()
+  const priceLower = sorted ? position.token0PriceLower : position.token0PriceUpper.invert()
+  const priceUpper = sorted ? position.token0PriceUpper : position.token0PriceLower.invert()
 
   const handleRateChange = useCallback(() => {
     setBaseCurrency(quoteCurrency)
@@ -80,7 +80,7 @@ export const PositionPreview = ({
               <TYPE.label ml="8px">{currency0?.symbol}</TYPE.label>
             </RowFixed>
             <RowFixed>
-              <TYPE.label mr="8px">{position.amount0.toSignificant(4)}</TYPE.label>
+              <TYPE.label mr="8px">{position.amount0.toFixed(2)}</TYPE.label>
             </RowFixed>
           </RowBetween>
           <RowBetween>
@@ -89,7 +89,7 @@ export const PositionPreview = ({
               <TYPE.label ml="8px">{currency1?.symbol}</TYPE.label>
             </RowFixed>
             <RowFixed>
-              <TYPE.label mr="8px">{position.amount1.toSignificant(4)}</TYPE.label>
+              <TYPE.label mr="8px">{position.amount1.toFixed(2)}</TYPE.label>
             </RowFixed>
           </RowBetween>
           <RowBetween>

@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
 import { Trade as V3Trade } from '@uniswap/v3-sdk'
-import { useBestV3TradeExactIn, V3TradeState } from '../../hooks/useBestV3Trade'
+import { useBestV3TradeExactIn, useBestV3TradeExactOut, V3TradeState } from '../../hooks/useBestV3Trade'
 import { parseUnits } from '@ethersproject/units'
 import { Currency, CurrencyAmount, Percent, TradeType } from '@uniswap/sdk-core'
 import { ParsedQs } from 'qs'
@@ -16,6 +16,7 @@ import { Field, replaceSwapState, selectCurrency, setRecipient, switchCurrencies
 import { SwapState } from './reducer'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { SOLCYS_LOCAL } from 'constants/tokens'
+import useDebounce from 'hooks/useDebounce'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -110,6 +111,8 @@ export function useDerivedSwapInfo() {
     recipient,
   } = useSwapState()
 
+  const debouncedTypedValue = useDebounce(typedValue, 500)
+  // const debouncedTypedValue = typedValue
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
   const to: string | null = recipient ?? account
@@ -119,12 +122,20 @@ export function useDerivedSwapInfo() {
     outputCurrency ?? undefined,
   ])
 
-  // const isExactIn: boolean = independentField === Field.INPUT
-  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
+  const isExactIn: boolean = independentField === Field.INPUT
+  const parsedAmount = tryParseAmount(debouncedTypedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
-  const bestV3TradeExactIn = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
-  // const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
-  // const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
+  const bestV3TradeExactIn = useBestV3TradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
+  const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
+  // const { state, trade } = bestV3TradeExactIn
+  // console.log(
+  //   state,
+  //   trade?.inputAmount?.toSignificant(),
+  //   trade?.outputAmount?.toSignificant(),
+  //   trade?.route?.toString()
+  // )
+
+  const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
 
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],
@@ -138,15 +149,15 @@ export function useDerivedSwapInfo() {
 
   let inputError: string | undefined
   if (!account) {
-    inputError = 'Connect Ethereum Wallet'
+    inputError = 'Connect Wallet'
+  }
+
+  if (!currencies[Field.INPUT] || !currencies[Field.OUTPUT]) {
+    inputError = inputError ?? 'Select a token'
   }
 
   if (!parsedAmount) {
     inputError = inputError ?? 'Enter an amount'
-  }
-
-  if (!currencies[Field.INPUT] || !currencies[Field.OUTPUT]) {
-    inputError = inputError ?? 'Select a tokent'
   }
 
   const formattedTo = isAddress(to)
@@ -158,9 +169,8 @@ export function useDerivedSwapInfo() {
     }
   }
 
-  const toggledTrade = bestV3TradeExactIn?.trade ?? undefined
-  // const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
-  const allowedSlippage = new Percent(10)
+  const toggledTrade = v3Trade?.trade ?? undefined
+  const allowedSlippage = useSwapSlippageTolerance(v3Trade?.trade ?? undefined)
 
   // compare input balance to max input
   const balanceIn = currencyBalances[Field.INPUT]
