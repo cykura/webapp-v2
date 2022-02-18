@@ -15,7 +15,7 @@ import { unwrappedToken } from 'utils/unwrappedToken'
 import RangeBadge from 'components/Badge/RangeBadge'
 import { RowFixed } from 'components/Row'
 import HoverInlineText from 'components/HoverInlineText'
-import { SOLUSDC_LOCAL, SOLUSDC_MAIN } from '../../constants/tokens'
+import { SOLUSDC_LOCAL, SOLUSDC_MAIN, SOLUSDT_LOCAL } from '../../constants/tokens'
 
 import JSBI from 'jsbi'
 
@@ -138,7 +138,7 @@ export function getPriceOrderingFromPositionForUI(position?: Position): {
   // console.log(`GET PRICE FROM POSITION\ntoken0 is ${token0?.symbol}\ntoken1 is ${token1?.symbol}`)
 
   // if token0 is a dollar-stable asset, set it as the quote token
-  const stables = [SOLUSDC_MAIN, SOLUSDC_LOCAL]
+  const stables = [SOLUSDC_MAIN, SOLUSDC_LOCAL, SOLUSDT_LOCAL]
   if (stables.some((stable) => stable.equals(token0))) {
     // console.log('STABLE LOOP')
     return {

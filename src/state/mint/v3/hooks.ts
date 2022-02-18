@@ -221,11 +221,11 @@ export function useV3DerivedMintInfo(
 
   // used for ratio calculation when pool not initialized
   const mockPool = useMemo(() => {
-    if (tokenA && tokenB && token0 && token1 && feeAmount && price && !invalidPrice) {
+    if (token0 && token1 && feeAmount && price && !invalidPrice) {
       const currentTick = priceToClosestTick(price)
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
 
-      return new Pool(tokenA, tokenB, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
+      return new Pool(token0, token1, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
     } else {
       return undefined
     }
@@ -421,7 +421,7 @@ export function useV3DerivedMintInfo(
 
   let errorMessage: string | undefined
   if (!account) {
-    errorMessage = 'Connect Eth Wallet'
+    errorMessage = 'Connect Wallet'
   }
 
   if (invalidPrice) {

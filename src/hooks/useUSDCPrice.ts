@@ -9,7 +9,7 @@ import JSBI from 'jsbi'
 // The amount is large enough to filter low liquidity pairs.
 const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
   101: CurrencyAmount.fromRawAmount(SOLUSDC_MAIN, 1000_000),
-  104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1),
+  104: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
   103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
 }
 
@@ -62,8 +62,8 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
         currency,
         stablecoin,
         numerator,
-        // JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(currency.decimals)))
-        denominator
+        JSBI.multiply(denominator, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(6)))
+        // denominator
       )
       // console.log('$', price.toSignificant())
       return price

@@ -214,7 +214,7 @@ export default function AddLiquidity({
     const tokenB = currencyB?.wrapped
     const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
-    console.log(`POOL CREATION\ttoken0 ${tk0?.address}\ttoken1 ${tk1?.address}`)
+    console.log(`POOL CREATION\ttoken0 ${tk0?.address} ${tk0.symbol}\ttoken1 ${tk1?.address} ${tk1.symbol}`)
 
     // const token1 = new anchor.web3.PublicKey(tk0.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk0.address)
     // const token2 = new anchor.web3.PublicKey(tk1.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk1.address)
@@ -310,14 +310,16 @@ export default function AddLiquidity({
     // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
     const amount0Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+      +formattedAmounts[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B] *
+        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B]?.decimals ?? 0)
     )
     const amount1Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
+      +formattedAmounts[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A] *
+        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A]?.decimals ?? 0)
     )
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
-    // console.log(amount0Desired.toNumber(), amount0Desired.toNumber() * LAMPORTS_PER_SOL)
+    // console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
 
     // Create and init pool
     if (noLiquidity) {

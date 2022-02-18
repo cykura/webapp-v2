@@ -80,7 +80,7 @@ export const PositionPreview = ({
               <TYPE.label ml="8px">{currency0?.symbol}</TYPE.label>
             </RowFixed>
             <RowFixed>
-              <TYPE.label mr="8px">{position.amount0.toSignificant(4)}</TYPE.label>
+              <TYPE.label mr="8px">{position.amount0.toFixed(2)}</TYPE.label>
             </RowFixed>
           </RowBetween>
           <RowBetween>
@@ -89,7 +89,7 @@ export const PositionPreview = ({
               <TYPE.label ml="8px">{currency1?.symbol}</TYPE.label>
             </RowFixed>
             <RowFixed>
-              <TYPE.label mr="8px">{position.amount1.toSignificant(4)}</TYPE.label>
+              <TYPE.label mr="8px">{position.amount1.toFixed(2)}</TYPE.label>
             </RowFixed>
           </RowBetween>
           <RowBetween>
