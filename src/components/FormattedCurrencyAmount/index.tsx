@@ -12,10 +12,10 @@ export default function FormattedCurrencyAmount({
 }) {
   return (
     <>
-      {currencyAmount.equalTo(JSBI.BigInt(0))
+      {currencyAmount.equalTo(0)
         ? '0'
         : currencyAmount.greaterThan(CURRENCY_AMOUNT_MIN)
-        ? currencyAmount.toSignificant(significantDigits)
+        ? currencyAmount.toFixed(2)
         : `<${CURRENCY_AMOUNT_MIN.toSignificant(1)}`}
     </>
   )

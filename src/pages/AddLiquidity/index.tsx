@@ -328,7 +328,7 @@ export default function AddLiquidity({
     )
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
-    // console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
+    console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
 
     // Create and init pool
     if (noLiquidity) {
@@ -881,6 +881,9 @@ export default function AddLiquidity({
     // if there was a tx hash, we want to clear the input
     if (txHash) {
       onFieldAInput('')
+      if (tokenId) {
+        return history.push(`/pool/${tokenId}`)
+      }
       history.push('/pool')
     }
     setTxHash('')
