@@ -67,6 +67,7 @@ import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'
 import * as metaplex from '@metaplex/js'
 import { TransactionInstruction } from '@solana/web3.js'
+import JSBI from 'jsbi'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -258,8 +259,16 @@ export default function AddLiquidity({
     // nr = nr * 10e9
     // const dr = 10e9
 
-    // const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(price.numerator.toString(), price.denominator.toString()).toString())
+    // console.log(price.numerator.toString(), price.denominator.toString())
+    const nr = JSBI.BigInt(price.numerator.toString())
+    const dr = JSBI.BigInt(price.denominator.toString())
+    const sqrtPriceX32 = new BN(
+      encodeSqrtRatioX32(
+        JSBI.multiply(nr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.baseCurrency.decimals))),
+        JSBI.multiply(dr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.quoteCurrency.decimals)))
+      ).toString()
+    )
+
     console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
     console.log('price', price?.toSignificant())
 
