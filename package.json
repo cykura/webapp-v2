@@ -35,6 +35,7 @@
     "@uniswap/v3-core": "1.0.0",
     "@uniswap/v3-periphery": "^1.1.1",
     "@uniswap/v3-sdk": "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git",
+    "@uniswap/sdk-core": "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk-core.git",
     "ajv": "^6.12.3",
     "copy-to-clipboard": "^3.2.0",
     "cross-env": "^7.0.2",

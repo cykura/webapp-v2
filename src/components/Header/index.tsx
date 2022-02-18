@@ -15,7 +15,7 @@ import Faucet from './Faucet'
 import { useSOLBalance } from 'state/wallet/hooks'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
-import { CurrencyAmount, Currency } from '@uniswap/v3-sdk/node_modules/@uniswap/sdk-core'
+import { CurrencyAmount, Currency } from '@uniswap/sdk-core'
 
 const HeaderFrame = styled.div<{ showBackground: boolean }>`
   display: grid;
