@@ -1,5 +1,5 @@
 import { StakingProvider } from 'contexts/Staking'
-import { VoteLockerProvider } from 'contexts/VoteLocker'
+import { VeLockerProvider } from 'contexts/VoteLocker'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
 import { Route, Switch } from 'react-router-dom'
 import styled from 'styled-components/macro'
@@ -73,9 +73,9 @@ export default function App() {
               </StakingProvider>
             </Route>
             <Route exact strict path="/vote-locker">
-              <VoteLockerProvider>
+              <VeLockerProvider>
                 <VoteLocker />
-              </VoteLockerProvider>
+              </VeLockerProvider>
             </Route>
 
             <Route exact strict path="/pool" component={Pool} />

@@ -63,7 +63,7 @@ ReactDOM.render(
     <Provider store={store}>
       <WalletKitProvider
         app={{ name: 'cyclos' }}
-        defaultNetwork="mainnet-beta"
+        defaultNetwork="localnet"
         networkConfigs={{
           'mainnet-beta': {
             name: 'Custom RPC',

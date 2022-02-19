@@ -8,6 +8,7 @@ import Row, { AutoRow, RowBetween, RowFixed } from 'components/Row'
 import Slider from 'components/Slider'
 import Toggle from 'components/Toggle'
 import { CYS_ICON } from 'constants/tokens'
+import useVeLocker from 'contexts/VoteLocker'
 import useDebouncedChangeHandler from 'hooks/useDebouncedChangeHandler'
 import { MaxButton } from 'pages/Pool/styleds'
 import { ResponsiveHeaderText, SmallMaxButton } from 'pages/RemoveLiquidity/styled'
@@ -163,6 +164,7 @@ function LockTokensModal({ onDismiss, extend }: any) {
   const [depositAmount, setDepositAmount] = useState(0)
   const [percent, onPercentSelect] = useState(7)
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)
+  const { lockTokens, withdrawTokens, balance, setReloadState, escrowData } = useVeLocker()
 
   const formattedDepositAmount = depositAmount
     ? depositAmount?.toLocaleString('fullwide', {
@@ -170,6 +172,18 @@ function LockTokensModal({ onDismiss, extend }: any) {
         useGrouping: false,
       })
     : depositAmount?.toString() ?? 0
+
+  const handleLockTokens = async () => {
+    const hash = await lockTokens(formattedDepositAmount, percent, extend)
+    setReloadState((p: boolean) => !p)
+    onDismiss()
+    window.alert(hash.signature)
+  }
+
+  const handleWithdrawlTokens = async () => {
+    const hash = await withdrawTokens()
+    window.alert(hash)
+  }
 
   return (
     <ColumnCenter>
@@ -189,9 +203,9 @@ function LockTokensModal({ onDismiss, extend }: any) {
               <TYPE.subHeader color="text2">Deposit Amount</TYPE.subHeader>
               <AutoRow style={{ width: 'max-content' }}>
                 <TYPE.subHeader color="text2">Balance:&nbsp;</TYPE.subHeader>
-                <StyledLink>
+                <StyledLink onClick={() => setDepositAmount(+balance)}>
                   <TYPE.link>
-                    {(0.0).toFixed(3)} <small>CYS</small>
+                    {balance} <small>CYS</small>
                   </TYPE.link>
                 </StyledLink>
               </AutoRow>
@@ -274,7 +288,7 @@ function LockTokensModal({ onDismiss, extend }: any) {
             </AutoColumn>
           </AutoRow>
         </OutlineCard>
-        <ResponsiveButtonPrimary style={{ marginTop: 0, width: '100%' }}>
+        <ResponsiveButtonPrimary style={{ marginTop: 0, width: '100%' }} onClick={handleLockTokens}>
           {extend ? 'Extend Lockup' : 'Lock Tokens'}
         </ResponsiveButtonPrimary>
       </ColumnCenter>
@@ -286,7 +300,8 @@ function VoteLocker() {
   const history = useHistory()
   const [isLockOpen, setIsLockOpen] = useState(false)
   const [isExtendOpen, setIsExtendOpen] = useState(false)
-  const [isNewUser, setIsNewUser] = useState(true)
+  const { balance, escrowData, votingPower } = useVeLocker()
+  const isNewUser = !escrowData?.escrowAmount
 
   const onDismiss = useCallback(() => {
     setIsLockOpen(false)
@@ -329,7 +344,7 @@ function VoteLocker() {
                   CYS Balance
                 </TYPE.small>
                 <TYPE.mediumHeader>
-                  {(0.0).toFixed(6)} &nbsp;
+                  {balance} &nbsp;
                   <IconWrapper>
                     <img src={CYS_ICON} />
                   </IconWrapper>
@@ -341,7 +356,7 @@ function VoteLocker() {
                   Locked CYS
                 </TYPE.small>
                 <TYPE.mediumHeader>
-                  {(0.0).toFixed(6)} &nbsp;
+                  {escrowData.escrowAmount ?? '-'} &nbsp;
                   <IconWrapper>
                     <img src={CYS_ICON} />
                   </IconWrapper>
@@ -356,12 +371,7 @@ function VoteLocker() {
               </AutoRow>
             </MainContentWrapper>
             <MainContentWrapper flex="5">
-              <TYPE.mediumHeader
-                letterSpacing={1.5}
-                color="text2"
-                style={{ padding: '0.6rem 1rem' }}
-                onClick={() => setIsNewUser((p) => !p)}
-              >
+              <TYPE.mediumHeader letterSpacing={1.5} color="text2" style={{ padding: '0.6rem 1rem' }}>
                 <span style={{ fontWeight: 700 }}>{isNewUser ? 'Setup Voting' : 'Your Lockup'}</span>
               </TYPE.mediumHeader>
               <Divider />
@@ -387,7 +397,7 @@ function VoteLocker() {
                     veCYS Balance
                   </TYPE.small>
                   <TYPE.mediumHeader>
-                    {(0.0).toFixed(6)} &nbsp;
+                    {votingPower} &nbsp;
                     <IconWrapper>
                       <img src={CYS_ICON} />
                     </IconWrapper>
@@ -397,14 +407,14 @@ function VoteLocker() {
                     Time Remaining
                   </TYPE.small>
                   <TYPE.mediumHeader>
-                    6&nbsp;
+                    {((escrowData?.escrowLockTime * 1000) / 8.64e7).toFixed(0)} &nbsp;
                     <small>days</small>
                   </TYPE.mediumHeader>
                   <Divider />
                   <TYPE.small fontSize={14} color="text2">
                     Unlock Time
                   </TYPE.small>
-                  <TYPE.label>{new Date().toUTCString()}</TYPE.label>
+                  <TYPE.label>{new Date(+escrowData?.escrowEndsAt * 1000).toString()}</TYPE.label>
                 </AutoColumn>
               )}
             </MainContentWrapper>
