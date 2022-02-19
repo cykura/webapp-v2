@@ -5,7 +5,7 @@ import {
   TICK_SPACINGS,
   encodeSqrtRatioX32,
   TickMath,
-} from '@uniswap/v3-sdk/dist/'
+} from '@uniswap/v3-sdk/'
 import { Price, Token } from '@uniswap/sdk-core'
 import { tryParseAmount } from 'state/swap/hooks'
 import JSBI from 'jsbi'
