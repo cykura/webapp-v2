@@ -74,7 +74,9 @@ export function useBestV3TradeExactIn(
   const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
 
   useEffect(() => {
-    if (!amountIn || !currencyOut || !routes) return
+    if (!amountIn || !currencyOut || !routes || amountIn.currency.wrapped.address == currencyOut.wrapped.address) {
+      return
+    }
     ;(async () => {
       let bestAmount: CurrencyAmount<typeof currencyOut> = CurrencyAmount.fromRawAmount(currencyOut, JSBI.BigInt(0))
 
@@ -126,7 +128,7 @@ export function useBestV3TradeExactIn(
         console.error('Error', err)
       }
     })()
-  }, [dontRender, amountIn?.toSignificant()])
+  }, [dontRender, amountIn?.toSignificant(), currencyOut])
 
   return useMemo(() => {
     // console.log(
@@ -192,7 +194,7 @@ export function useBestV3TradeExactOut(
     if (!prevStateSorted) return false
     const changed = routesSorted.map((ele, i) => ele == prevStateSorted[i])
     return changed.every((ele) => ele == true)
-  }, [prevState, routes])
+  }, [prevState, routes, currencyIn?.wrapped.address, amountOut?.toSignificant()])
   // console.log(dontRender)
 
   const { connection, wallet } = useSolana()
@@ -206,7 +208,9 @@ export function useBestV3TradeExactOut(
   const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
 
   useEffect(() => {
-    if (!amountOut || !currencyIn || !routes) return
+    if (!amountOut || !currencyIn || !routes || currencyIn.wrapped.address == amountOut?.currency.wrapped.address) {
+      return
+    }
     ;(async () => {
       let bestAmount: CurrencyAmount<typeof currencyIn> = CurrencyAmount.fromRawAmount(currencyIn, JSBI.BigInt(0))
 
@@ -261,7 +265,7 @@ export function useBestV3TradeExactOut(
         console.error('Error', err)
       }
     })()
-  }, [dontRender, amountOut?.toSignificant()])
+  }, [dontRender, amountOut?.toSignificant(), currencyIn])
 
   return useMemo(() => {
     // console.log(

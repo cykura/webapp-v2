@@ -55,13 +55,22 @@ export function useV3SwapPools(
       }
     }
 
-    fetchPool()
+    if (
+      currencyIn?.wrapped.address != currencyOut?.wrapped.address &&
+      currencyIn?.wrapped.address &&
+      currencyOut?.wrapped.address
+    ) {
+      fetchPool()
+    }
   }, [currencyIn, currencyOut])
 
-  return {
-    pools: poolAddr,
-    loading: false,
-  }
+  // console.log('before return from swap Pools')
+  return useMemo(() => {
+    return {
+      pools: [...new Set(poolAddr)],
+      loading: false,
+    }
+  }, [currencyIn, currencyOut])
 
   // const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
 
