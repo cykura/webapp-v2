@@ -253,7 +253,7 @@ export function useSwapCallback(
       pool,
       true
     )
-    const latestObservationState = (
+    const lastObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
@@ -406,7 +406,7 @@ export function useSwapCallback(
           isWritable: true,
         },
         {
-          pubkey: latestObservationState,
+          pubkey: lastObservationState,
           isSigner: false,
           isWritable: true,
         },
@@ -434,7 +434,7 @@ export function useSwapCallback(
       tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wrappedSolPubkey, signer, signer, []))
     }
 
-    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
     tx.feePayer = signer
 
     const str = tx.serializeMessage().toString('base64')

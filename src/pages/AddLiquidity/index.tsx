@@ -591,7 +591,7 @@ export default function AddLiquidity({
     // fetch observation accounts
     const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-    const latestObservationState = (
+    const lastObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
@@ -680,7 +680,7 @@ export default function AddLiquidity({
               tokenAccount1: userATA1,
               vault0: vault0,
               vault1: vault1,
-              latestObservationState: latestObservationState,
+              lastObservationState,
               nextObservationState: nextObservationState,
               tokenizedPositionState: tokenizedPositionState,
               coreProgram: cyclosCore.programId,
@@ -751,7 +751,7 @@ export default function AddLiquidity({
         // for large time differences the oracle value can become stale
         const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-        const latestObservationState = (
+        const lastObservationState = (
           await PublicKey.findProgramAddress(
             [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
             cyclosCore.programId
@@ -791,7 +791,7 @@ export default function AddLiquidity({
               tokenAccount1: userATA1,
               vault0: vault0,
               vault1: vault1,
-              latestObservationState: latestObservationState,
+              lastObservationState,
               nextObservationState: nextObservationState,
               tokenizedPositionState: nftMint,
               coreProgram: cyclosCore.programId,

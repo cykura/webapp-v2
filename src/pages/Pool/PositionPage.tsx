@@ -496,7 +496,7 @@ export function PositionPage({
 
       const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-      const latestObservationState = (
+      const lastObservationState = (
         await PublicKey.findProgramAddress(
           [
             OBSERVATION_SEED,
@@ -569,7 +569,7 @@ export function PositionPage({
             tickUpperState: tickUpperState,
             bitmapLowerState: bitmapLowerState,
             bitmapUpperState: bitmapUpperState,
-            latestObservationState: latestObservationState,
+            lastObservationState,
             nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
             vault0: vault0,

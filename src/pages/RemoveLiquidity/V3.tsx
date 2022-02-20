@@ -221,7 +221,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-    const latestObservationState = (
+    const lastObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
@@ -291,7 +291,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     try {
       const tx = new Transaction()
-      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
       tx.add(
         cyclosCore.instruction.decreaseLiquidity(removeLiquidityAmount, amount0Minimum, amount1Minimum, deadline, {
           accounts: {
@@ -305,7 +305,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             tickUpperState: tickUpperState,
             bitmapLowerState: bitmapLowerState,
             bitmapUpperState: bitmapUpperState,
-            latestObservationState: latestObservationState,
+            lastObservationState,
             nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
           },
@@ -324,7 +324,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             tickUpperState: tickUpperState,
             bitmapLowerState: bitmapLowerState,
             bitmapUpperState: bitmapUpperState,
-            latestObservationState: latestObservationState,
+            lastObservationState,
             nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
             vault0: vault0,
