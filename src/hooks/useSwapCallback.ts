@@ -440,7 +440,7 @@ export function useSwapCallback(
     const str = tx.serializeMessage().toString('base64')
     console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
 
-    await wallet?.signTransaction(tx)
+    // await wallet?.signTransaction(tx)
     const hash = await providerMut?.send(tx)
 
     console.log('swap hash', hash)
