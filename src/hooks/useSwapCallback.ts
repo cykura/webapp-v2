@@ -288,7 +288,7 @@ export function useSwapCallback(
     const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
       CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
     )
-    console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
+    console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut.toSignificant())
 
     const deadline = new BN(Date.now() / 1000 + 100_000)
 
@@ -305,31 +305,56 @@ export function useSwapCallback(
       new PublicKey(WSOL_LOCAL.address),
       signer
     )
-    ;[inputCurrency, outputCurrency].forEach(async (currency) => {
-      if (currency.symbol != 'SOL') {
-        const ata = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          new PublicKey(currency.wrapped.address),
-          signer
-        )
-        const accountInfo = await connection.getAccountInfo(ata)
 
-        if (!accountInfo) {
-          console.log(`Creating ATA for ${currency.name}`)
-          tx.instructions.push(
-            Token.createAssociatedTokenAccountInstruction(
-              ASSOCIATED_TOKEN_PROGRAM_ID,
-              TOKEN_PROGRAM_ID,
-              new PublicKey(currency.wrapped.address),
-              ata,
-              signer,
-              signer
-            )
+    // inputCurrency ATA Creation if not exist
+    if (inputCurrency.symbol != 'SOL') {
+      const ata = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(inputCurrency.wrapped.address),
+        signer
+      )
+      const accountInfo = await connection.getAccountInfo(ata)
+
+      if (!accountInfo) {
+        console.log(`Creating ATA for ${inputCurrency.name} ${ata.toString()}`)
+        tx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            new PublicKey(inputCurrency.wrapped.address),
+            ata,
+            signer,
+            signer
           )
-        }
+        )
       }
-    })
+    }
+
+    // outputCurrency ATA Creation if not exist
+    if (outputCurrency.symbol != 'SOL') {
+      const ata = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(outputCurrency.wrapped.address),
+        signer
+      )
+      const accountInfo = await connection.getAccountInfo(ata)
+
+      if (!accountInfo) {
+        console.log(`Creating ATA for ${outputCurrency.name} ${ata.toString()}`)
+        tx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            new PublicKey(outputCurrency.wrapped.address),
+            ata,
+            signer,
+            signer
+          )
+        )
+      }
+    }
 
     // 2. Wrap and Unwrap native SOL is one of the input tokens is SOL
     if (isSol) {
@@ -376,50 +401,56 @@ export function useSwapCallback(
     const iAccount = isSol ? WSOL_ATA : inputTokenAccount
     const oAccount = isSol ? WSOL_ATA : outputTokenAccount
 
-    const ix = cyclosCore.instruction.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
-      accounts: {
-        signer,
-        factoryState,
-        inputTokenAccount: iAccount,
-        coreProgram: cyclosCore.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-      remainingAccounts: [
-        {
-          pubkey: pool,
-          isSigner: false,
-          isWritable: true,
+    const swapIx = cyclosCore.instruction.exactInput(
+      deadline,
+      amountIn,
+      new BN(0),
+      Buffer.from([swapAccounts.length]),
+      {
+        accounts: {
+          signer,
+          factoryState,
+          inputTokenAccount: iAccount,
+          coreProgram: cyclosCore.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
         },
-        {
-          pubkey: oAccount,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: inputVault,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: outputVault,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: lastObservationState,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: nextObservationState,
-          isSigner: false,
-          isWritable: true,
-        },
-        ...swapAccounts,
-      ],
-    })
+        remainingAccounts: [
+          {
+            pubkey: pool,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: oAccount,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: inputVault,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: outputVault,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: lastObservationState,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: nextObservationState,
+            isSigner: false,
+            isWritable: true,
+          },
+          ...swapAccounts,
+        ],
+      }
+    )
 
-    tx.add(ix)
+    tx.add(swapIx)
 
     // UNWRAP NATIVE SOL
     if (isSol) {
