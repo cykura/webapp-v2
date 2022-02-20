@@ -222,7 +222,7 @@ export function useSwapCallback(
       tickDataProvider
     )
 
-    const amountIn = new BN(trade?.inputAmount.numerator[0])
+    const amountIn = new BN(trade?.inputAmount.numerator.toString())
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
     const minterWallet0 = await Token.getAssociatedTokenAddress(
