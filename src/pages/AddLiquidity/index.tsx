@@ -393,7 +393,7 @@ export default function AddLiquidity({
 
         tx.add(ix)
         tx.feePayer = wallet?.publicKey
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
         // console.log(tx)
 
         // const str1 = tx.serializeMessage().toString('base64')
@@ -484,7 +484,7 @@ export default function AddLiquidity({
       console.log('Creating accounts')
       try {
         const tx = new Transaction()
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
         if (!tickLowerStateInfo) {
           console.log('Creating tickLowerState')
           tx.instructions.push(
@@ -633,7 +633,7 @@ export default function AddLiquidity({
       // Create new position
       console.log('Creating new position')
       try {
-        const tx = new Transaction()
+        // const tx = new Transaction()
 
         // console.log(
         //   `
@@ -656,7 +656,7 @@ export default function AddLiquidity({
         //   tokenizedPositionState ${tokenizedPositionState.toString()}
         //   `
         // )
-        const ix = cyclosCore.instruction.mintTokenizedPosition(
+        const hash = await cyclosCore.rpc.mintTokenizedPosition(
           tokenizedPositionBump,
           amount0Desired,
           amount1Desired,
@@ -689,19 +689,13 @@ export default function AddLiquidity({
               tokenProgram: TOKEN_PROGRAM_ID,
               associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             },
+            signers: [nftMintKeypair],
           }
         )
 
-        tx.add(ix)
-
-        tx.feePayer = wallet?.publicKey
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        tx.sign(nftMintKeypair)
-
-        const txnHash2 = await providerMut?.send(tx)
         setAttemptingTxn(true)
-        console.log(`https://explorer.solana.com/tx/${txnHash2?.signature}?cluster=custom`)
-        setTxHash(txnHash2?.signature ?? '')
+        console.log(`https://explorer.solana.com/tx/${hash}?cluster=custom`)
+        setTxHash(hash ?? '')
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
