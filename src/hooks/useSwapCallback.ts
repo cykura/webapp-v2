@@ -207,13 +207,14 @@ export function useSwapCallback(
       fee,
     })
 
-    const uniToken0 = inputCurrency?.wrapped
-    const uniToken1 = outputCurrency?.wrapped
+    // Not in sorted order
+    const uniTokenInput = inputCurrency?.wrapped
+    const uniTokenOutput = outputCurrency?.wrapped
 
     // output is one tick behind actual (8 instead of 9)
     const uniPoolA = new Pool(
-      uniToken0,
-      uniToken1,
+      uniTokenInput,
+      uniTokenOutput,
       fee,
       JSBI.BigInt(sqrtPriceX32),
       JSBI.BigInt(liquidity),
@@ -281,8 +282,11 @@ export function useSwapCallback(
       : [minterWallet1, minterWallet0, vault1, vault0, false]
 
     console.log('zero for one', zeroForOne)
+    const inputAmount = CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
+
+    console.log('input amount in useSwapCallback', inputAmount.currency.name)
     const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
-      CurrencyAmount.fromRawAmount(zeroForOne ? uniToken0 : uniToken1, amountIn.toNumber())
+      CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
     )
     console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
 
@@ -494,15 +498,17 @@ export class SolanaTickDataProvider implements TickDataProvider {
     // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
     // console.log(tick, tickSpacing)
     let compressed = Number(JSBI.divide(JSBI.BigInt(tick), JSBI.BigInt(tickSpacing)))
-    // console.log(compressed, 'compresssed')
-    // console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    console.log('compresssed after division', compressed)
+    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
     if (tick < 0 && tick % tickSpacing !== 0) {
-      // console.log('deducting from compressed.')
+      console.log('deducting from compressed.')
       compressed -= 1
     }
     if (!lte) {
+      console.log('lte is false, +1 to compressed')
       compressed += 1
     }
+    console.log('got compressed final=', compressed)
 
     const { wordPos, bitPos } = tickPosition(compressed)
 
