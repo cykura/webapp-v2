@@ -15,6 +15,7 @@ import * as anchor from '@project-serum/anchor'
 import { Pool } from '@uniswap/v3-sdk'
 import usePrevious from './usePrevious'
 import { SOL_LOCAL, WSOL_LOCAL } from 'constants/tokens'
+import { NATIVE_MINT } from '@solana/spl-token'
 
 export enum V3TradeState {
   LOADING,
@@ -84,8 +85,8 @@ export function useBestV3TradeExactIn(
         routes.forEach(async (route) => {
           const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
 
-          const t0 = token0.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token0
-          const t1 = token1.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token1
+          const t0 = token0.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token0
+          const t1 = token1.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token1
 
           const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
             token0: t0,
@@ -218,8 +219,8 @@ export function useBestV3TradeExactOut(
         routes.forEach(async (route) => {
           const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
 
-          const t0 = token0.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token0
-          const t1 = token1.toString() == SOL_LOCAL.address ? new PublicKey(WSOL_LOCAL.address) : token1
+          const t0 = token0.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token0
+          const t1 = token1.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token1
 
           const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
             token0: t0,

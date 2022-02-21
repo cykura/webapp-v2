@@ -139,7 +139,6 @@ export function usePool(
   useEffect(() => {
     ;(async () => {
       if (!currencyA?.wrapped || !currencyB?.wrapped || !feeAmount) return
-      if (currencyA?.wrapped.address == 'token 0' || currencyB?.wrapped.address == 'token 1') return
 
       let [token0, token1] = [currencyA?.wrapped, currencyB?.wrapped]
       if (currencyA?.wrapped.address !== currencyB?.wrapped.address) {
