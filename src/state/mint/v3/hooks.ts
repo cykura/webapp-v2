@@ -203,6 +203,7 @@ export function useV3DerivedMintInfo(
                 parsedQuoteAmount.quotient
               )
             : undefined
+        // console.log('price', price?.toSignificant(), price?.invert().toSignificant())
         return (invertPrice ? price?.invert() : price) ?? undefined
       }
       return undefined
@@ -230,7 +231,7 @@ export function useV3DerivedMintInfo(
     if (token0 && token1 && feeAmount && price && !invalidPrice) {
       const currentTick = priceToClosestTick(price)
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
-      console.log(currentTick, 'currentTick', currentSqrt.toString(), 'currentSqrt')
+      // console.log(currentTick, 'currentTick', currentSqrt.toString(), 'currentSqrt')
       return new Pool(token0, token1, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
     } else {
       return undefined

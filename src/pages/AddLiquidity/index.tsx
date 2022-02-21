@@ -262,14 +262,15 @@ export default function AddLiquidity({
     // const dr = 10e9
 
     // console.log(price.numerator.toString(), price.denominator.toString())
+    // const sqrtPriceX32 = new BN(
+    //   encodeSqrtRatioX32(
+    //     JSBI.multiply(nr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.baseCurrency.decimals))),
+    //     JSBI.multiply(dr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.quoteCurrency.decimals)))
+    //   ).toString()
+    // )
     const nr = JSBI.BigInt(price.numerator.toString())
     const dr = JSBI.BigInt(price.denominator.toString())
-    const sqrtPriceX32 = new BN(
-      encodeSqrtRatioX32(
-        JSBI.multiply(nr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.baseCurrency.decimals))),
-        JSBI.multiply(dr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.quoteCurrency.decimals)))
-      ).toString()
-    )
+    const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
 
     console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
     console.log('price', price?.toSignificant())
@@ -322,12 +323,10 @@ export default function AddLiquidity({
     // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
     const amount0Desired = new BN(
-      +formattedAmounts[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B] *
-        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_A : Field.CURRENCY_B]?.decimals ?? 0)
+      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
     )
     const amount1Desired = new BN(
-      +formattedAmounts[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A] *
-        Math.pow(10, currencies[!invertPrice ? Field.CURRENCY_B : Field.CURRENCY_A]?.decimals ?? 0)
+      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
     )
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
