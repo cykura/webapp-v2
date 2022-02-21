@@ -3484,10 +3484,12 @@
 
 "@uniswap/sdk-core@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk-core.git":
   version "3.0.1"
-  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk-core.git#61fb80cc64bbb2d0884eb6dde9af550dd78bef02"
+  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk-core.git#e22cc21b18ba3471999dcd1cd31d3d5f75da65ee"
   dependencies:
     "@ethersproject/address" "^5.0.2"
+    "@types/bs58" "^4.0.1"
     big.js "^5.2.2"
+    bs58 "^4.0.1"
     decimal.js-light "^2.5.0"
     jsbi "^3.1.4"
     tiny-invariant "^1.1.0"
@@ -3520,9 +3522,9 @@
     base64-sol "1.0.1"
     hardhat-watcher "^2.1.1"
 
-"@uniswap/v3-sdk@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git":
+"@uniswap/v3-sdk@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#83e86d25034ecc96b5a7b642498652fdf2cb62ee":
   version "3.7.1"
-  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#2a2a0cf05aad5154a9cc15702947f3ae8a04aeae"
+  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#83e86d25034ecc96b5a7b642498652fdf2cb62ee"
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"
