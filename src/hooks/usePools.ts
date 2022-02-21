@@ -1,7 +1,6 @@
 import { u32ToSeed } from '@uniswap/v3-sdk'
 import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
-import idl from '../constants/cyclos-core.json'
 import { PROGRAM_ID_STR, V3_CORE_FACTORY_ADDRESSES } from '../constants/addresses'
 import { Token, Currency } from '@uniswap/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
@@ -13,6 +12,7 @@ import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import JSBI from 'jsbi'
 import { SolanaTickDataProvider } from './useSwapCallback'
 import { CyclosCore, IDL } from 'types/cyclos-core'
+import { PublicKey } from '@solana/web3.js'
 
 // const POOL_STATE_INTERFACE = new Interface(IUniswapV3PoolStateABI) as IUniswapV3PoolStateInterface
 
@@ -25,7 +25,7 @@ export enum PoolState {
 
 export function usePools(
   poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][]
-): [PoolState, Pool | null][] {
+): [PoolState, Pool | null, PublicKey | undefined][] {
   const { chainId } = useActiveWeb3ReactSol()
   const { connection, wallet } = useSolana()
 
@@ -34,7 +34,10 @@ export function usePools(
   })
   const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
+  // Stores Pool Addresses of transformed list
   const [poolAddresses, setPoolAddresses] = useState<(string | undefined)[]>([])
+  // FIX type here
+  const [allFetchedPoolStates, setAllFetchedPoolStates] = useState<any>([])
 
   const transformed: ([Token, Token, FeeAmount] | null)[] = useMemo(() => {
     return poolKeys.map(([currencyA, currencyB, feeAmount]) => {
@@ -50,6 +53,7 @@ export function usePools(
 
   useEffect(() => {
     ;(async () => {
+      const poolStates = await cyclosCore.account.poolState.all()
       const poolList = await Promise.all(
         transformed.map(async (value) => {
           if (!value) return undefined
@@ -59,62 +63,125 @@ export function usePools(
 
             const tk0 = new anchor.web3.PublicKey(token0.address)
             const tk1 = new anchor.web3.PublicKey(token1.address)
-            const [poolAState, poolAStateBump] = await anchor.web3.PublicKey.findProgramAddress(
+            const [poolState, _] = await anchor.web3.PublicKey.findProgramAddress(
               [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
               cyclosCore.programId
             )
-            // console.log('tk0', tokenA.address)
-            // console.log('tk1', tokenB.address)
-            // console.log('fee', feeAmount)
-            // console.log('poolAState', poolAState.toString())
-            return poolAState.toString()
+            return poolState.toString()
           } catch (e) {
             console.log(value)
             console.log('ERROR ', e)
-            return undefined
+            return ''
           }
         })
       )
       setPoolAddresses(poolList)
+      setAllFetchedPoolStates(poolStates)
     })()
   }, [chainId, transformed])
 
+  // console.log(allFetchedPoolStates.map((r: any) => r.publicKey.toString()))
+  // console.log(poolAddresses.map((r) => r?.toString()))
+
+  const r = useMemo(() => {
+    const allPubkeys = allFetchedPoolStates.map((p: any) => p.publicKey.toString())
+    return poolAddresses.map((p) => (allPubkeys.includes(p?.toString()) ? true : false))
+  }, [poolAddresses, allFetchedPoolStates])
+  // console.log(r)
+
+  // Pool State returned
+  // bump: 255
+  // fee: 3000
+  // feeGrowthGlobal0X32: BN {negative: 0, words: Array(3), length: 1, red: null}
+  // feeGrowthGlobal1X32: BN {negative: 0, words: Array(3), length: 1, red: null}
+  // liquidity: BN {negative: 0, words: Array(3), length: 1, red: null}
+  // observationCardinality: 1
+  // observationCardinalityNext: 1
+  // observationIndex: 0
+  // protocolFeesToken0: BN {negative: 0, words: Array(3), length: 1, red: null}
+  // protocolFeesToken1: BN {negative: 0, words: Array(3), length: 1, red: null}
+  // sqrtPriceX32: BN {negative: 0, words: Array(3), length: 2, red: null}
+  // tick: -23028
+  // tickSpacing: 60
+  // token0: PublicKey {_bn: BN}
+  // token1: PublicKey {_bn: BN}
+  // unlocked: true
+
   return useMemo(() => {
-    return poolKeys.map((_key, index) => {
+    // if (allFetchedPoolStates.length == 0) {
+    //   return [PoolState.LOADING, null, undefined]
+    // }
+
+    return r.map((key, index) => {
       const [token0, token1, fee] = transformed[index] ?? []
-      if (!token0 || !token1 || !fee) return [PoolState.INVALID, null]
+      if (!key || !token0 || !token1 || !fee) return [PoolState.INVALID, null, undefined]
 
+      // if (!allFetchedPoolStates) return [PoolState.LOADING, null, undefined]
+
+      const poolState = allFetchedPoolStates.shift()
+      // console.log(poolState, ' poolState taken')
+      if (!poolState) return [PoolState.INVALID, null, undefined]
+
+      const { token0: token0Add, token1: token1Add, fee: poolFee, sqrtPriceX32, liquidity, tick } = poolState.account
       // const { result: liquidity, loading: liquidityLoading, valid: liquidityValid } = liquidities[index]
-
-      const SOL_poolStatesData: any[] = []
-      poolAddresses.forEach(async (poolAddr) => {
-        if (poolAddr) {
-          try {
-            const slot0 = await cyclosCore.account.poolState.fetch(poolAddr)
-            SOL_poolStatesData.push(slot0)
-          } catch (e) {
-            SOL_poolStatesData.push(null)
-            console.log('Does not Exist ', e)
-          }
-        }
-      })
-      const slot0 = SOL_poolStatesData[index]
 
       // if (!slot0Valid || !liquidityValid) return [PoolState.INVALID, null]
       // if (slot0Loading || liquidityLoading) return [PoolState.LOADING, null]
 
-      if (!slot0) return [PoolState.NOT_EXISTS, null]
-
-      if (!slot0.sqrtPriceX96 || slot0.sqrtPriceX96.eq(0)) return [PoolState.NOT_EXISTS, null]
+      if (!sqrtPriceX32 || !liquidity || !tick) return [PoolState.NOT_EXISTS, null, undefined]
 
       try {
-        return [PoolState.EXISTS, new Pool(token0, token1, fee, slot0.sqrtPriceX96, slot0.liquidity, slot0.tick)]
+        // If can't find public key from constructed list
+        const pubkey = poolAddresses[index]
+        if (!pubkey) return [PoolState.NOT_EXISTS, null, undefined]
+
+        return [
+          PoolState.EXISTS,
+          new Pool(
+            token0,
+            token1,
+            fee,
+            JSBI.BigInt(sqrtPriceX32.toString()),
+            JSBI.BigInt(liquidity.toString()),
+            Number(tick)
+          ),
+          new PublicKey(pubkey.toString()),
+        ]
       } catch (error) {
         console.error('Error when constructing the pool', error)
-        return [PoolState.NOT_EXISTS, null]
+        return [PoolState.NOT_EXISTS, null, undefined]
       }
     })
-  }, [poolKeys, transformed])
+
+    //   const SOL_poolStatesData: any[] = []
+    //   poolAddresses.forEach(async (poolAddr) => {
+    //     if (poolAddr) {
+    //       try {
+    //         const slot0 = await cyclosCore.account.poolState.fetch(poolAddr)
+    //         SOL_poolStatesData.push(slot0)
+    //       } catch (e) {
+    //         SOL_poolStatesData.push(null)
+    //         console.log('Does not Exist ', e)
+    //       }
+    //     }
+    //   })
+    //   const slot0 = SOL_poolStatesData[index]
+
+    //   // if (!slot0Valid || !liquidityValid) return [PoolState.INVALID, null]
+    //   // if (slot0Loading || liquidityLoading) return [PoolState.LOADING, null]
+
+    //   if (!slot0) return [PoolState.NOT_EXISTS, null]
+
+    //   if (!slot0.sqrtPriceX96 || slot0.sqrtPriceX96.eq(0)) return [PoolState.NOT_EXISTS, null]
+
+    //   try {
+    //     return [PoolState.EXISTS, new Pool(token0, token1, fee, slot0.sqrtPriceX96, slot0.liquidity, slot0.tick)]
+    //   } catch (error) {
+    //     console.error('Error when constructing the pool', error)
+    //     return [PoolState.NOT_EXISTS, null]
+    //   }
+    // })
+  }, [poolKeys, transformed, r])
 }
 
 export function usePool(
@@ -122,10 +189,6 @@ export function usePool(
   currencyB: Currency | undefined,
   feeAmount: FeeAmount | undefined
 ): Pool | null {
-  const poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][] = useMemo(
-    () => [[currencyA, currencyB, feeAmount]],
-    [currencyA, currencyB, feeAmount]
-  )
   const { chainId, account } = useActiveWeb3ReactSol()
   const { connection, wallet } = useSolana()
 

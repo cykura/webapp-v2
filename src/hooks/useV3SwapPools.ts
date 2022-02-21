@@ -17,60 +17,100 @@ export function useV3SwapPools(
   currencyIn?: Currency,
   currencyOut?: Currency
 ): {
-  pools: PublicKey[]
+  pools: Pool[]
   loading: boolean
+  poolIds: PublicKey[]
 } {
   const { connection } = useSolana()
   const [poolAddr, setAddr] = useState<PublicKey[]>([])
 
-  useEffect(() => {
-    async function fetchPool() {
-      if (currencyIn && currencyOut) {
-        let [tk0, tk1] = [currencyIn?.wrapped, currencyOut?.wrapped]
-        if (currencyIn?.wrapped.address !== currencyOut?.wrapped.address) {
-          ;[tk0, tk1] = currencyIn?.wrapped.sortsBefore(currencyOut?.wrapped)
-            ? [currencyIn?.wrapped, currencyOut?.wrapped]
-            : [currencyOut?.wrapped, currencyIn?.wrapped] // does safety checks
-        }
+  const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
+  // console.log(allCurrencyCombinationsWithAllFees.map((tk) => `${tk[0].symbol} ${tk[1].symbol}`))
 
-        const token0 = new PublicKey((tk0 as Token).address)
-        const token1 = new PublicKey((tk1 as Token).address)
-        ;[500, 3000, 10_000].forEach(async (fee) => {
-          const generatedAddr = (
-            await PublicKey.findProgramAddress(
-              [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
-              PROGRAM_ID
-            )
-          )[0]
-          // console.log('generated address', generatedAddr.toString(), ' for fee', fee)
-          try {
-            const poolInfo = await connection.getAccountInfo(generatedAddr)
-            if (poolInfo) {
-              setAddr((prevState) => [...prevState, generatedAddr])
-            }
-          } catch (error) {
-            console.log('failed to get pool info', error)
-          }
-        })
-      }
-    }
+  const allCurrencyCombinationsWithAllFees: [Token, Token, FeeAmount][] = useMemo(
+    () =>
+      allCurrencyCombinations.reduce<[Token, Token, FeeAmount][]>((list, [tokenA, tokenB]) => {
+        return list.concat([
+          [tokenA, tokenB, FeeAmount.LOW],
+          [tokenA, tokenB, FeeAmount.MEDIUM],
+          [tokenA, tokenB, FeeAmount.HIGH],
+        ])
+      }, []),
+    [allCurrencyCombinations]
+  )
 
-    if (
-      currencyIn?.wrapped.address != currencyOut?.wrapped.address &&
-      currencyIn?.wrapped.address &&
-      currencyOut?.wrapped.address
-    ) {
-      fetchPool()
-    }
-  }, [currencyIn, currencyOut])
+  // console.log(allCurrencyCombinationsWithAllFees.map((tk) => `${tk[0].symbol} ${tk[1].symbol} ${tk[2].valueOf()}`))
 
-  // console.log('before return from swap Pools')
+  // Fetch all pools for the calculated pairs above
+  const pools = usePools(allCurrencyCombinationsWithAllFees)
+  // console.log(pools)
+
   return useMemo(() => {
-    return {
-      pools: [...new Set(poolAddr)],
-      loading: false,
+    const r = {
+      pools: pools
+        .filter((tuple): tuple is [PoolState.EXISTS, Pool, PublicKey] => {
+          return tuple[0] === PoolState.EXISTS && tuple[1] !== null
+        })
+        .map(([, pool]) => pool),
+      loading: pools.some(([state]) => state === PoolState.LOADING),
+      poolIds: pools
+        .filter((tuple): tuple is [PoolState.EXISTS, Pool, PublicKey] => {
+          return tuple[0] === PoolState.EXISTS && tuple[1] !== null
+        })
+        .map(([, , pb]) => pb),
     }
-  }, [currencyIn, currencyOut])
+    // console.log(r.pools)
+    return r
+  }, [pools])
+
+  // useEffect(() => {
+  //   async function fetchPool() {
+  //     if (currencyIn && currencyOut) {
+  //       let [tk0, tk1] = [currencyIn?.wrapped, currencyOut?.wrapped]
+  //       if (currencyIn?.wrapped.address !== currencyOut?.wrapped.address) {
+  //         ;[tk0, tk1] = currencyIn?.wrapped.sortsBefore(currencyOut?.wrapped)
+  //           ? [currencyIn?.wrapped, currencyOut?.wrapped]
+  //           : [currencyOut?.wrapped, currencyIn?.wrapped] // does safety checks
+  //       }
+
+  //       const token0 = new PublicKey((tk0 as Token).address)
+  //       const token1 = new PublicKey((tk1 as Token).address)
+  //       ;[500, 3000, 10_000].forEach(async (fee) => {
+  //         const generatedAddr = (
+  //           await PublicKey.findProgramAddress(
+  //             [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
+  //             PROGRAM_ID
+  //           )
+  //         )[0]
+  //         // console.log('generated address', generatedAddr.toString(), ' for fee', fee)
+  //         try {
+  //           const poolInfo = await connection.getAccountInfo(generatedAddr)
+  //           if (poolInfo) {
+  //             setAddr((prevState) => [...prevState, generatedAddr])
+  //           }
+  //         } catch (error) {
+  //           console.log('failed to get pool info', error)
+  //         }
+  //       })
+  //     }
+  //   }
+
+  //   if (
+  //     currencyIn?.wrapped.address != currencyOut?.wrapped.address &&
+  //     currencyIn?.wrapped.address &&
+  //     currencyOut?.wrapped.address
+  //   ) {
+  //     fetchPool()
+  //   }
+  // }, [currencyIn, currencyOut])
+
+  // // console.log('before return from swap Pools')
+  // return useMemo(() => {
+  //   return {
+  //     pools: [...new Set(poolAddr)],
+  //     loading: false,
+  //   }
+  // }, [currencyIn, currencyOut])
 
   // const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
 
