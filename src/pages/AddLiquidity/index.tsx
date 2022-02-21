@@ -633,7 +633,8 @@ export default function AddLiquidity({
       // Create new position
       console.log('Creating new position')
       try {
-        // const tx = new Transaction()
+        const tx1 = new Transaction()
+        const tx2 = new Transaction()
 
         // console.log(
         //   `
@@ -656,7 +657,47 @@ export default function AddLiquidity({
         //   tokenizedPositionState ${tokenizedPositionState.toString()}
         //   `
         // )
-        const hash = await cyclosCore.rpc.mintTokenizedPosition(
+        // If Native SOL is used
+        const account = await connection.getAccountInfo(WSOL_ATA)
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          const amount =
+            token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
+          // console.log(amount)
+          if (!account) {
+            tx1.add(
+              Token.createAssociatedTokenAccountInstruction(
+                ASSOCIATED_TOKEN_PROGRAM_ID,
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                WSOL_ATA,
+                wallet?.publicKey,
+                wallet?.publicKey
+              )
+            )
+          }
+          tx1.add(
+            SystemProgram.transfer({
+              fromPubkey: wallet?.publicKey,
+              toPubkey: WSOL_ATA,
+              lamports: amount,
+            }),
+            new TransactionInstruction({
+              keys: [
+                {
+                  pubkey: WSOL_ATA,
+                  isSigner: false,
+                  isWritable: true,
+                },
+              ],
+              data: Buffer.from(new Uint8Array([17])),
+              programId: TOKEN_PROGRAM_ID,
+            })
+          )
+          tx1.feePayer = wallet?.publicKey
+          tx1.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+        }
+
+        const mintIx = cyclosCore.instruction.mintTokenizedPosition(
           tokenizedPositionBump,
           amount0Desired,
           amount1Desired,
@@ -693,9 +734,33 @@ export default function AddLiquidity({
           }
         )
 
+        tx2.add(mintIx)
+
         setAttemptingTxn(true)
-        console.log(`https://explorer.solana.com/tx/${hash}?cluster=custom`)
-        setTxHash(hash ?? '')
+
+        tx2.feePayer = wallet?.publicKey
+        tx2.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+        tx2.sign(nftMintKeypair)
+        // console.log(tx1)
+        // console.log(tx2)
+        // console.log(tx.signatures.map((s) => s.publicKey.toString()))
+
+        // const str1 = tx.serializeMessage().toString('base64')
+        // console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
+
+        // const txnHash1 = await providerMut?.send(tx1)
+
+        // Cannot sent empty transactions. So add creation of ATA only if required
+        const sendReq = [{ tx: tx2, signers: [nftMintKeypair] }]
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          sendReq.unshift({ tx: tx1, signers: [] })
+        }
+
+        const pendingHash = await providerMut?.sendAll(sendReq)
+
+        const hash = pendingHash?.map((h) => h.signature)
+        // console.log(`https://explorer.solana.com/tx/${hash?.signature}?cluster=custom`)
+        setTxHash((hash && hash[0]) ?? '')
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
@@ -765,7 +830,46 @@ export default function AddLiquidity({
           )
         )[0]
 
-        const hashRes = await cyclosCore.rpc.increaseLiquidity(
+        const tx = new Transaction()
+
+        const account = await connection.getAccountInfo(WSOL_ATA)
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          const amount =
+            token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
+          // console.log(amount)
+          if (!account) {
+            tx.add(
+              Token.createAssociatedTokenAccountInstruction(
+                ASSOCIATED_TOKEN_PROGRAM_ID,
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                WSOL_ATA,
+                wallet?.publicKey,
+                wallet?.publicKey
+              )
+            )
+          }
+          tx.add(
+            SystemProgram.transfer({
+              fromPubkey: wallet?.publicKey,
+              toPubkey: WSOL_ATA,
+              lamports: amount,
+            }),
+            new TransactionInstruction({
+              keys: [
+                {
+                  pubkey: WSOL_ATA,
+                  isSigner: false,
+                  isWritable: true,
+                },
+              ],
+              data: Buffer.from(new Uint8Array([17])),
+              programId: TOKEN_PROGRAM_ID,
+            })
+          )
+        }
+
+        const ix = cyclosCore.instruction.increaseLiquidity(
           amount0Desired,
           amount1Desired,
           amount0Minimum,
@@ -793,9 +897,20 @@ export default function AddLiquidity({
             },
           }
         )
-        console.log(hashRes)
+
+        tx.add(ix)
+
+        tx.feePayer = wallet?.publicKey
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+        // console.log(tx)
         setAttemptingTxn(true)
-        setTxHash(hashRes)
+
+        const str1 = tx.serializeMessage().toString('base64')
+        console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
+
+        // const txnHash1 = await providerMut?.send(tx1)
+        const hash = await providerMut?.send(tx)
+        setTxHash(hash?.signature ?? '')
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)

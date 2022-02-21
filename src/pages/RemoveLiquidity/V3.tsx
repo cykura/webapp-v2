@@ -42,7 +42,7 @@ import RangeBadge from 'components/Badge/RangeBadge'
 import Toggle from 'components/Toggle'
 import JSBI from 'jsbi'
 import * as anchor from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
 import { PROGRAM_ID_STR } from '../../constants/addresses'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
@@ -129,8 +129,9 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const tokenB = currencyB?.wrapped
     const [tk1, tk2] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
-    const token1 = new anchor.web3.PublicKey(tk1.address)
-    const token2 = new anchor.web3.PublicKey(tk2.address)
+    const token0 = new anchor.web3.PublicKey(tk1.address)
+    const token1 = new anchor.web3.PublicKey(tk2.address)
+    // console.log(token0.toString(), token1.toString())
 
     const provider = new anchor.Provider(connection, wallet as Wallet, {
       skipPreflight: false,
@@ -181,7 +182,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     // create pool state
     const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
-      [POOL_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee)],
+      [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
       cyclosCore.programId
     )
 
@@ -190,8 +191,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
       [
         POSITION_SEED,
+        token0.toBuffer(),
         token1.toBuffer(),
-        token2.toBuffer(),
         u32ToSeed(fee),
         factoryState.toBuffer(),
         u32ToSeed(tickLower),
@@ -201,21 +202,21 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     )
 
     const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
-      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
+      [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
 
     const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
-      [TICK_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
+      [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
 
     const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
+      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
     const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
-      [BITMAP_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
+      [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
 
@@ -223,7 +224,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     const lastObservationState = (
       await PublicKey.findProgramAddress(
-        [OBSERVATION_SEED, token1.toBuffer(), token2.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
@@ -232,8 +233,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       await PublicKey.findProgramAddress(
         [
           OBSERVATION_SEED,
+          token0.toBuffer(),
           token1.toBuffer(),
-          token2.toBuffer(),
           u32ToSeed(fee),
           u16ToSeed((observationIndex + 1) % observationCardinalityNext),
         ],
@@ -257,7 +258,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const vault0 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      token1,
+      token0,
       poolState,
       true
     )
@@ -265,7 +266,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const vault1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      token2,
+      token1,
       poolState,
       true
     )
@@ -274,7 +275,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const userATA0 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      token1,
+      token0,
       wallet?.publicKey,
       true
     )
@@ -282,7 +283,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const userATA1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      token2,
+      token1,
       wallet?.publicKey,
       true
     )
@@ -335,8 +336,21 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
           },
         })
       )
+      //  If WSOL, then close the ATA
+      if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+        const WSOL_ATA = await Token.getAssociatedTokenAddress(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          NATIVE_MINT,
+          wallet?.publicKey
+        )
+        tx.add(
+          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+        )
+      }
       tx.feePayer = wallet?.publicKey ?? undefined
-      await wallet?.signTransaction(tx)
+      // await wallet?.signTransaction(tx)
+      console.log(tx)
       const hash = await providerMut?.send(tx)
       console.log(hash, ' -> remove position')
       setTxnHash(hash?.signature)
