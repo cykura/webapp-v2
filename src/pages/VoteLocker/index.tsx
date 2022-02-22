@@ -1,4 +1,4 @@
-import { ButtonGray, ButtonPrimary } from 'components/Button'
+import { ButtonGray, ButtonPrimary, ButtonSecondary } from 'components/Button'
 import Card, { LightCard, OutlineCard } from 'components/Card'
 import Column, { AutoColumn, ColumnCenter } from 'components/Column'
 import { FlyoutAlignment, PopupMenu } from 'components/Menu'
@@ -45,12 +45,20 @@ const ResponsiveButtonPrimary = styled(ButtonPrimary)`
   border-radius: 8px;
   margin: auto;
   margin-top: 1rem;
-  padding: 12px;
+  padding: 6px;
   width: calc(50% - 1rem);
   color: ${({ theme }) => theme.text5};
   ${({ theme }) => theme.mediaWidth.upToSmall`
     flex: 1 1 auto;
   `};
+`
+
+const ResponsiveButtonPrimaryOutlined = styled(ButtonSecondary)`
+  border-radius: 8px;
+  margin: auto;
+  margin-top: 1rem;
+  padding: 6px;
+  width: calc(100% - 1rem);
 `
 
 const MainContentWrapper = styled.main<{ flex?: string }>`
@@ -164,7 +172,7 @@ function LockTokensModal({ onDismiss, extend }: any) {
   const [depositAmount, setDepositAmount] = useState(0)
   const [percent, onPercentSelect] = useState(7)
   const [percentForSlider, onPercentSelectForSlider] = useDebouncedChangeHandler(percent, onPercentSelect)
-  const { lockTokens, withdrawTokens, balance, setReloadState, escrowData } = useVeLocker()
+  const { lockTokens, balance, setReloadState, escrowData } = useVeLocker()
 
   const formattedDepositAmount = depositAmount
     ? depositAmount?.toLocaleString('fullwide', {
@@ -178,11 +186,6 @@ function LockTokensModal({ onDismiss, extend }: any) {
     setReloadState((p: boolean) => !p)
     onDismiss()
     window.alert(hash.signature)
-  }
-
-  const handleWithdrawlTokens = async () => {
-    const hash = await withdrawTokens()
-    window.alert(hash)
   }
 
   return (
@@ -300,7 +303,7 @@ function VoteLocker() {
   const history = useHistory()
   const [isLockOpen, setIsLockOpen] = useState(false)
   const [isExtendOpen, setIsExtendOpen] = useState(false)
-  const { balance, escrowData, votingPower } = useVeLocker()
+  const { balance, escrowData, votingPower, withdrawTokens } = useVeLocker()
   const isNewUser = !escrowData?.escrowAmount
 
   const onDismiss = useCallback(() => {
@@ -310,6 +313,11 @@ function VoteLocker() {
 
   const handleStakingRedirect = () => {
     history.push('/staking')
+  }
+
+  const handleWithdrawlTokens = async () => {
+    const hash = await withdrawTokens()
+    window.alert(hash)
   }
 
   return (
@@ -369,6 +377,9 @@ function VoteLocker() {
                   Extend
                 </ResponsiveButtonPrimary>
               </AutoRow>
+              <ResponsiveButtonPrimaryOutlined onClick={handleWithdrawlTokens}>
+                Withdraw
+              </ResponsiveButtonPrimaryOutlined>
             </MainContentWrapper>
             <MainContentWrapper flex="5">
               <TYPE.mediumHeader letterSpacing={1.5} color="text2" style={{ padding: '0.6rem 1rem' }}>
@@ -414,7 +425,8 @@ function VoteLocker() {
                   <TYPE.small fontSize={14} color="text2">
                     Unlock Time
                   </TYPE.small>
-                  <TYPE.label>{new Date(+escrowData?.escrowEndsAt * 1000).toString()}</TYPE.label>
+                  <TYPE.label>{new Date(+escrowData?.escrowEndsAt * 1000).toDateString()}</TYPE.label>
+                  <TYPE.label>{new Date(+escrowData?.escrowEndsAt * 1000).toTimeString()}</TYPE.label>
                 </AutoColumn>
               )}
             </MainContentWrapper>

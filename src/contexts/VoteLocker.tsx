@@ -46,7 +46,7 @@ export function VeLockerProvider(props: IProps) {
   })
   const tribecaSdk = TribecaSDK.load({ provider: solanaProvider })
   const [reloadState, setReloadState] = useState(false)
-  const [balance, setBalance] = useState<number>()
+  const [balance, setBalance] = useState<string>('-')
   const [governorKey, setGovernorKey] = useState<any>()
   const [lockerKey, setLockerKey] = useState<any>()
   const [escrowKey, setEscrowKey] = useState<any>()
@@ -58,8 +58,8 @@ export function VeLockerProvider(props: IProps) {
   useEffect(() => {
     if (!wallet?.publicKey) return
     ;(async () => {
-      const [governorKey] = await findGovernorAddress(new PublicKey('Er3mzZioWGtUvLYvgW3RvBCzeJeFFg81iXY4CtLFPsyc'))
-      const [lockerKey] = await findLockerAddress(new PublicKey('Er3mzZioWGtUvLYvgW3RvBCzeJeFFg81iXY4CtLFPsyc'))
+      const [governorKey] = await findGovernorAddress(new PublicKey('Hpy4DSJVR87xXYsuEb3excGJzzmsuXHjaAwtVPMSz7sa'))
+      const [lockerKey] = await findLockerAddress(new PublicKey('Hpy4DSJVR87xXYsuEb3excGJzzmsuXHjaAwtVPMSz7sa'))
       const [escrowKey] = await findEscrowAddress(lockerKey, wallet?.publicKey)
       setGovernorKey(governorKey)
       setLockerKey(lockerKey)
@@ -78,8 +78,8 @@ export function VeLockerProvider(props: IProps) {
         const cysInfo = tokensInfo?.value.filter(
           (v) => v.account.data.parsed.info.mint.toString() === 'cxWg5RTK5AiSbBZh7NRg5btsbSrc8ETLXGf7tk3MUez'
         )
-        const balanceInfo = cysInfo?.[0].account.data.parsed.info.tokenAmount.uiAmountString
-        setBalance(balanceInfo)
+        const balanceInfo = cysInfo?.[0]?.account.data.parsed.info.tokenAmount.uiAmountString
+        setBalance(balanceInfo ?? '-')
 
         const escrowWrapper = new VoteEscrow(tribecaSdk, lockerKey, governorKey, escrowKey, wallet.publicKey)
         const lockerWrapper = await LockerWrapper.load(tribecaSdk, lockerKey, governorKey)
@@ -88,12 +88,12 @@ export function VeLockerProvider(props: IProps) {
         setVotingPower(+vepow / 1000_000)
 
         const escData = await lockerWrapper.fetchEscrow(escrowKey)
-        console.log('Amount after lockup: ', escData.amount.toString())
+        // console.log('Amount after lockup: ', escData.amount.toString())
         setEscrowAmount(+escData.amount.toString() / 1000_000)
-        console.log('Escrow start: ', escData.escrowStartedAt.toString())
-        console.log('Escrow End: ', escData.escrowEndsAt.toString())
+        // console.log('Escrow start: ', escData.escrowStartedAt.toString())
+        // console.log('Escrow End: ', escData.escrowEndsAt.toString())
         setEscrowEndsAt(escData.escrowEndsAt.toString())
-        console.log('lockup time: ', escData.escrowEndsAt.sub(escData.escrowStartedAt).toString())
+        // console.log('lockup time: ', escData.escrowEndsAt.sub(escData.escrowStartedAt).toString())
         setEscrowLockTime(escData.escrowEndsAt.sub(escData.escrowStartedAt).toString())
       })()
     } catch (err) {
