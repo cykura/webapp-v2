@@ -23,9 +23,18 @@ export enum PoolState {
   INVALID,
 }
 
+export type CyclosPool = {
+  token0: PublicKey | undefined
+  token1: PublicKey | undefined
+  fee: FeeAmount | undefined
+  sqrtPriceX32: JSBI
+  liquidity: JSBI
+  tick: number
+}
+
 export function usePools(
   poolKeys: [Currency | undefined, Currency | undefined, FeeAmount | undefined][]
-): [PoolState, Pool | null, PublicKey | undefined][] {
+): [PoolState, Pool | null][] {
   const { chainId } = useActiveWeb3ReactSol()
   const { connection, wallet } = useSolana()
 
@@ -75,6 +84,7 @@ export function usePools(
           }
         })
       )
+      // console.log(poolList.map((r) => r?.toString()))
       setPoolAddresses(poolList)
       setAllFetchedPoolStates(poolStates)
     })()
@@ -114,26 +124,39 @@ export function usePools(
 
     return r.map((key, index) => {
       const [token0, token1, fee] = transformed[index] ?? []
-      if (!key || !token0 || !token1 || !fee) return [PoolState.INVALID, null, undefined]
+      if (!key || !token0 || !token1 || !fee) return [PoolState.INVALID, null]
 
       // if (!allFetchedPoolStates) return [PoolState.LOADING, null, undefined]
 
       const poolState = allFetchedPoolStates.shift()
       // console.log(poolState, ' poolState taken')
-      if (!poolState) return [PoolState.INVALID, null, undefined]
+      if (!poolState) return [PoolState.INVALID, null]
 
-      const { token0: token0Add, token1: token1Add, fee: poolFee, sqrtPriceX32, liquidity, tick } = poolState.account
+      const {
+        token0: token0Add,
+        token1: token1Add,
+        fee: poolFee,
+        sqrtPriceX32,
+        liquidity,
+        tick,
+      } = poolState.account as CyclosPool
       // const { result: liquidity, loading: liquidityLoading, valid: liquidityValid } = liquidities[index]
 
       // if (!slot0Valid || !liquidityValid) return [PoolState.INVALID, null]
       // if (slot0Loading || liquidityLoading) return [PoolState.LOADING, null]
 
-      if (!sqrtPriceX32 || !liquidity || !tick) return [PoolState.NOT_EXISTS, null, undefined]
+      if (!sqrtPriceX32 || !liquidity || !tick) return [PoolState.NOT_EXISTS, null]
 
       try {
         // If can't find public key from constructed list
         const pubkey = poolAddresses[index]
-        if (!pubkey) return [PoolState.NOT_EXISTS, null, undefined]
+        if (!pubkey || !token0Add || !token1Add) return [PoolState.NOT_EXISTS, null]
+
+        const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
+          token0: new PublicKey(token0Add),
+          token1: new PublicKey(token1Add),
+          fee,
+        })
 
         return [
           PoolState.EXISTS,
@@ -143,44 +166,15 @@ export function usePools(
             fee,
             JSBI.BigInt(sqrtPriceX32.toString()),
             JSBI.BigInt(liquidity.toString()),
-            Number(tick)
+            Number(tick),
+            tickDataProvider
           ),
-          new PublicKey(pubkey.toString()),
         ]
       } catch (error) {
         console.error('Error when constructing the pool', error)
-        return [PoolState.NOT_EXISTS, null, undefined]
+        return [PoolState.NOT_EXISTS, null]
       }
     })
-
-    //   const SOL_poolStatesData: any[] = []
-    //   poolAddresses.forEach(async (poolAddr) => {
-    //     if (poolAddr) {
-    //       try {
-    //         const slot0 = await cyclosCore.account.poolState.fetch(poolAddr)
-    //         SOL_poolStatesData.push(slot0)
-    //       } catch (e) {
-    //         SOL_poolStatesData.push(null)
-    //         console.log('Does not Exist ', e)
-    //       }
-    //     }
-    //   })
-    //   const slot0 = SOL_poolStatesData[index]
-
-    //   // if (!slot0Valid || !liquidityValid) return [PoolState.INVALID, null]
-    //   // if (slot0Loading || liquidityLoading) return [PoolState.LOADING, null]
-
-    //   if (!slot0) return [PoolState.NOT_EXISTS, null]
-
-    //   if (!slot0.sqrtPriceX96 || slot0.sqrtPriceX96.eq(0)) return [PoolState.NOT_EXISTS, null]
-
-    //   try {
-    //     return [PoolState.EXISTS, new Pool(token0, token1, fee, slot0.sqrtPriceX96, slot0.liquidity, slot0.tick)]
-    //   } catch (error) {
-    //     console.error('Error when constructing the pool', error)
-    //     return [PoolState.NOT_EXISTS, null]
-    //   }
-    // })
   }, [poolKeys, transformed, r])
 }
 

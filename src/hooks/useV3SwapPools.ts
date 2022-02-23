@@ -1,9 +1,5 @@
-import { useSolana } from '@saberhq/use-solana'
-import { PublicKey } from '@solana/web3.js'
 import { Currency, Token } from '@uniswap/sdk-core'
-import { FeeAmount, Pool, u32ToSeed } from '@uniswap/v3-sdk'
-import { PROGRAM_ID } from 'constants/addresses'
-import { POOL_SEED } from 'constants/tokens'
+import { FeeAmount, Pool } from '@uniswap/v3-sdk'
 import { useEffect, useMemo, useState } from 'react'
 import { useAllCurrencyCombinations } from './useAllCurrencyCombinations'
 import { PoolState, usePools } from './usePools'
@@ -19,11 +15,7 @@ export function useV3SwapPools(
 ): {
   pools: Pool[]
   loading: boolean
-  poolIds: PublicKey[]
 } {
-  const { connection } = useSolana()
-  const [poolAddr, setAddr] = useState<PublicKey[]>([])
-
   const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
   // console.log(allCurrencyCombinationsWithAllFees.map((tk) => `${tk[0].symbol} ${tk[1].symbol}`))
 
@@ -46,21 +38,14 @@ export function useV3SwapPools(
   // console.log(pools)
 
   return useMemo(() => {
-    const r = {
+    return {
       pools: pools
-        .filter((tuple): tuple is [PoolState.EXISTS, Pool, PublicKey] => {
+        .filter((tuple): tuple is [PoolState.EXISTS, Pool] => {
           return tuple[0] === PoolState.EXISTS && tuple[1] !== null
         })
         .map(([, pool]) => pool),
       loading: pools.some(([state]) => state === PoolState.LOADING),
-      poolIds: pools
-        .filter((tuple): tuple is [PoolState.EXISTS, Pool, PublicKey] => {
-          return tuple[0] === PoolState.EXISTS && tuple[1] !== null
-        })
-        .map(([, , pb]) => pb),
     }
-    // console.log(r.pools)
-    return r
   }, [pools])
 
   // useEffect(() => {

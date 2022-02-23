@@ -12,7 +12,7 @@ import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { PROGRAM_ID_STR } from 'constants/addresses'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import * as anchor from '@project-serum/anchor'
-import { Pool } from '@uniswap/v3-sdk'
+import { Pool, Route, Trade } from '@uniswap/v3-sdk'
 import usePrevious from './usePrevious'
 import { SOL_LOCAL, WSOL_LOCAL } from 'constants/tokens'
 import { NATIVE_MINT } from '@solana/spl-token'
@@ -40,32 +40,25 @@ export interface CyclosTrade {
   trade: CysTrade
 }
 
-/**
- * Returns the best v3 trade for a desired exact input swap
- * @param amountIn the amount to swap in
- * @param currencyOut the desired output currency
- */
+// /**
+//  * Returns the best v3 trade for a desired exact input swap
+//  * @param amountIn the amount to swap in
+//  * @param currencyOut the desired output currency
+//  */
 export function useBestV3TradeExactIn(
   amountIn?: CurrencyAmount<Currency>,
   currencyOut?: Currency
   // ): { state: V3TradeState; trade: Trade<Currency, Currency, TradeType.EXACT_INPUT> | null } {
-): CyclosTrade {
-  const { routes, loading: routesLoading, poolIds } = useAllV3Routes(amountIn?.currency, currencyOut)
-  // console.log(routesLoading)
-  // const prevState = usePrevious(routes)
-  // console.log(prevState, ' is the previous State')
-  // console.log(routes.map((r) => r.midPrice.toFixed(2)))
-  const { connection, wallet } = useSolana()
-  const provider = new anchor.Provider(connection, wallet as Wallet, {
-    skipPreflight: true,
-  })
-  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+): {
+  state: V3TradeState
+  trade: Trade<Currency, Currency, TradeType.EXACT_INPUT> | null
+  accounts: PublicKey[] | undefined
+} {
+  const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
 
-  const allTokens = useAllTokens()
+  // console.log(routesLoading, routes, poolIds)
 
-  const [poolStates, setPoolStates] = useState<any>()
-  const [uniPoolStates, setUniPoolStates] = useState<any>()
-  const [amounts, setAmounts] = useState<any>()
+  const [amounts, setAmounts] = useState<any>([])
 
   // console.log(routes)
   // console.log(
@@ -74,186 +67,149 @@ export function useBestV3TradeExactIn(
   // console.log(routes.map((r, i) => `${i + 1} ${r.tokenPath.map((p) => `${p.name}->`)}`))
   // console.log(poolIds.flat().map((r, i) => r.toString()))
 
-  // Changing this to useMemo() works though. WTF
-  useMemo(() => {
+  useEffect(() => {
     async function fetchPoolState() {
+      if (!amountIn) return
       // console.log(routes, poolIds)
-      // const r = routes.map((route) => {
-      //   return route.pools.map((pool) => `${pool.token0.symbol} ${pool.token1.symbol}`)
-      // })
-      const flatPoolIds = poolIds.flat()
-      // console.log(flatPoolIds.map((r) => r.toString()))
 
-      const poolState = await cyclosCore.account.poolState.fetchMultiple(flatPoolIds)
+      const result: any = Promise.all(
+        routes.map((route, i) => {
+          // console.log(i + 1, ' ROUTE')
+          const { input, output, pools, tokenPath } = route as any
+          const pairTokenPath = tokenPath
+            .slice()
+            .map((_: any, i: any, a: any) => a.slice(0 + i, i + 2))
+            .filter((ar: any) => ar.length == 2)
+            .map((a: any) => `${a[0].symbol} ${a[1].symbol}`)
+          // console.log(`Pairs will be ${pairTokenPath}`)
 
-      const state = {}
-      const uniState = {}
-      for (const pool of poolState) {
-        if (!pool) return
-        const { token0, token1, fee, sqrtPriceX32, liquidity, tick } = pool as any
+          // Wrt to the pools, gives where there tokens in the tokenPath is sorted or not.
+          const order = pools.map((pool: any, index: any) => {
+            // return pairTokenPath[index].split(' ')[0]
+            if (
+              pool.token0.symbol == pairTokenPath[index].split(' ')[0] &&
+              pool.token1.symbol === pairTokenPath[index].split(' ')[1]
+            ) {
+              return true
+            }
+            return false
+          })
+          // console.log('Order wrt Pools', order)
+          const res = Promise.all(
+            order.map(async (o: any, i: any) => {
+              const pool = pools[i] as any
+              if (o) {
+                // sorted order of pool present
+                // console.log(pool.token0.symbol, pool.token1.symbol)
+                return await pool.getOutputAmount(amountIn)
+              } else {
+                // console.log(pool.token0.symbol, pool.token1.symbol)
+                try {
+                  // Need to check what amounts are actually passed here. Might be some precision problem
+                  // const amtIn = CurrencyAmount.fromRawAmount(pool.token1, parseInt(amountIn.toFixed()).toString())
+                  // return await pool.getInputAmount(amtIn)
 
-        const t0 = allTokens[token0]
-        const t1 = allTokens[token1]
-        // Find a better way to index poolState later
-        const index = token0.toString().slice(10) + token1.toString().slice(10) + fee.toString()
+                  // This works for single pair
+                  return await pool.getInputAmount(amountIn)
+                } catch (e) {
+                  console.log(pool, o)
+                  console.log('This fails?', e)
+                }
+              }
+            })
+          )
+          // console.log(result)
+          return res
+        })
+      )
 
-        // construct Pools()
-        const p = new Pool(
-          t0,
-          t1,
-          fee,
-          JSBI.BigInt(sqrtPriceX32.toString()),
-          JSBI.BigInt(liquidity.toString()),
-          Number(tick)
-        )
-
-        // const inputAmount = p.getInputAmount()
-
-        state[index] = pool
-        uniState[index] = p
-      }
-
-      setPoolStates(state)
-      setUniPoolStates(uniState)
-      // console.log(poolState.map((p: any) => `${p.token0.toString()} ${p.token1.toString()} ${p.fee}`))
+      const d = await result
+      // console.log(d)
+      setAmounts(d)
     }
-    fetchPoolState()
-  }, [routes, poolIds, routesLoading])
+    // console.log('fetchPoolState called')
+    fetchPoolState().then()
+  }, [routes, routesLoading])
 
-  // console.log(poolStates)
-  // console.log(uniPoolStates)
-
-  // This checks to see if the routes have been updated with newer values
-  // by comparing each array value to the previous state.
-  // const dontRender = useMemo(() => {
-  //   const routesSorted = routes.sort()
-  //   const prevStateSorted = prevState?.sort()
-  //   if (!prevStateSorted) return false
-  //   const changed = routesSorted.map((ele, i) => ele == prevStateSorted[i])
-  //   return changed.every((ele) => ele == true)
-  // }, [prevState, routes])
-  // console.log(dontRender)
-
-  // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
-  const [amountOut, setAmountOut] = useState<CurrencyAmount<Currency> | null>(null)
-  const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
-
-  routes.map((route, i) => {
-    console.log(i + 1, ' ROUTE')
-    const { input, output, pools, tokenPath } = route as any
-    console.log(`Swapping from ${input.symbol} to ${output.symbol}`)
-    console.log(`Pools used are`)
-    pools.forEach((pool: any) => {
-      const { token0, token1, fee, sqrtRatioX32, tickCurrent, token0Price, token1Price } = pool as any
-      console.log(`${token0.symbol} ${token1.symbol} ${fee}`)
-
-      // const index = token0.address.toString().slice(10) + token1.address.toString().slice(10) + fee.toString()
-    })
-    console.log(`token Path used is ${tokenPath.map((t: any) => t.symbol)}`)
-  })
-
-  return {
-    state: V3TradeState.INVALID,
-    trade: null,
+  if (amounts) {
+    console.log(
+      'IN',
+      amounts.flat().map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol}`)
+    )
   }
 
-  // useEffect(() => {
-  //   if (!amountIn || !currencyOut || !routes || amountIn.currency.wrapped.address == currencyOut.wrapped.address) {
-  //     return
-  //   }
-  //   ;(async () => {
-  //     let bestAmount: CurrencyAmount<typeof currencyOut> = CurrencyAmount.fromRawAmount(currencyOut, JSBI.BigInt(0))
+  return useMemo(() => {
+    if (!amountIn || !currencyOut) {
+      return {
+        state: V3TradeState.INVALID,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  //     try {
-  //       routes.forEach(async (route) => {
-  //         const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
+    if (routesLoading) {
+      return {
+        state: V3TradeState.LOADING,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  //         const t0 = token0.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token0
-  //         const t1 = token1.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token1
+    const { bestRoute, amountOut } = amounts.flat().reduce(
+      (
+        currentBest: {
+          bestRoute: Route<Currency, Currency> | null
+          amountOut: number | null
+        },
+        amount: any,
+        i: any
+      ) => {
+        if (!amount) return currentBest
 
-  //         const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-  //           token0: t0,
-  //           token1: t1,
-  //           fee: fee,
-  //         })
+        if (currentBest.amountOut === null) {
+          return {
+            bestRoute: routes[i],
+            amountOut: amount[0].toFixed(2),
+          }
+        } else if (currentBest.amountOut < amount[0].toFixed(2)) {
+          return {
+            bestRoute: routes[i],
+            amountOut: amount[0].toFixed(2),
+          }
+        }
 
-  //         const pool = new Pool(
-  //           amountIn.currency.wrapped,
-  //           currencyOut.wrapped,
-  //           fee,
-  //           JSBI.BigInt(sqrtPriceX32),
-  //           JSBI.BigInt(liquidity),
-  //           tick,
-  //           tickDataProvider
-  //         )
+        return currentBest
+      },
+      {
+        bestRoute: null,
+        amountOut: null,
+      }
+    )
 
-  //         const [expectedAmountOut] = await pool.getOutputAmount(
-  //           CurrencyAmount.fromFractionalAmount(amountIn?.currency?.wrapped, amountIn.numerator, amountIn.denominator)
-  //         )
-  //         // console.log(expectedAmountOut.toSignificant(), ' is coming from the calculation')
+    if (!bestRoute || !amountOut) {
+      return {
+        state: V3TradeState.NO_ROUTE_FOUND,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  //         // console.log(expectedAmountOut.toSignificant(), fee)
-  //         if (bestAmount.equalTo(bestAmount)) {
-  //           // console.log('initial loop')
-  //           bestAmount = expectedAmountOut
-  //           setBestRoute(route)
-  //         }
-  //         // If we get a better quote of other pool
-  //         if (expectedAmountOut.lessThan(bestAmount)) {
-  //           bestAmount = expectedAmountOut
-  //           setAmountOut(expectedAmountOut)
-  //           setBestRoute(route)
-  //         } else {
-  //           // Already have the best quote
-  //           setAmountOut(bestAmount)
-  //         }
-  //       })
-  //     } catch (err) {
-  //       console.error('Error', err)
-  //     }
-  //   })()
-  // }, [dontRender, amountIn?.toSignificant(), currencyOut])
+    // const isSyncing = quotesResults.some(({ syncing }) => syncing)
 
-  // return useMemo(() => {
-  //   // console.log(
-  //   //   `TradeIn ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
-  //   // )
-  //   // console.log(
-  //   //   amountIn?.toSignificant(),
-  //   //   currencyOut?.name,
-  //   //   ...routes.map((r) => r.toString()),
-  //   //   amountOut?.toSignificant()
-  //   // )
-  //   // if (!amountIn || !currencyOut || !routes[0]) {
-  //   if (!amountIn || !currencyOut || !routes[0]) {
-  //     // // Throw Illiquid error message for negative trades too
-  //     // if (amountOut?.lessThan(new Fraction(0, 1))) {
-  //     //   console.log('Getting -ve price for this trade!', amountOut.toSignificant())
-  //     // }
-  //     // console.log('INVALID TRADE', ...routes.map((r) => r.toString()))
-  //     return {
-  //       state: V3TradeState.INVALID,
-  //       trade: null,
-  //     }
-  //   }
-
-  //   if (routesLoading || !amountOut) {
-  //     // console.log('LOADING TRADE')
-  //     return {
-  //       state: V3TradeState.LOADING,
-  //       trade: null,
-  //     }
-  //   }
-  //   // console.log('FOUND A VALID TRADE?')
-  //   return {
-  //     state: V3TradeState.VALID,
-  //     trade: {
-  //       route: bestRoute,
-  //       inputAmount: amountIn,
-  //       outputAmount: amountOut,
-  //     },
-  //   }
-  // }, [amountIn, currencyOut, amountOut, dontRender, routesLoading])
+    console.log(bestRoute, amountOut, 'IN')
+    const finalAmount = JSBI.BigInt((amountOut * 10 ** currencyOut.decimals).toString())
+    return {
+      // state: isSyncing ? V3TradeState.SYNCING : V3TradeState.VALID,
+      state: V3TradeState.VALID,
+      trade: Trade.createUncheckedTrade({
+        route: bestRoute,
+        tradeType: TradeType.EXACT_INPUT,
+        inputAmount: amountIn,
+        outputAmount: CurrencyAmount.fromRawAmount(currencyOut, finalAmount),
+      }),
+      accounts: [PublicKey.default], // Figure out how to pass the actual accounts here
+    }
+  }, [amountIn, currencyOut, amounts, routes, routesLoading])
 }
 
 // /**
@@ -261,198 +217,150 @@ export function useBestV3TradeExactIn(
 //  * @param currencyIn the desired input currency
 //  * @param amountOut the amount to swap out
 //  */
+
 export function useBestV3TradeExactOut(
   currencyIn?: Currency,
   amountOut?: CurrencyAmount<Currency>
-  // ): { state: V3TradeState; trade: Trade<Currency, Currency, TradeType.EXACT_OUTPUT> | null } {
-): CyclosTrade {
-  const { routes, loading: routesLoading } = useAllV3Routes(amountOut?.currency, currencyIn)
-  return {
-    state: V3TradeState.INVALID,
-    trade: null,
+): {
+  state: V3TradeState
+  trade: Trade<Currency, Currency, TradeType.EXACT_OUTPUT> | null
+  accounts: PublicKey[] | undefined
+} {
+  const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
+  // console.log(routesLoading, routes)
+  const [amounts, setAmounts] = useState<any>([])
+
+  useMemo(() => {
+    async function fetchPoolState() {
+      if (!amountOut) return
+
+      const result: any = Promise.all(
+        routes.map((route, i) => {
+          // console.log(route)
+          const { input, output, pools, tokenPath } = route as any
+
+          const pairTokenPath = tokenPath
+            .slice()
+            .map((_: any, i: any, a: any) => a.slice(0 + i, i + 2))
+            .filter((ar: any) => ar.length == 2)
+            .map((a: any) => `${a[0].symbol} ${a[1].symbol}`)
+
+          // console.log(`Pairs will be ${pairTokenPath}`)
+          // Wrt to the pools, gives where there tokens in the tokenPath is sorted or not.
+          const order = pools.map((pool: any, index: any) => {
+            if (
+              pool.token0.symbol == pairTokenPath[index].split(' ')[0] &&
+              pool.token1.symbol === pairTokenPath[index].split(' ')[1]
+            ) {
+              return true
+            }
+            return false
+          })
+          // console.log(order)
+
+          const res = Promise.all(
+            order.map(async (o: any, i: any) => {
+              const pool = pools[i] as any
+              // console.log(o, ' is the TRUTH')
+              if (o) {
+                // sorted order of pool present
+                // const amtOut = CurrencyAmount.fromRawAmount(pool.token0, +amountOut.toFixed(2) * -1)
+                // return await pool.getOutputAmount(amtOut)
+                return await pool.getOutputAmount(amountOut)
+              } else {
+                // console.log(pool.token0.symbol, pool.token1.symbol)
+                try {
+                  // This works for single pair
+                  // const amtOut = CurrencyAmount.fromRawAmount(pool.token0, +amountOut.toFixed(2) * -1)
+                  // return await pool.getOutputAmount(amtOut)
+                  return await pool.getOutputAmount(amountOut)
+                } catch (e) {
+                  console.log(pool, o)
+                  console.log('This fails?', e)
+                }
+              }
+            })
+          )
+          // console.log(result)
+          return res
+        })
+      )
+      const d = await result
+      // console.log(d)
+      setAmounts(d)
+    }
+
+    fetchPoolState()
+  }, [routes, routesLoading])
+
+  if (amounts) {
+    console.log(
+      'OUT',
+      amounts.flat().map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol}`)
+    )
   }
-  // const prevState = usePrevious(routes)
-  // // console.log(prevState, ' is the previous State')
 
-  // // This checks to see if the routes have been updated with newer values
-  // // by comparing each array value to the previous state.
-  // const dontRender = useMemo(() => {
-  //   const routesSorted = routes.sort()
-  //   const prevStateSorted = prevState?.sort()
-  //   if (!prevStateSorted) return false
-  //   const changed = routesSorted.map((ele, i) => ele == prevStateSorted[i])
-  //   return changed.every((ele) => ele == true)
-  // }, [prevState, routes, currencyIn?.wrapped.address, amountOut?.toSignificant()])
-  // // console.log(dontRender)
+  return useMemo(() => {
+    if (!amountOut || !currencyIn) {
+      return {
+        state: V3TradeState.INVALID,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  // const { connection, wallet } = useSolana()
-  // const provider = new anchor.Provider(connection, wallet as Wallet, {
-  //   skipPreflight: true,
-  // })
-  // const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+    if (routesLoading) {
+      return {
+        state: V3TradeState.LOADING,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  // // const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactInput', quoteExactInInputs)
-  // const [amountIn, setAmountIn] = useState<CurrencyAmount<Currency> | null>(null)
-  // const [bestRoute, setBestRoute] = useState<PublicKey | null>(null)
+    const { bestRoute, amountIn } = amounts.flat().reduce(
+      (currentBest: { bestRoute: Route<Currency, Currency> | null; amountIn: number | null }, amount: any, i: any) => {
+        if (!amount) return currentBest
 
-  // useEffect(() => {
-  //   if (!amountOut || !currencyIn || !routes || currencyIn.wrapped.address == amountOut?.currency.wrapped.address) {
-  //     return
-  //   }
-  //   ;(async () => {
-  //     let bestAmount: CurrencyAmount<typeof currencyIn> = CurrencyAmount.fromRawAmount(currencyIn, JSBI.BigInt(0))
+        if (currentBest.amountIn === null) {
+          return {
+            bestRoute: routes[i],
+            amountIn: amount[0].toFixed(2),
+          }
+        } else if (currentBest.amountIn < amount[0].toFixed(2)) {
+          return {
+            bestRoute: routes[i],
+            amountIn: amount[0].toFixed(2),
+          }
+        }
 
-  //     try {
-  //       routes.forEach(async (route) => {
-  //         const { tick, sqrtPriceX32, liquidity, token0, token1, fee } = await cyclosCore.account.poolState.fetch(route)
+        return currentBest
+      },
+      {
+        bestRoute: null,
+        amountIn: null,
+      }
+    )
 
-  //         const t0 = token0.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token0
-  //         const t1 = token1.toString() == NATIVE_MINT.toString() ? NATIVE_MINT : token1
+    if (!bestRoute || !amountIn) {
+      return {
+        state: V3TradeState.NO_ROUTE_FOUND,
+        trade: null,
+        accounts: undefined,
+      }
+    }
 
-  //         const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-  //           token0: t0,
-  //           token1: t1,
-  //           fee: fee,
-  //         })
+    const finalAmount = JSBI.BigInt((amountIn * 10 ** currencyIn.decimals).toString())
 
-  //         const pool = new Pool(
-  //           amountOut.currency.wrapped,
-  //           currencyIn.wrapped,
-  //           fee,
-  //           JSBI.BigInt(sqrtPriceX32),
-  //           JSBI.BigInt(liquidity),
-  //           tick,
-  //           tickDataProvider
-  //         )
-
-  //         const [expectedAmountIn] = await pool.getInputAmount(
-  //           CurrencyAmount.fromFractionalAmount(
-  //             amountOut?.currency?.wrapped,
-  //             amountOut.numerator,
-  //             amountOut.denominator
-  //           )
-  //         )
-
-  //         // console.log(expectedAmountIn.toSignificant(), fee)
-  //         if (bestAmount.equalTo(bestAmount)) {
-  //           // console.log('initial loop')
-  //           bestAmount = expectedAmountIn
-  //           setBestRoute(route)
-  //         }
-  //         // If we get a better quote of other pool
-  //         if (expectedAmountIn.lessThan(bestAmount)) {
-  //           bestAmount = expectedAmountIn
-  //           setAmountIn(expectedAmountIn)
-  //           setBestRoute(route)
-  //         } else {
-  //           // Already have the best quote
-  //           setAmountIn(bestAmount)
-  //         }
-  //       })
-  //     } catch (err) {
-  //       console.error('Error', err)
-  //     }
-  //   })()
-  // }, [dontRender, amountOut?.toSignificant(), currencyIn])
-
-  // return useMemo(() => {
-  //   // console.log(
-  //   //   `TradeOut ${bestRoute?.toString()} inputAmount ${amountIn?.toSignificant()} outputAmount ${amountOut?.toSignificant()}`
-  //   // )
-  //   if (!amountOut || !currencyIn || !routes[0]) {
-  //     // Throw Illiquid error message for negative trades too
-  //     // if (amountIn?.lessThan(new Fraction(0, 1))) {
-  //     //   console.log('Getting -ve price for this trade')
-  //     // }
-  //     return {
-  //       state: V3TradeState.INVALID,
-  //       trade: null,
-  //     }
-  //   }
-
-  //   if (routesLoading || !amountIn) {
-  //     return {
-  //       state: V3TradeState.LOADING,
-  //       trade: null,
-  //     }
-  //   }
-  //   return {
-  //     state: V3TradeState.VALID,
-  //     trade: {
-  //       route: bestRoute,
-  //       inputAmount: amountIn,
-  //       outputAmount: amountOut,
-  //     },
-  //   }
-  // }, [amountOut, currencyIn, amountIn, dontRender, routesLoading])
-  //   const quoter = useV3Quoter()
-  //   const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
-
-  //   const quoteExactOutInputs = useMemo(() => {
-  //     return routes.map((route) => [
-  //       encodeRouteToPath(route, true),
-  //       amountOut ? `0x${amountOut.quotient.toString(16)}` : undefined,
-  //     ])
-  //   }, [amountOut, routes])
-
-  //   const quotesResults = useSingleContractMultipleData(quoter, 'quoteExactOutput', quoteExactOutInputs)
-
-  //   return useMemo(() => {
-  //     if (!amountOut || !currencyIn || quotesResults.some(({ valid }) => !valid)) {
-  //       return {
-  //         state: V3TradeState.INVALID,
-  //         trade: null,
-  //       }
-  //     }
-
-  //     if (routesLoading || quotesResults.some(({ loading }) => loading)) {
-  //       return {
-  //         state: V3TradeState.LOADING,
-  //         trade: null,
-  //       }
-  //     }
-
-  //     const { bestRoute, amountIn } = quotesResults.reduce(
-  //       (currentBest: { bestRoute: Route<Currency, Currency> | null; amountIn: BigNumber | null }, { result }, i) => {
-  //         if (!result) return currentBest
-
-  //         if (currentBest.amountIn === null) {
-  //           return {
-  //             bestRoute: routes[i],
-  //             amountIn: result.amountIn,
-  //           }
-  //         } else if (currentBest.amountIn.gt(result.amountIn)) {
-  //           return {
-  //             bestRoute: routes[i],
-  //             amountIn: result.amountIn,
-  //           }
-  //         }
-
-  //         return currentBest
-  //       },
-  //       {
-  //         bestRoute: null,
-  //         amountIn: null,
-  //       }
-  //     )
-
-  //     if (!bestRoute || !amountIn) {
-  //       return {
-  //         state: V3TradeState.NO_ROUTE_FOUND,
-  //         trade: null,
-  //       }
-  //     }
-
-  //     const isSyncing = quotesResults.some(({ syncing }) => syncing)
-
-  //     return {
-  //       state: isSyncing ? V3TradeState.SYNCING : V3TradeState.VALID,
-  //       trade: Trade.createUncheckedTrade({
-  //         route: bestRoute,
-  //         tradeType: TradeType.EXACT_OUTPUT,
-  //         inputAmount: CurrencyAmount.fromRawAmount(currencyIn, amountIn.toString()),
-  //         outputAmount: amountOut,
-  //       }),
-  //     }
-  //   }, [amountOut, currencyIn, quotesResults, routes, routesLoading])
+    console.log(bestRoute, 'OUT')
+    return {
+      state: V3TradeState.VALID,
+      trade: Trade.createUncheckedTrade({
+        route: bestRoute,
+        tradeType: TradeType.EXACT_OUTPUT,
+        inputAmount: CurrencyAmount.fromRawAmount(currencyIn, finalAmount),
+        outputAmount: amountOut,
+      }),
+      accounts: [PublicKey.default], // Figure out how to pass the actual accounts here
+    }
+  }, [amountOut, currencyIn, amounts, routes, routesLoading])
 }
