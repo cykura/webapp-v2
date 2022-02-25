@@ -200,19 +200,19 @@ export function usePools(
       try {
         // If can't find public key from constructed list
         const pubkey = poolAddresses[index]
-        if (!pubkey || !token0Add || !token1Add) return [PoolState.NOT_EXISTS, null]
+        if (!pubkey || !token0Add || !token1Add || !poolFee) return [PoolState.NOT_EXISTS, null]
 
         const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
           token0: new PublicKey(token0Add),
           token1: new PublicKey(token1Add),
-          fee,
+          fee: poolFee,
         })
         return [
           PoolState.EXISTS,
           new Pool(
             token0,
             token1,
-            fee,
+            poolFee,
             JSBI.BigInt(sqrtPriceX32.toString()),
             JSBI.BigInt(liquidity.toString()),
             Number(tick),

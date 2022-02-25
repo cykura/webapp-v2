@@ -96,23 +96,24 @@ export function useBestV3TradeExactIn(
           const res = Promise.all(
             order.map(async (o: any, i: any) => {
               const pool = pools[i] as any
+              if (!amountIn || !currencyOut) return
+              const amtIn = CurrencyAmount.fromRawAmount(amountIn.currency, amountIn.numerator.toString())
               if (o) {
                 // sorted order of pool present
-                // console.log(pool.token0.symbol, pool.token1.symbol)
                 // CYS -> USDC. Input CYS
                 // console.log('IF in')
                 // console.log(amountIn?.currency.symbol, currencyOut?.symbol)
-
-                return await pool.getOutputAmount(amountIn)
+                return await pool.getOutputAmount(amtIn)
               } else {
                 // console.log(pool.token0.symbol, pool.token1.symbol)
                 try {
                   // USDC -> CYS. Input USDC. This doesn't work now. Returns negative amount
-                  if (!amountIn || !currencyOut) return
-                  const { numerator, denominator } = amountIn.multiply('-1')
-                  const amtIn = CurrencyAmount.fromFractionalAmount(currencyOut, numerator, denominator)
+                  // const { numerator, denominator } = amountIn.multiply('1')
+                  // const amtIn = CurrencyAmount.fromFractionalAmount(currencyOut, numerator, denominator)
                   // console.log('ELSE in')
                   // console.log(amountIn?.currency.symbol, currencyOut?.symbol)
+                  // const a = CurrencyAmount.fromRawAmount(amountIn.currency, amtIn.numerator.toString())
+                  // console.log(a.toFixed())
                   return await pool.getOutputAmount(amtIn)
                 } catch (e) {
                   console.log(pool, o)
@@ -177,6 +178,13 @@ export function useBestV3TradeExactIn(
     //     flatAmounts.map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol} ${a[1].fee}}`)
     //   )
     //   console.log(flatAmounts.map((a: any) => a[2].flat().map((i: any) => i)))
+    // }
+
+    // if (amounts) {
+    //   console.log(
+    //     'IN',
+    //     absAmouts.map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol} ${a[1].fee} `)
+    //   )
     // }
 
     const { bestRoute, amountOut, swapAccounts } = absAmouts.reduce(
@@ -291,22 +299,24 @@ export function useBestV3TradeExactOut(
             order.map(async (o: any, i: any) => {
               const pool = pools[i] as any
               // console.log(o, ' is the TRUTH')
+              if (!amountOut || !currencyIn) return
+              const amtOut = CurrencyAmount.fromRawAmount(amountOut.currency, amountOut.numerator.toString())
               if (o) {
                 // sorted order of pool present
                 // CYS -> USDC. Input USDC
                 // console.log('IF out')
                 // console.log(currencyIn?.symbol, amountOut?.currency.symbol)
-                return await pool.getOutputAmount(amountOut)
+                return await pool.getOutputAmount(amtOut)
               } else {
                 // console.log(pool.token0.symbol, pool.token1.symbol)
                 try {
                   // This works for single pair
                   // USDC -> CYS. Input CYS
-                  if (!amountOut || !currencyIn) return
-                  const { numerator, denominator } = amountOut.multiply('-1')
-                  const amtOut = CurrencyAmount.fromFractionalAmount(currencyIn, numerator, denominator)
+                  // const { numerator, denominator } = amountOut.multiply('-1')
+                  // const amtOut = CurrencyAmount.fromFractionalAmount(currencyIn, numerator, denominator)
                   // console.log('ELSE out')
                   // console.log(currencyIn?.symbol, amountOut?.currency.symbol)
+                  // const a = CurrencyAmount.fromRawAmount(amountOut.currency, amtOut.numerator.toString())
                   return await pool.getOutputAmount(amtOut)
                 } catch (e) {
                   console.log(pool, o)
@@ -361,9 +371,8 @@ export function useBestV3TradeExactOut(
     // if (amounts) {
     //   console.log(
     //     'OUT',
-    //     amounts.flat().map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol} ${a[1].fee} `)
+    //     absAmounts.map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol} ${a[1].fee} `)
     //   )
-    //   console.log(amounts.flat().map((a: any) => a[2].map((i: any) => i)))
     // }
 
     const { bestRoute, amountIn, swapAccounts } = absAmounts.reduce(

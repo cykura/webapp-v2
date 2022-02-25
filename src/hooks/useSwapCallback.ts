@@ -206,7 +206,7 @@ export function useSwapCallback(
     // console.log(poolAdd.toString())
     // swapAccounts cannot be empty. If empty something went wrong fethcing them and swap wont work.
     // Throw eerror for this late
-    const { token0: t0, token1: t1, fee: f } = trade.swaps[0].route.pools[0]
+    const { token0: t0, token1: t1, fee: f } = trade.route.pools[0]
 
     const [pool, _] = await anchor.web3.PublicKey.findProgramAddress(
       [POOL_SEED, new PublicKey(t0.address).toBuffer(), new PublicKey(t1.address).toBuffer(), u32ToSeed(f)],
