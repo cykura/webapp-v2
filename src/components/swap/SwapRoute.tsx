@@ -7,15 +7,20 @@ import { ThemeContext } from 'styled-components/macro'
 import { TYPE } from '../../theme'
 import { unwrappedToken } from 'utils/unwrappedToken'
 
-function LabeledArrow({}: { fee: FeeAmount }) {
+function LabeledArrow({ fee }: { fee: FeeAmount }) {
   const theme = useContext(ThemeContext)
 
   // todo: render the fee in the label
-  return <ChevronRight size={14} color={theme.text2} />
+  return (
+    <>
+      <ChevronRight size={14} color={theme.text2} />({fee / 10_000} %)
+    </>
+  )
 }
 
 export default memo(function SwapRoute({ trade }: { trade: V3Trade<Currency, Currency, TradeType> }) {
   const tokenPath = trade.route.tokenPath
+  const fee = trade.route.pools[0].fee
   const theme = useContext(ThemeContext)
   return (
     <Flex flexWrap="wrap" width="100%" justifyContent="flex-start" alignItems="center">
@@ -29,7 +34,7 @@ export default memo(function SwapRoute({ trade }: { trade: V3Trade<Currency, Cur
                 {currency.symbol}
               </TYPE.black>
             </Flex>
-            {isLastItem && <LabeledArrow fee={trade.route.pools[i].fee} />}
+            {isLastItem && <LabeledArrow fee={fee} />}
           </Fragment>
         )
       })}
