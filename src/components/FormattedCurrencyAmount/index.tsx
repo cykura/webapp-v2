@@ -15,7 +15,7 @@ export default function FormattedCurrencyAmount({
       {currencyAmount.equalTo(0)
         ? '0'
         : currencyAmount.greaterThan(CURRENCY_AMOUNT_MIN)
-        ? currencyAmount.toFixed(2)
+        ? currencyAmount.toSignificant(6)
         : `<${CURRENCY_AMOUNT_MIN.toSignificant(1)}`}
     </>
   )

@@ -3522,9 +3522,9 @@
     base64-sol "1.0.1"
     hardhat-watcher "^2.1.1"
 
-"@uniswap/v3-sdk@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#83e86d25034ecc96b5a7b642498652fdf2cb62ee":
+"@uniswap/v3-sdk@git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#3194f58355f18181e115f3bfc2d019f5003086e6":
   version "3.7.1"
-  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#83e86d25034ecc96b5a7b642498652fdf2cb62ee"
+  resolved "git+https://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:x-oauth-basic@github.com/cyclos-io/sdk.git#3194f58355f18181e115f3bfc2d019f5003086e6"
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"

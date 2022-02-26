@@ -46,7 +46,7 @@ export function useV3SwapPools(
         .map(([, pool]) => pool),
       loading: pools.some(([state]) => state === PoolState.LOADING),
     }
-  }, [pools])
+  }, [pools, currencyIn, currencyOut])
 
   // useEffect(() => {
   //   async function fetchPool() {

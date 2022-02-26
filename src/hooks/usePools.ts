@@ -55,14 +55,6 @@ export function usePools(
   const [allFetchedPoolStates, setAllFetchedPoolStates] = useState<any>([])
   const [loading, setLoading] = useState<boolean>(false)
 
-  // const prevPoolAddresses = usePrevious(poolAddresses)
-  // const prevAllFetchedPoolStates = usePrevious(allFetchedPoolStates)
-
-  // if (!poolAddresses || !allFetchedPoolStates) {
-  //   setPoolAddresses(prevPoolAddresses!)
-  //   setAllFetchedPoolStates(prevAllFetchedPoolStates)
-  // }
-
   const transformed: ([Token, Token, FeeAmount] | null)[] = useMemo(() => {
     return poolKeys.map(([currencyA, currencyB, feeAmount]) => {
       if (!chainId || !currencyA || !currencyB || !feeAmount) return null
@@ -101,43 +93,20 @@ export function usePools(
         })
       )
 
-      // const allFetchedPublicKeys = poolStates.map((p: any) => p.publicKey.toString())
-      // const existingPools = poolList.map((p: any) => (allFetchedPublicKeys.includes(p.toString()) ? true : false))
+      const mapPoolStates = {}
+      poolStates.forEach((pState: any) => {
+        mapPoolStates[pState.publicKey.toString()] = pState
+      })
 
-      // console.log(allFetchedPublicKeys.map((p: any) => p.toString()))
-      // console.log(existingPools.map((p, i) => `${p} ${poolList[i]}`))
-      // console.log(existingPools)
-      // console.log(poolList.map((r) => r?.toString()))
+      // console.log(mapPoolStates)
       setPoolAddresses(poolList)
-      // console.log(poolStates.map((p: any) => p.publicKey.toString()))
-      setAllFetchedPoolStates(poolStates)
+      setAllFetchedPoolStates(mapPoolStates)
       setLoading(false)
     }
     fetchPoolState()
   }, [chainId, transformed, poolKeys])
 
-  // Pool State returned
-  // bump: 255
-  // fee: 3000
-  // feeGrowthGlobal0X32: BN {negative: 0, words: Array(3), length: 1, red: null}
-  // feeGrowthGlobal1X32: BN {negative: 0, words: Array(3), length: 1, red: null}
-  // liquidity: BN {negative: 0, words: Array(3), length: 1, red: null}
-  // observationCardinality: 1
-  // observationCardinalityNext: 1
-  // observationIndex: 0
-  // protocolFeesToken0: BN {negative: 0, words: Array(3), length: 1, red: null}
-  // protocolFeesToken1: BN {negative: 0, words: Array(3), length: 1, red: null}
-  // sqrtPriceX32: BN {negative: 0, words: Array(3), length: 2, red: null}
-  // tick: -23028
-  // tickSpacing: 60
-  // token0: PublicKey {_bn: BN}
-  // token1: PublicKey {_bn: BN}
-  // unlocked: true
-
-  // console.log(poolAddresses, allFetchedPoolStates)
-  // console.log('usePool called')
-
-  // console.log('prev STates ', poolAddresses, allFetchedPoolStates)
+  // const allFetchedPoolStatesCopy = allFetchedPoolStates.slice()
 
   return useMemo(() => {
     // if (allFetchedPoolStates.length == 0) {
@@ -145,36 +114,40 @@ export function usePools(
     // }
     // console.log(loading, poolAddresses, allFetchedPoolStates)
 
-    const allFetchedPoolStatesCopy = allFetchedPoolStates.slice()
-
-    if (!loading && allFetchedPoolStatesCopy.length == 0 && poolAddresses.length == 0) {
+    if (!loading && allFetchedPoolStates.length == 0 && poolAddresses.length == 0) {
       // console.log('Something went wrong')
       return transformed.map((i) => [PoolState.INVALID, null])
     }
 
-    if (loading && allFetchedPoolStatesCopy.length == 0) {
+    if (loading && allFetchedPoolStates.length == 0) {
       // console.log('LOADING')
       return transformed.map((i) => [PoolState.LOADING, null])
     }
 
-    const allFetchedPublicKeys = poolAddresses.map((p: any, i: any) => p)
-    // console.log(allFetchedPublicKeys.map((p) => p))
-    const existingPools = poolAddresses.map((p: any) => (allFetchedPublicKeys.includes(p.toString()) ? true : false))
-    // console.log(existingPools.map((p: any) => p))
-
-    // console.log(existingPools, poolAddresses, allFetchedPoolStatesCopy)
+    // const allFetchedPublicKeys = allFetchedPoolStates.map((p: any, i: any) => Object.keys(p))
+    const allFetchedPublicKeys = Object.keys(allFetchedPoolStates)
+    // console.log(allFetchedPublicKeys)
+    const existingPools = poolAddresses.map((p: any) =>
+      allFetchedPublicKeys.flat(1).includes(p.toString()) ? true : false
+    )
+    // console.log(poolAddresses.map((p: any) => p))
 
     return existingPools.map((key: any, index: any) => {
       const [token0, token1, fee] = transformed[index] ?? []
-      // console.log(token0?.symbol, token1?.symbol, fee, p[index], poolAddresses[index])
-      if (!key || !token0 || !token1 || !fee) {
+
+      const poolAdd = poolAddresses[index]
+
+      if (!key || !token0 || !token1 || !fee || !poolAdd) {
         // console.log('invalid becuase cant pubkey in fetched records')
         return [PoolState.NOT_EXISTS, null]
       }
 
-      const poolState = allFetchedPoolStatesCopy.shift()
+      // console.log(token0?.symbol, token1?.symbol, fee, poolAddresses[index])
+      // console.log(allFetchedPoolStates)
+      const poolState = allFetchedPoolStates[poolAdd]
+      // console.log(poolState)
       if (!poolState) {
-        // console.log('invalid becasue no state yet')
+        // console.log('invalid becasue no state not found')
         return [PoolState.NOT_EXISTS, null]
       }
 
@@ -186,14 +159,10 @@ export function usePools(
         liquidity,
         tick,
       } = poolState.account as CyclosPool
-      // console.log(sqrtPriceX32, liquidity, tick, ' poolState taken')
-      // const { result: liquidity, loading: liquidityLoading, valid: liquidityValid } = liquidities[index]
+      // console.log(sqrtPriceX32, liquidity, tick)
 
-      // if (!slot0Valid || !liquidityValid) return [PoolState.INVALID, null]
-      // if (slot0Loading || liquidityLoading) return [PoolState.LOADING, null]
-
-      if (!sqrtPriceX32.toString() || !liquidity.toString() || !tick) {
-        // console.log('comes inside?')
+      if (!sqrtPriceX32.toString() || !liquidity.toString()) {
+        console.log('comes inside?')
         return [PoolState.NOT_EXISTS, null]
       }
 
@@ -201,7 +170,7 @@ export function usePools(
         // If can't find public key from constructed list
         const pubkey = poolAddresses[index]
         if (!pubkey || !token0Add || !token1Add || !poolFee) return [PoolState.NOT_EXISTS, null]
-
+        // console.log('RETURNED', token0.symbol, token1.symbol, poolFee)
         const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
           token0: new PublicKey(token0Add),
           token1: new PublicKey(token1Add),
@@ -224,7 +193,7 @@ export function usePools(
         return [PoolState.NOT_EXISTS, null]
       }
     })
-  }, [loading, transformed])
+  }, [loading, transformed, poolKeys])
   // console.log(r)
   // return r
 }
