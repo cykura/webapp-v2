@@ -7,7 +7,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'owner'
-          isMut: false
+          isMut: true
           isSigner: true
         },
         {
@@ -21,12 +21,7 @@ export type CyclosCore = {
           isSigner: false
         }
       ]
-      args: [
-        {
-          name: 'factoryStateBump'
-          type: 'u8'
-        }
-      ]
+      args: []
     },
     {
       name: 'setOwner'
@@ -54,7 +49,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'owner'
-          isMut: false
+          isMut: true
           isSigner: true
         },
         {
@@ -74,10 +69,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'feeStateBump'
-          type: 'u8'
-        },
         {
           name: 'fee'
           type: 'u32'
@@ -153,14 +144,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'poolStateBump'
-          type: 'u8'
-        },
-        {
-          name: 'observationStateBump'
-          type: 'u8'
-        },
         {
           name: 'sqrtPriceX32'
           type: 'u64'
@@ -295,10 +278,6 @@ export type CyclosCore = {
       ]
       args: [
         {
-          name: 'tickAccountBump'
-          type: 'u8'
-        },
-        {
           name: 'tick'
           type: 'i32'
         }
@@ -346,10 +325,6 @@ export type CyclosCore = {
       ]
       args: [
         {
-          name: 'bump'
-          type: 'u8'
-        },
-        {
           name: 'wordPos'
           type: 'i16'
         }
@@ -394,12 +369,7 @@ export type CyclosCore = {
           isSigner: false
         }
       ]
-      args: [
-        {
-          name: 'bump'
-          type: 'u8'
-        }
-      ]
+      args: []
     },
     {
       name: 'mintCallback'
@@ -555,12 +525,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -621,12 +586,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: false
           isSigner: false
         }
@@ -747,12 +707,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -857,12 +812,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -893,10 +843,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'bump'
-          type: 'u8'
-        },
         {
           name: 'amount0Desired'
           type: 'u64'
@@ -1039,12 +985,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -1136,12 +1077,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -1224,12 +1160,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -1314,12 +1245,7 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'latestObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
+          name: 'lastObservationState'
           isMut: true
           isSigner: false
         },
@@ -1726,6 +1652,82 @@ export type CyclosCore = {
       }
     }
   ]
+  types: [
+    {
+      name: 'ErrorCode'
+      type: {
+        kind: 'enum'
+        variants: [
+          {
+            name: 'LOK'
+          },
+          {
+            name: 'ZeroMintAmount'
+          },
+          {
+            name: 'TLU'
+          },
+          {
+            name: 'TMS'
+          },
+          {
+            name: 'TLM'
+          },
+          {
+            name: 'TUM'
+          },
+          {
+            name: 'M0'
+          },
+          {
+            name: 'M1'
+          },
+          {
+            name: 'OS'
+          },
+          {
+            name: 'AS'
+          },
+          {
+            name: 'SPL'
+          },
+          {
+            name: 'IIA'
+          },
+          {
+            name: 'NP'
+          },
+          {
+            name: 'LO'
+          },
+          {
+            name: 'R'
+          },
+          {
+            name: 'T'
+          },
+          {
+            name: 'LS'
+          },
+          {
+            name: 'LA'
+          },
+          {
+            name: 'TransactionTooOld'
+          },
+          {
+            name: 'PriceSlippageCheck'
+          },
+          {
+            name: 'NotApproved'
+          },
+          {
+            name: 'TooLittleReceived'
+          }
+        ]
+      }
+    }
+  ]
   events: [
     {
       name: 'OwnerChanged'
@@ -2113,118 +2115,6 @@ export type CyclosCore = {
       ]
     }
   ]
-  errors: [
-    {
-      code: 300
-      name: 'LOK'
-      msg: 'LOK'
-    },
-    {
-      code: 301
-      name: 'ZeroMintAmount'
-      msg: 'Minting amount should be greater than 0'
-    },
-    {
-      code: 302
-      name: 'TLU'
-      msg: 'TLU'
-    },
-    {
-      code: 303
-      name: 'TMS'
-      msg: 'TMS'
-    },
-    {
-      code: 304
-      name: 'TLM'
-      msg: 'TLM'
-    },
-    {
-      code: 305
-      name: 'TUM'
-      msg: 'TUM'
-    },
-    {
-      code: 306
-      name: 'M0'
-      msg: 'M0'
-    },
-    {
-      code: 307
-      name: 'M1'
-      msg: 'M1'
-    },
-    {
-      code: 308
-      name: 'OS'
-      msg: 'OS'
-    },
-    {
-      code: 309
-      name: 'AS'
-      msg: 'AS'
-    },
-    {
-      code: 310
-      name: 'SPL'
-      msg: 'SPL'
-    },
-    {
-      code: 311
-      name: 'IIA'
-      msg: 'IIA'
-    },
-    {
-      code: 312
-      name: 'NP'
-      msg: 'NP'
-    },
-    {
-      code: 313
-      name: 'LO'
-      msg: 'LO'
-    },
-    {
-      code: 314
-      name: 'R'
-      msg: 'R'
-    },
-    {
-      code: 315
-      name: 'T'
-      msg: 'T'
-    },
-    {
-      code: 316
-      name: 'LS'
-      msg: 'LS'
-    },
-    {
-      code: 317
-      name: 'LA'
-      msg: 'LA'
-    },
-    {
-      code: 318
-      name: 'TransactionTooOld'
-      msg: 'Transaction too old'
-    },
-    {
-      code: 319
-      name: 'PriceSlippageCheck'
-      msg: 'Price slippage check'
-    },
-    {
-      code: 320
-      name: 'NotApproved'
-      msg: 'Not approved'
-    },
-    {
-      code: 321
-      name: 'TooLittleReceived'
-      msg: 'Too little received'
-    }
-  ]
 }
 
 export const IDL: CyclosCore = {
@@ -2236,7 +2126,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'owner',
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {
@@ -2250,12 +2140,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: 'factoryStateBump',
-          type: 'u8',
-        },
-      ],
+      args: [],
     },
     {
       name: 'setOwner',
@@ -2283,7 +2168,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'owner',
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {
@@ -2303,10 +2188,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'feeStateBump',
-          type: 'u8',
-        },
         {
           name: 'fee',
           type: 'u32',
@@ -2382,14 +2263,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'poolStateBump',
-          type: 'u8',
-        },
-        {
-          name: 'observationStateBump',
-          type: 'u8',
-        },
         {
           name: 'sqrtPriceX32',
           type: 'u64',
@@ -2524,10 +2397,6 @@ export const IDL: CyclosCore = {
       ],
       args: [
         {
-          name: 'tickAccountBump',
-          type: 'u8',
-        },
-        {
           name: 'tick',
           type: 'i32',
         },
@@ -2575,10 +2444,6 @@ export const IDL: CyclosCore = {
       ],
       args: [
         {
-          name: 'bump',
-          type: 'u8',
-        },
-        {
           name: 'wordPos',
           type: 'i16',
         },
@@ -2623,12 +2488,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: 'bump',
-          type: 'u8',
-        },
-      ],
+      args: [],
     },
     {
       name: 'mintCallback',
@@ -2784,12 +2644,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -2850,12 +2705,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: false,
           isSigner: false,
         },
@@ -2976,12 +2826,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3086,12 +2931,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3122,10 +2962,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'bump',
-          type: 'u8',
-        },
         {
           name: 'amount0Desired',
           type: 'u64',
@@ -3268,12 +3104,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3365,12 +3196,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3453,12 +3279,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3543,12 +3364,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'latestObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
+          name: 'lastObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3955,6 +3771,82 @@ export const IDL: CyclosCore = {
       },
     },
   ],
+  types: [
+    {
+      name: 'ErrorCode',
+      type: {
+        kind: 'enum',
+        variants: [
+          {
+            name: 'LOK',
+          },
+          {
+            name: 'ZeroMintAmount',
+          },
+          {
+            name: 'TLU',
+          },
+          {
+            name: 'TMS',
+          },
+          {
+            name: 'TLM',
+          },
+          {
+            name: 'TUM',
+          },
+          {
+            name: 'M0',
+          },
+          {
+            name: 'M1',
+          },
+          {
+            name: 'OS',
+          },
+          {
+            name: 'AS',
+          },
+          {
+            name: 'SPL',
+          },
+          {
+            name: 'IIA',
+          },
+          {
+            name: 'NP',
+          },
+          {
+            name: 'LO',
+          },
+          {
+            name: 'R',
+          },
+          {
+            name: 'T',
+          },
+          {
+            name: 'LS',
+          },
+          {
+            name: 'LA',
+          },
+          {
+            name: 'TransactionTooOld',
+          },
+          {
+            name: 'PriceSlippageCheck',
+          },
+          {
+            name: 'NotApproved',
+          },
+          {
+            name: 'TooLittleReceived',
+          },
+        ],
+      },
+    },
+  ],
   events: [
     {
       name: 'OwnerChanged',
@@ -4340,118 +4232,6 @@ export const IDL: CyclosCore = {
           index: false,
         },
       ],
-    },
-  ],
-  errors: [
-    {
-      code: 300,
-      name: 'LOK',
-      msg: 'LOK',
-    },
-    {
-      code: 301,
-      name: 'ZeroMintAmount',
-      msg: 'Minting amount should be greater than 0',
-    },
-    {
-      code: 302,
-      name: 'TLU',
-      msg: 'TLU',
-    },
-    {
-      code: 303,
-      name: 'TMS',
-      msg: 'TMS',
-    },
-    {
-      code: 304,
-      name: 'TLM',
-      msg: 'TLM',
-    },
-    {
-      code: 305,
-      name: 'TUM',
-      msg: 'TUM',
-    },
-    {
-      code: 306,
-      name: 'M0',
-      msg: 'M0',
-    },
-    {
-      code: 307,
-      name: 'M1',
-      msg: 'M1',
-    },
-    {
-      code: 308,
-      name: 'OS',
-      msg: 'OS',
-    },
-    {
-      code: 309,
-      name: 'AS',
-      msg: 'AS',
-    },
-    {
-      code: 310,
-      name: 'SPL',
-      msg: 'SPL',
-    },
-    {
-      code: 311,
-      name: 'IIA',
-      msg: 'IIA',
-    },
-    {
-      code: 312,
-      name: 'NP',
-      msg: 'NP',
-    },
-    {
-      code: 313,
-      name: 'LO',
-      msg: 'LO',
-    },
-    {
-      code: 314,
-      name: 'R',
-      msg: 'R',
-    },
-    {
-      code: 315,
-      name: 'T',
-      msg: 'T',
-    },
-    {
-      code: 316,
-      name: 'LS',
-      msg: 'LS',
-    },
-    {
-      code: 317,
-      name: 'LA',
-      msg: 'LA',
-    },
-    {
-      code: 318,
-      name: 'TransactionTooOld',
-      msg: 'Transaction too old',
-    },
-    {
-      code: 319,
-      name: 'PriceSlippageCheck',
-      msg: 'Price slippage check',
-    },
-    {
-      code: 320,
-      name: 'NotApproved',
-      msg: 'Not approved',
-    },
-    {
-      code: 321,
-      name: 'TooLittleReceived',
-      msg: 'Too little received',
     },
   ],
 }

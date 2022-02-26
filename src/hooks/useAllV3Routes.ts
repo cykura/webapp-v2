@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { useUserSingleHopOnly } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
 import { useV3SwapPools } from './useV3SwapPools'
-import { PublicKey } from '@solana/web3.js'
 
 function computeAllRoutes(
   currencyIn: Currency,
@@ -22,7 +21,6 @@ function computeAllRoutes(
 
   for (const pool of pools) {
     if (currentPath.indexOf(pool) !== -1 || !pool.involvesToken(tokenIn)) continue
-
     const outputToken = pool.token0.equals(tokenIn) ? pool.token1 : pool.token0
     if (outputToken.equals(tokenOut)) {
       allPaths.push(new Route([...currentPath, pool], startCurrencyIn, currencyOut))
@@ -51,27 +49,23 @@ function computeAllRoutes(
 export function useAllV3Routes(
   currencyIn?: Currency,
   currencyOut?: Currency
-): { loading: boolean; routes: PublicKey[] } {
+): { loading: boolean; routes: Route<Currency, Currency>[] } {
   const { chainId } = useActiveWeb3ReactSol()
 
-  // return Cyclos liquidity pool addresses
-
-  const [singleHopOnly] = useUserSingleHopOnly()
+  // const [singleHopOnly] = useUserSingleHopOnly()
+  const singleHopOnly = true
   // console.log('Inside useAllV3Routes', currencyIn?.name, currencyOut?.name)
 
   const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
 
   // const [p, setP] = useState<PublicKey[]>([])
   // setP(pools)
-
-  // console.log('fetched pools', pools, poolsLoading)
+  // console.log(pools, currencyIn?.symbol, currencyOut?.symbol)
 
   return useMemo(() => {
     if (poolsLoading || !chainId || !pools || !currencyIn || !currencyOut) return { loading: true, routes: [] }
-    // console.log('fetched pools', pools)
-    return { loading: false, routes: pools }
-    // const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
-    // return { loading: false, routes }
-    // }, [chainId, currencyIn, currencyOut, [...pools], singleHopOnly])
-  }, [chainId, currencyIn, currencyOut, [...pools]])
+
+    const routes = computeAllRoutes(currencyIn, currencyOut, pools, chainId, [], [], currencyIn, singleHopOnly ? 1 : 2)
+    return { loading: false, routes }
+  }, [chainId, currencyIn, currencyOut, pools])
 }

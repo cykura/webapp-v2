@@ -37,7 +37,6 @@ export default function ConfirmSwapModal({
   isOpen,
   attemptingTxn,
   txHash,
-  isATA = false,
 }: {
   isOpen: boolean
   trade: V3Trade<Currency, Currency, TradeType> | undefined
@@ -50,7 +49,6 @@ export default function ConfirmSwapModal({
   onConfirm: () => void
   swapErrorMessage: ReactNode | undefined
   onDismiss: () => void
-  isATA?: boolean
 }) {
   const showAcceptChanges = useMemo(
     () =>
@@ -82,12 +80,12 @@ export default function ConfirmSwapModal({
   }, [onConfirm, showAcceptChanges, swapErrorMessage, trade])
 
   // text to show while loading
-  const pendingText =
-    // <Trans>
-    //   Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
-    //   {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
-    // </Trans>
-    isATA ? <span>Creating Token Accounts </span> : <span>Swapping in progress</span>
+  const pendingText = (
+    <span>
+      Swapping {trade?.inputAmount?.toSignificant(6)} {trade?.inputAmount?.currency?.symbol} for{' '}
+      {trade?.outputAmount?.toSignificant(6)} {trade?.outputAmount?.currency?.symbol}
+    </span>
+  )
 
   const confirmationContent = useCallback(
     () =>

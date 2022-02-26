@@ -5,6 +5,7 @@ import {
   nextInitializedBit,
   Pool,
   PoolVars,
+  POOL_SEED,
   SwapRouter,
   TickDataProvider,
   tickPosition,
@@ -14,16 +15,16 @@ import {
 import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@uniswap/sdk-core'
 import * as anchor from '@project-serum/anchor'
 import idl from '../constants/cyclos-core.json'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CyclosCore, IDL } from 'types/cyclos-core'
-import { PROGRAM_ID_STR, SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
+import { PROGRAM_ID, PROGRAM_ID_STR, SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
 import { calculateGasMargin } from '../utils/calculateGasMargin'
 import { useTransactionAdder } from '../state/transactions/hooks'
 import { isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import useTransactionDeadline from './useTransactionDeadline'
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
+import { AccountMeta, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
 import { CysTrade } from './useBestV3Trade'
 import { useSolana } from '@saberhq/use-solana'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
@@ -164,9 +165,10 @@ function swapErrorToUserReadableMessage(error: any): string {
 // returns a function that will execute a swap, if the parameters are all valid
 // and the user has approved the slippage adjusted input amount for the trade
 export function useSwapCallback(
-  trade: CysTrade, // trade to execute, required
+  trade: V3Trade<Currency, Currency, TradeType> | undefined, // trade to execute, required
   allowedSlippage: Percent, // in bips
-  recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
+  recipientAddress: string | null, // the address of the recipient of the trade, or null if swap should be returned to sender
+  swapAccounts: AccountMeta[] | undefined // the bitmap and tick accounts that need to be passed for the swap
 ): { state: SwapCallbackState; callback: null | (() => Promise<string>); error: string | null } {
   // console.log('building callback for', trade)
 
@@ -178,6 +180,12 @@ export function useSwapCallback(
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
 
+  const provider = new anchor.Provider(connection, wallet as Wallet, {
+    skipPreflight: true,
+  })
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+
+  // console.log('useSwapCallback is called')
   const pool = trade?.route
   const signer = wallet?.publicKey
   // Need to calculate the allowed slippage amount to pass it in as sqrtPriceLimitX32 along with the swap txn
@@ -187,40 +195,32 @@ export function useSwapCallback(
     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
   }
 
-  const provider = new anchor.Provider(connection, wallet as Wallet, {
-    skipPreflight: true,
-  })
-  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
+  // const callback = async () => Promise.resolve('')
   const callback = async () => {
+    // console.log('Is it here?')
     // Find bitmap and tick accounts required to consume the input amount
     // 1. Find current tick from pool account
     // 2. Find swap direction
     // 3. Formula to know if a tick is consumed completely
+
+    // console.log(poolAdd.toString())
+    // swapAccounts cannot be empty. If empty something went wrong fethcing them and swap wont work.
+    // Throw eerror for this late
+    const { token0: t0, token1: t1, fee: f } = trade.route.pools[0]
+
+    const [pool, _] = await anchor.web3.PublicKey.findProgramAddress(
+      [POOL_SEED, new PublicKey(t0.address).toBuffer(), new PublicKey(t1.address).toBuffer(), u32ToSeed(f)],
+      cyclosCore.programId
+    )
+
+    // console.log(swapAccounts, pool)
+    if (!swapAccounts || !pool) {
+      console.log('BROKEN')
+      return ''
+    }
+    // console.log(pool.toString(), ' --> ')
     const { observationIndex, observationCardinalityNext, tick, sqrtPriceX32, liquidity, token0, token1, fee } =
       await cyclosCore.account.poolState.fetch(pool)
-
-    console.log('token0', token0.toString(), 'token1', token1.toString(), 'tick', tick)
-
-    const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
-      token0,
-      token1,
-      fee,
-    })
-
-    // Not in sorted order
-    const uniTokenInput = inputCurrency?.wrapped
-    const uniTokenOutput = outputCurrency?.wrapped
-
-    // output is one tick behind actual (8 instead of 9)
-    const uniPoolA = new Pool(
-      uniTokenInput,
-      uniTokenOutput,
-      fee,
-      JSBI.BigInt(sqrtPriceX32),
-      JSBI.BigInt(liquidity),
-      tick,
-      tickDataProvider
-    )
 
     const amountIn = new BN(trade?.inputAmount.numerator.toString())
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
@@ -232,6 +232,7 @@ export function useSwapCallback(
       signer,
       true
     )
+
     const minterWallet1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -239,6 +240,7 @@ export function useSwapCallback(
       signer,
       true
     )
+
     const vault0 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -246,6 +248,7 @@ export function useSwapCallback(
       pool,
       true
     )
+
     const vault1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -253,12 +256,14 @@ export function useSwapCallback(
       pool,
       true
     )
-    const latestObservationState = (
+
+    const lastObservationState = (
       await PublicKey.findProgramAddress(
         [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
         cyclosCore.programId
       )
     )[0]
+
     const nextObservationState = (
       await PublicKey.findProgramAddress(
         [
@@ -281,14 +286,29 @@ export function useSwapCallback(
       ? [minterWallet0, minterWallet1, vault0, vault1, true]
       : [minterWallet1, minterWallet0, vault1, vault0, false]
 
-    console.log('zero for one', zeroForOne)
-    const inputAmount = CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
+    // console.log(
+    //   trade?.swaps.map((s) => s),
+    //   trade?.outputAmount.toFixed(2),
+    //   trade?.inputAmount.toFixed(2),
+    //   inputToken.toString(),
+    //   zeroForOne,
+    //   fee,
+    //   f,
+    //   t0.symbol,
+    //   token0.toString(),
+    //   t1.symbol,
+    //   token1.toString(),
+    //   swapAccounts
+    // )
 
-    console.log('input amount in useSwapCallback', inputAmount.currency.name)
-    const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
-      CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
-    )
-    console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut)
+    // console.log('zero for one', zeroForOne)
+    // const inputAmount = CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
+
+    // console.log('input amount in useSwapCallback', inputAmount.currency.name)
+    // const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
+    //   CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
+    // )
+    // console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut.toSignificant())
 
     const deadline = new BN(Date.now() / 1000 + 100_000)
 
@@ -305,31 +325,56 @@ export function useSwapCallback(
       new PublicKey(WSOL_LOCAL.address),
       signer
     )
-    ;[inputCurrency, outputCurrency].forEach(async (currency) => {
-      if (currency.symbol != 'SOL') {
-        const ata = await Token.getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          new PublicKey(currency.wrapped.address),
-          signer
-        )
-        const accountInfo = await connection.getAccountInfo(ata)
 
-        if (!accountInfo) {
-          console.log(`Creating ATA for ${currency.name}`)
-          tx.instructions.push(
-            Token.createAssociatedTokenAccountInstruction(
-              ASSOCIATED_TOKEN_PROGRAM_ID,
-              TOKEN_PROGRAM_ID,
-              new PublicKey(currency.wrapped.address),
-              ata,
-              signer,
-              signer
-            )
+    // inputCurrency ATA Creation if not exist
+    if (inputCurrency.symbol != 'SOL') {
+      const ata = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(inputCurrency.wrapped.address),
+        signer
+      )
+      const accountInfo = await connection.getAccountInfo(ata)
+
+      if (!accountInfo) {
+        console.log(`Creating ATA for ${inputCurrency.name} ${ata.toString()}`)
+        tx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            new PublicKey(inputCurrency.wrapped.address),
+            ata,
+            signer,
+            signer
           )
-        }
+        )
       }
-    })
+    }
+
+    // outputCurrency ATA Creation if not exist
+    if (outputCurrency.symbol != 'SOL') {
+      const ata = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        new PublicKey(outputCurrency.wrapped.address),
+        signer
+      )
+      const accountInfo = await connection.getAccountInfo(ata)
+
+      if (!accountInfo) {
+        console.log(`Creating ATA for ${outputCurrency.name} ${ata.toString()}`)
+        tx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            new PublicKey(outputCurrency.wrapped.address),
+            ata,
+            signer,
+            signer
+          )
+        )
+      }
+    }
 
     // 2. Wrap and Unwrap native SOL is one of the input tokens is SOL
     if (isSol) {
@@ -376,50 +421,58 @@ export function useSwapCallback(
     const iAccount = isSol ? WSOL_ATA : inputTokenAccount
     const oAccount = isSol ? WSOL_ATA : outputTokenAccount
 
-    const ix = cyclosCore.instruction.exactInput(deadline, amountIn, new BN(0), Buffer.from([swapAccounts.length]), {
-      accounts: {
-        signer,
-        factoryState,
-        inputTokenAccount: iAccount,
-        coreProgram: cyclosCore.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-      remainingAccounts: [
-        {
-          pubkey: pool,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: oAccount,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: inputVault,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: outputVault,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: latestObservationState,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: nextObservationState,
-          isSigner: false,
-          isWritable: true,
-        },
-        ...swapAccounts,
-      ],
-    })
+    // console.log(swapAccounts)
 
-    tx.add(ix)
+    const swapIx = cyclosCore.instruction.exactInput(
+      deadline,
+      amountIn,
+      new BN(0),
+      Buffer.from([swapAccounts.length]),
+      {
+        accounts: {
+          signer,
+          factoryState,
+          inputTokenAccount: iAccount,
+          coreProgram: cyclosCore.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        remainingAccounts: [
+          {
+            pubkey: pool,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: oAccount,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: inputVault,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: outputVault,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: lastObservationState,
+            isSigner: false,
+            isWritable: true,
+          },
+          ...swapAccounts,
+          {
+            pubkey: nextObservationState,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+      }
+    )
+
+    tx.add(swapIx)
 
     // UNWRAP NATIVE SOL
     if (isSol) {
@@ -445,6 +498,7 @@ export function useSwapCallback(
 
     console.log('swap hash', hash)
     return hash?.signature ?? '' // This should not be the case. Check types, should not get empty string here
+    // return ''
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
 }
@@ -467,11 +521,18 @@ export class SolanaTickDataProvider implements TickDataProvider {
   }
 
   async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
-    const tickState = await this.getTickAddress(tick)
+    try {
+      const tickState = await this.getTickAddress(tick)
 
-    const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
-    return {
-      liquidityNet: liquidityNet.toString(),
+      const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
+      return {
+        liquidityNet: liquidityNet.toString(),
+      }
+    } catch (e) {
+      console.log('Fetching tick state fails', e)
+      return Promise.resolve({
+        liquidityNet: JSBI.BigInt(0),
+      })
     }
   }
 
@@ -498,17 +559,17 @@ export class SolanaTickDataProvider implements TickDataProvider {
     // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
     // console.log(tick, tickSpacing)
     let compressed = Number(JSBI.divide(JSBI.BigInt(tick), JSBI.BigInt(tickSpacing)))
-    console.log('compresssed after division', compressed)
-    console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
+    // console.log('compresssed after division', compressed)
+    // console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
     if (tick < 0 && tick % tickSpacing !== 0) {
-      console.log('deducting from compressed.')
+      // console.log('deducting from compressed.')
       compressed -= 1
     }
     if (!lte) {
-      console.log('lte is false, +1 to compressed')
+      // console.log('lte is false, +1 to compressed')
       compressed += 1
     }
-    console.log('got compressed final=', compressed)
+    // console.log('got compressed final=', compressed)
 
     const { wordPos, bitPos } = tickPosition(compressed)
 

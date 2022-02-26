@@ -129,7 +129,7 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
   }
 
   useEffect(() => {
-    ;(async () => {
+    async function fetchNFT() {
       if (!account) return
       setLoading(true)
       // const [mintAuthority, _] = await PublicKey.findProgramAddress([], cyclosCore.programId)
@@ -174,7 +174,8 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
       const posList = positionList.filter((v) => v != null)
       setpositionDetails(posList)
       setLoading(false)
-    })()
+    }
+    fetchNFT()
   }, [chainId, account])
 
   return {

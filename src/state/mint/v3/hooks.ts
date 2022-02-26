@@ -25,7 +25,7 @@ import { tryParseTick } from './utils'
 import { usePool } from 'hooks/usePools'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { PROGRAM_ID } from 'constants/addresses'
-import { POOL_SEED } from 'constants/tokens'
+import { POOL_SEED, SOL_LOCAL, WSOL_LOCAL } from 'constants/tokens'
 import { PublicKey } from '@solana/web3.js'
 import * as anchor from '@project-serum/anchor'
 
@@ -136,10 +136,16 @@ export function useV3DerivedMintInfo(
   )
 
   // formatted with tokens
-  const [tokenA, tokenB, baseToken] = useMemo(
+  let [tokenA, tokenB, baseToken] = useMemo(
     () => [currencyA?.wrapped, currencyB?.wrapped, baseCurrency?.wrapped],
     [currencyA, currencyB, baseCurrency]
   )
+
+  // We get the arbitary SOL addr taken locally when selected from the drop down list
+  // Convert this NATIVE_MINT as further all calculations are based on this
+  tokenA = tokenA?.address == SOL_LOCAL.address ? WSOL_LOCAL : tokenA
+  tokenB = tokenB?.address == SOL_LOCAL.address ? WSOL_LOCAL : tokenB
+  baseToken = baseToken
 
   const [token0, token1] = useMemo(
     () =>
@@ -197,6 +203,7 @@ export function useV3DerivedMintInfo(
                 parsedQuoteAmount.quotient
               )
             : undefined
+        // console.log('price', price?.toSignificant(), price?.invert().toSignificant())
         return (invertPrice ? price?.invert() : price) ?? undefined
       }
       return undefined
@@ -224,7 +231,7 @@ export function useV3DerivedMintInfo(
     if (token0 && token1 && feeAmount && price && !invalidPrice) {
       const currentTick = priceToClosestTick(price)
       const currentSqrt = TickMath.getSqrtRatioAtTick(currentTick)
-
+      // console.log(currentTick, 'currentTick', currentSqrt.toString(), 'currentSqrt')
       return new Pool(token0, token1, feeAmount, currentSqrt, JSBI.BigInt(0), currentTick)
     } else {
       return undefined

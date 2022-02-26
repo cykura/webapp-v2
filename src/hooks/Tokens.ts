@@ -22,6 +22,7 @@ import { SOLUSDC, SOLUSDT } from '../constants/tokens'
 import { useSolana } from '@saberhq/use-solana'
 import { WrappedTokenInfo } from 'state/lists/wrappedTokenInfo'
 import { TokenList } from '@uniswap/token-lists'
+import { NATIVE_MINT } from '@solana/spl-token'
 
 // reduce token map into standard address <-> Token mapping, optionally include user added tokens
 function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
@@ -150,7 +151,7 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
   const { chainId } = useActiveWeb3ReactSol()
   const tokens = useAllTokens()
   // console.log(tokenAddress)
-  const tokenAdd = tokenAddress == SOL_LOCAL.address ? WSOL_LOCAL.address : tokenAddress
+  const tokenAdd = tokenAddress == NATIVE_MINT.toString() ? WSOL_LOCAL.address : tokenAddress
   const token: Token | undefined | any = tokenAdd ? tokens[tokenAdd] : undefined
 
   return useMemo(() => {

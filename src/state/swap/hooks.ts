@@ -186,7 +186,7 @@ export function useDerivedSwapInfo() {
     currencyBalances,
     parsedAmount,
     inputError,
-    // v3TradeState: v3Trade,
+    v3TradeState: v3Trade,
     toggledTrade,
     allowedSlippage,
   }
