@@ -126,11 +126,18 @@ export function usePools(
 
     // const allFetchedPublicKeys = allFetchedPoolStates.map((p: any, i: any) => Object.keys(p))
     const allFetchedPublicKeys = Object.keys(allFetchedPoolStates)
-    // console.log(allFetchedPublicKeys)
+    // console.log("PK 's of all fetched pool states", allFetchedPublicKeys)
     const existingPools = poolAddresses.map((p: any) =>
       allFetchedPublicKeys.flat(1).includes(p.toString()) ? true : false
     )
-    // console.log(poolAddresses.map((p: any) => p))
+    // console.log(
+    //   "PK's of all constructed pools",
+    //   poolAddresses.map((p: any) => p)
+    // )
+    // console.log(
+    //   "pools in fetched PK's",
+    //   existingPools.map((i: any) => i)
+    // )
 
     return existingPools.map((key: any, index: any) => {
       const [token0, token1, fee] = transformed[index] ?? []

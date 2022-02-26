@@ -47,7 +47,7 @@ const WETH_ONLY: ChainTokenList = {
 export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   // Need to use USDT as a base too
   // [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [104]: [SOLUSDC_LOCAL],
+  [104]: [SOLUSDC_LOCAL, SOLUSDT_LOCAL],
   [103]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
   [101]: [SOLUSDC_MAIN],
 }
