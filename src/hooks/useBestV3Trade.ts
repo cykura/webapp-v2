@@ -418,11 +418,12 @@ export function useBestV3TradeExactOut(
       }
     }
 
-    // console.log(
-    //   bestRoute,
-    //   swapAccounts.map((i: any) => i.toString()),
-    //   'OUT'
-    // )
+    console.log(
+      'best route',
+      bestRoute,
+      swapAccounts.map((i: any) => i.toString()),
+      'OUT'
+    )
     return {
       state: V3TradeState.VALID,
       trade: Trade.createUncheckedTrade({

@@ -62,8 +62,25 @@ export function usePools(
       const tokenA = currencyA?.wrapped
       const tokenB = currencyB?.wrapped
       if (!tokenA || !tokenB || tokenA.equals(tokenB)) return null
-      const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
-      return [token0, token1, feeAmount]
+
+      let tk0: Token
+      let tk1: Token
+
+      if (currencyA?.wrapped.address < currencyB?.wrapped.address) {
+        tk0 = tokenA
+        tk1 = tokenB
+        // tk0 = new anchor.web3.PublicKey(currencyA?.wrapped.address)
+        // tk1 = new anchor.web3.PublicKey(currencyB?.wrapped.address)
+      } else {
+        tk0 = tokenB
+        tk1 = tokenA
+        // tk0 = new anchor.web3.PublicKey(currencyB?.wrapped.address)
+        // tk1 = new anchor.web3.PublicKey(currencyA?.wrapped.address)
+      }
+      return [tk0, tk1, feeAmount]
+
+      // const [token0, token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+      // return [token0, token1, feeAmount]
     })
   }, [chainId, poolKeys])
 
@@ -83,6 +100,7 @@ export function usePools(
               [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
               cyclosCore.programId
             )
+            // console.log('got pool state in usePools', poolState.toString())
             return poolState.toString()
           } catch (e) {
             setLoading(false)
@@ -98,7 +116,7 @@ export function usePools(
         mapPoolStates[pState.publicKey.toString()] = pState
       })
 
-      // console.log(mapPoolStates)
+      console.log(mapPoolStates)
       setPoolAddresses(poolList)
       setAllFetchedPoolStates(mapPoolStates)
       setLoading(false)
@@ -217,20 +235,47 @@ export function usePool(
     async function fetchPool() {
       if (!currencyA?.wrapped || !currencyB?.wrapped || !feeAmount) return
 
-      let [token0, token1] = [currencyA?.wrapped, currencyB?.wrapped]
-      if (currencyA?.wrapped.address !== currencyB?.wrapped.address) {
-        ;[token0, token1] = currencyA?.wrapped.sortsBefore(currencyB?.wrapped)
-          ? [currencyA?.wrapped, currencyB?.wrapped]
-          : [currencyB?.wrapped, currencyA?.wrapped] // does safety checks
+      let tk0: PublicKey
+      let tk1: PublicKey
+
+      if (currencyA?.wrapped.address < currencyB?.wrapped.address) {
+        tk0 = new anchor.web3.PublicKey(currencyA?.wrapped.address)
+        tk1 = new anchor.web3.PublicKey(currencyB?.wrapped.address)
+      } else {
+        tk0 = new anchor.web3.PublicKey(currencyB?.wrapped.address)
+        tk1 = new anchor.web3.PublicKey(currencyA?.wrapped.address)
       }
+      // if (currencyA?.wrapped.sortsBefore(currencyB)){
+      // }
+      // let [token0, token1] = [currencyA?.wrapped, currencyB?.wrapped]
+
+      // if (currencyA?.wrapped.address > currencyB?.wrapped.address) {
+
+      // }
+      // if (currencyA?.wrapped.address !== currencyB?.wrapped.address) {
+      //   ;[token0, token1] = currencyA?.wrapped.sortsBefore(currencyB?.wrapped)
+      //     ? [currencyA?.wrapped, currencyB?.wrapped]
+      //     : [currencyB?.wrapped, currencyA?.wrapped] // does safety checks
+      // }
       try {
-        const tk0 = new anchor.web3.PublicKey(token0.address)
-        const tk1 = new anchor.web3.PublicKey(token1.address)
+        // const tk0 = new anchor.web3.PublicKey(token0.address)
+        // const tk1 = new anchor.web3.PublicKey(token1.address)
+        // console.log('tokens in order post sort', tk0.toString() < tk1.toString())
 
         const [poolState, _] = await anchor.web3.PublicKey.findProgramAddress(
           [POOL_SEED, tk0.toBuffer(), tk1.toBuffer(), u32ToSeed(feeAmount)],
           cyclosCore.programId
         )
+        // console.log(
+        //   'fetching pool for',
+        //   tk0.toString(),
+        //   tk1.toString(),
+        //   feeAmount,
+        //   'cyclos',
+        //   cyclosCore.programId.toString(),
+        //   'pool ID',
+        //   poolState.toString()
+        // )
 
         // console.log(poolState.toString())
         const slot0 = await cyclosCore.account.poolState.fetch(poolState)

@@ -421,7 +421,7 @@ export function useSwapCallback(
     const iAccount = isSol ? WSOL_ATA : inputTokenAccount
     const oAccount = isSol ? WSOL_ATA : outputTokenAccount
 
-    // console.log(swapAccounts)
+    console.log(swapAccounts)
 
     const swapIx = cyclosCore.instruction.exactInput(
       deadline,
