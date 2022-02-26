@@ -292,7 +292,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     try {
       const tx = new Transaction()
-      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
       tx.add(
         cyclosCore.instruction.decreaseLiquidity(removeLiquidityAmount, amount0Minimum, amount1Minimum, deadline, {
           accounts: {
@@ -307,9 +307,15 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             bitmapLowerState: bitmapLowerState,
             bitmapUpperState: bitmapUpperState,
             lastObservationState,
-            nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
           },
+          remainingAccounts: [
+            {
+              pubkey: nextObservationState,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
         })
       )
       tx.add(
@@ -326,7 +332,6 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             bitmapLowerState: bitmapLowerState,
             bitmapUpperState: bitmapUpperState,
             lastObservationState,
-            nextObservationState: nextObservationState,
             coreProgram: cyclosCore.programId,
             vault0: vault0,
             vault1: vault1,
@@ -334,6 +339,13 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
             recipientWallet1: userATA1,
             tokenProgram: TOKEN_PROGRAM_ID,
           },
+          remainingAccounts: [
+            {
+              pubkey: nextObservationState,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
         })
       )
       //  If WSOL, then close the ATA

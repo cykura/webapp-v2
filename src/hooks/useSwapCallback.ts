@@ -462,12 +462,12 @@ export function useSwapCallback(
             isSigner: false,
             isWritable: true,
           },
+          ...swapAccounts,
           {
             pubkey: nextObservationState,
             isSigner: false,
             isWritable: true,
           },
-          ...swapAccounts,
         ],
       }
     )
@@ -487,7 +487,7 @@ export function useSwapCallback(
       tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wrappedSolPubkey, signer, signer, []))
     }
 
-    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
     tx.feePayer = signer
 
     const str = tx.serializeMessage().toString('base64')

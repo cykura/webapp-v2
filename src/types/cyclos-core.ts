@@ -1,5 +1,5 @@
 export type CyclosCore = {
-  version: '0.1.0'
+  version: '0.0.0'
   name: 'cyclos_core'
   instructions: [
     {
@@ -7,7 +7,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'owner'
-          isMut: false
+          isMut: true
           isSigner: true
         },
         {
@@ -21,12 +21,7 @@ export type CyclosCore = {
           isSigner: false
         }
       ]
-      args: [
-        {
-          name: 'factoryStateBump'
-          type: 'u8'
-        }
-      ]
+      args: []
     },
     {
       name: 'setOwner'
@@ -54,7 +49,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'owner'
-          isMut: false
+          isMut: true
           isSigner: true
         },
         {
@@ -74,10 +69,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'feeStateBump'
-          type: 'u8'
-        },
         {
           name: 'fee'
           type: 'u32'
@@ -153,14 +144,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'poolStateBump'
-          type: 'u8'
-        },
-        {
-          name: 'observationStateBump'
-          type: 'u8'
-        },
         {
           name: 'sqrtPriceX32'
           type: 'u64'
@@ -295,10 +278,6 @@ export type CyclosCore = {
       ]
       args: [
         {
-          name: 'tickAccountBump'
-          type: 'u8'
-        },
-        {
           name: 'tick'
           type: 'i32'
         }
@@ -346,10 +325,6 @@ export type CyclosCore = {
       ]
       args: [
         {
-          name: 'bump'
-          type: 'u8'
-        },
-        {
           name: 'wordPos'
           type: 'i16'
         }
@@ -394,12 +369,7 @@ export type CyclosCore = {
           isSigner: false
         }
       ]
-      args: [
-        {
-          name: 'bump'
-          type: 'u8'
-        }
-      ]
+      args: []
     },
     {
       name: 'mintCallback'
@@ -560,11 +530,6 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'nextObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'tokenProgram'
           isMut: false
           isSigner: false
@@ -622,11 +587,6 @@ export type CyclosCore = {
         },
         {
           name: 'lastObservationState'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
           isMut: false
           isSigner: false
         }
@@ -752,11 +712,6 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'nextObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'callbackHandler'
           isMut: false
           isSigner: false
@@ -862,11 +817,6 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'nextObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'rent'
           isMut: false
           isSigner: false
@@ -893,10 +843,6 @@ export type CyclosCore = {
         }
       ]
       args: [
-        {
-          name: 'bump'
-          type: 'u8'
-        },
         {
           name: 'amount0Desired'
           type: 'u64'
@@ -1044,11 +990,6 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'nextObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'coreProgram'
           isMut: false
           isSigner: false
@@ -1141,11 +1082,6 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'nextObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'coreProgram'
           isMut: false
           isSigner: false
@@ -1225,11 +1161,6 @@ export type CyclosCore = {
         },
         {
           name: 'lastObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
           isMut: true
           isSigner: false
         },
@@ -1315,11 +1246,6 @@ export type CyclosCore = {
         },
         {
           name: 'lastObservationState'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'nextObservationState'
           isMut: true
           isSigner: false
         },
@@ -1726,6 +1652,82 @@ export type CyclosCore = {
       }
     }
   ]
+  types: [
+    {
+      name: 'ErrorCode'
+      type: {
+        kind: 'enum'
+        variants: [
+          {
+            name: 'LOK'
+          },
+          {
+            name: 'ZeroMintAmount'
+          },
+          {
+            name: 'TLU'
+          },
+          {
+            name: 'TMS'
+          },
+          {
+            name: 'TLM'
+          },
+          {
+            name: 'TUM'
+          },
+          {
+            name: 'M0'
+          },
+          {
+            name: 'M1'
+          },
+          {
+            name: 'OS'
+          },
+          {
+            name: 'AS'
+          },
+          {
+            name: 'SPL'
+          },
+          {
+            name: 'IIA'
+          },
+          {
+            name: 'NP'
+          },
+          {
+            name: 'LO'
+          },
+          {
+            name: 'R'
+          },
+          {
+            name: 'T'
+          },
+          {
+            name: 'LS'
+          },
+          {
+            name: 'LA'
+          },
+          {
+            name: 'TransactionTooOld'
+          },
+          {
+            name: 'PriceSlippageCheck'
+          },
+          {
+            name: 'NotApproved'
+          },
+          {
+            name: 'TooLittleReceived'
+          }
+        ]
+      }
+    }
+  ]
   events: [
     {
       name: 'OwnerChanged'
@@ -2113,122 +2115,10 @@ export type CyclosCore = {
       ]
     }
   ]
-  errors: [
-    {
-      code: 6000
-      name: 'LOK'
-      msg: 'LOK'
-    },
-    {
-      code: 6001
-      name: 'ZeroMintAmount'
-      msg: 'Minting amount should be greater than 0'
-    },
-    {
-      code: 6002
-      name: 'TLU'
-      msg: 'TLU'
-    },
-    {
-      code: 6003
-      name: 'TMS'
-      msg: 'TMS'
-    },
-    {
-      code: 6004
-      name: 'TLM'
-      msg: 'TLM'
-    },
-    {
-      code: 6005
-      name: 'TUM'
-      msg: 'TUM'
-    },
-    {
-      code: 6006
-      name: 'M0'
-      msg: 'M0'
-    },
-    {
-      code: 6007
-      name: 'M1'
-      msg: 'M1'
-    },
-    {
-      code: 6008
-      name: 'OS'
-      msg: 'OS'
-    },
-    {
-      code: 6009
-      name: 'AS'
-      msg: 'AS'
-    },
-    {
-      code: 6010
-      name: 'SPL'
-      msg: 'SPL'
-    },
-    {
-      code: 6011
-      name: 'IIA'
-      msg: 'IIA'
-    },
-    {
-      code: 6012
-      name: 'NP'
-      msg: 'NP'
-    },
-    {
-      code: 6013
-      name: 'LO'
-      msg: 'LO'
-    },
-    {
-      code: 6014
-      name: 'R'
-      msg: 'R'
-    },
-    {
-      code: 6015
-      name: 'T'
-      msg: 'T'
-    },
-    {
-      code: 6016
-      name: 'LS'
-      msg: 'LS'
-    },
-    {
-      code: 6017
-      name: 'LA'
-      msg: 'LA'
-    },
-    {
-      code: 6018
-      name: 'TransactionTooOld'
-      msg: 'Transaction too old'
-    },
-    {
-      code: 6019
-      name: 'PriceSlippageCheck'
-      msg: 'Price slippage check'
-    },
-    {
-      code: 6020
-      name: 'NotApproved'
-      msg: 'Not approved'
-    },
-    {
-      code: 6021
-      name: 'TooLittleReceived'
-      msg: 'Too little received'
-    }
-  ]
 }
 
 export const IDL: CyclosCore = {
-  version: '0.1.0',
+  version: '0.0.0',
   name: 'cyclos_core',
   instructions: [
     {
@@ -2236,7 +2126,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'owner',
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {
@@ -2250,12 +2140,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: 'factoryStateBump',
-          type: 'u8',
-        },
-      ],
+      args: [],
     },
     {
       name: 'setOwner',
@@ -2283,7 +2168,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'owner',
-          isMut: false,
+          isMut: true,
           isSigner: true,
         },
         {
@@ -2303,10 +2188,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'feeStateBump',
-          type: 'u8',
-        },
         {
           name: 'fee',
           type: 'u32',
@@ -2382,14 +2263,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'poolStateBump',
-          type: 'u8',
-        },
-        {
-          name: 'observationStateBump',
-          type: 'u8',
-        },
         {
           name: 'sqrtPriceX32',
           type: 'u64',
@@ -2524,10 +2397,6 @@ export const IDL: CyclosCore = {
       ],
       args: [
         {
-          name: 'tickAccountBump',
-          type: 'u8',
-        },
-        {
           name: 'tick',
           type: 'i32',
         },
@@ -2575,10 +2444,6 @@ export const IDL: CyclosCore = {
       ],
       args: [
         {
-          name: 'bump',
-          type: 'u8',
-        },
-        {
           name: 'wordPos',
           type: 'i16',
         },
@@ -2623,12 +2488,7 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
       ],
-      args: [
-        {
-          name: 'bump',
-          type: 'u8',
-        },
-      ],
+      args: [],
     },
     {
       name: 'mintCallback',
@@ -2789,11 +2649,6 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'nextObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'tokenProgram',
           isMut: false,
           isSigner: false,
@@ -2851,11 +2706,6 @@ export const IDL: CyclosCore = {
         },
         {
           name: 'lastObservationState',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
           isMut: false,
           isSigner: false,
         },
@@ -2981,11 +2831,6 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'nextObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'callbackHandler',
           isMut: false,
           isSigner: false,
@@ -3091,11 +2936,6 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'nextObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'rent',
           isMut: false,
           isSigner: false,
@@ -3122,10 +2962,6 @@ export const IDL: CyclosCore = {
         },
       ],
       args: [
-        {
-          name: 'bump',
-          type: 'u8',
-        },
         {
           name: 'amount0Desired',
           type: 'u64',
@@ -3273,11 +3109,6 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'nextObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'coreProgram',
           isMut: false,
           isSigner: false,
@@ -3370,11 +3201,6 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'nextObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'coreProgram',
           isMut: false,
           isSigner: false,
@@ -3454,11 +3280,6 @@ export const IDL: CyclosCore = {
         },
         {
           name: 'lastObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3544,11 +3365,6 @@ export const IDL: CyclosCore = {
         },
         {
           name: 'lastObservationState',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'nextObservationState',
           isMut: true,
           isSigner: false,
         },
@@ -3955,6 +3771,82 @@ export const IDL: CyclosCore = {
       },
     },
   ],
+  types: [
+    {
+      name: 'ErrorCode',
+      type: {
+        kind: 'enum',
+        variants: [
+          {
+            name: 'LOK',
+          },
+          {
+            name: 'ZeroMintAmount',
+          },
+          {
+            name: 'TLU',
+          },
+          {
+            name: 'TMS',
+          },
+          {
+            name: 'TLM',
+          },
+          {
+            name: 'TUM',
+          },
+          {
+            name: 'M0',
+          },
+          {
+            name: 'M1',
+          },
+          {
+            name: 'OS',
+          },
+          {
+            name: 'AS',
+          },
+          {
+            name: 'SPL',
+          },
+          {
+            name: 'IIA',
+          },
+          {
+            name: 'NP',
+          },
+          {
+            name: 'LO',
+          },
+          {
+            name: 'R',
+          },
+          {
+            name: 'T',
+          },
+          {
+            name: 'LS',
+          },
+          {
+            name: 'LA',
+          },
+          {
+            name: 'TransactionTooOld',
+          },
+          {
+            name: 'PriceSlippageCheck',
+          },
+          {
+            name: 'NotApproved',
+          },
+          {
+            name: 'TooLittleReceived',
+          },
+        ],
+      },
+    },
+  ],
   events: [
     {
       name: 'OwnerChanged',
@@ -4340,118 +4232,6 @@ export const IDL: CyclosCore = {
           index: false,
         },
       ],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: 'LOK',
-      msg: 'LOK',
-    },
-    {
-      code: 6001,
-      name: 'ZeroMintAmount',
-      msg: 'Minting amount should be greater than 0',
-    },
-    {
-      code: 6002,
-      name: 'TLU',
-      msg: 'TLU',
-    },
-    {
-      code: 6003,
-      name: 'TMS',
-      msg: 'TMS',
-    },
-    {
-      code: 6004,
-      name: 'TLM',
-      msg: 'TLM',
-    },
-    {
-      code: 6005,
-      name: 'TUM',
-      msg: 'TUM',
-    },
-    {
-      code: 6006,
-      name: 'M0',
-      msg: 'M0',
-    },
-    {
-      code: 6007,
-      name: 'M1',
-      msg: 'M1',
-    },
-    {
-      code: 6008,
-      name: 'OS',
-      msg: 'OS',
-    },
-    {
-      code: 6009,
-      name: 'AS',
-      msg: 'AS',
-    },
-    {
-      code: 6010,
-      name: 'SPL',
-      msg: 'SPL',
-    },
-    {
-      code: 6011,
-      name: 'IIA',
-      msg: 'IIA',
-    },
-    {
-      code: 6012,
-      name: 'NP',
-      msg: 'NP',
-    },
-    {
-      code: 6013,
-      name: 'LO',
-      msg: 'LO',
-    },
-    {
-      code: 6014,
-      name: 'R',
-      msg: 'R',
-    },
-    {
-      code: 6015,
-      name: 'T',
-      msg: 'T',
-    },
-    {
-      code: 6016,
-      name: 'LS',
-      msg: 'LS',
-    },
-    {
-      code: 6017,
-      name: 'LA',
-      msg: 'LA',
-    },
-    {
-      code: 6018,
-      name: 'TransactionTooOld',
-      msg: 'Transaction too old',
-    },
-    {
-      code: 6019,
-      name: 'PriceSlippageCheck',
-      msg: 'Price slippage check',
-    },
-    {
-      code: 6020,
-      name: 'NotApproved',
-      msg: 'Not approved',
-    },
-    {
-      code: 6021,
-      name: 'TooLittleReceived',
-      msg: 'Too little received',
     },
   ],
 }
