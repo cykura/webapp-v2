@@ -49,7 +49,7 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   // [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
   [104]: [SOLUSDC_LOCAL],
   [103]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [101]: [SOLUSDT_MAIN, SOLUSDC_MAIN],
+  [101]: [SOLUSDC_MAIN],
 }
 export const ADDITIONAL_BASES: { [chainId: number]: { [tokenAddress: string]: Token[] } } = {
   [1]: {
