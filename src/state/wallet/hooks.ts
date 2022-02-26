@@ -26,7 +26,7 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   }, [account, connected])
 
   const fetchSolBalance = () => {
-    if (!uncheckedAddress) return
+    if (!uncheckedAddress || uncheckedAddress == '11111111111111111111111111111111') return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
       setBalance(data)
@@ -77,7 +77,7 @@ export function useTokenBalancesWithLoadingIndicator(
   }, [address, connected])
 
   const fetchTokenBalances = () => {
-    if (!address) return
+    if (!address || address == '11111111111111111111111111111111') return
     connection
       .getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
@@ -89,7 +89,6 @@ export function useTokenBalancesWithLoadingIndicator(
           const amt: string | undefined = v.account.data.parsed.info.tokenAmount.amount
           tokenBalancesMap[add] = amt
         })
-
         validatedTokens.forEach((token: Token) => {
           if (tokenBalancesMap[token.address]) {
             // set balance of token
@@ -111,7 +110,7 @@ export function useTokenBalancesWithLoadingIndicator(
                 (memo, token, i) => {
                   const tkAdd: string = token.address
                   const value = solBalances[tkAdd]
-                  const amount = JSBI.BigInt(value ?? '')
+                  const amount = JSBI.BigInt(value ?? 0)
                   if (amount) {
                     memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
                   }

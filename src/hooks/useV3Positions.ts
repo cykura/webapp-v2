@@ -1,8 +1,5 @@
-import { useSingleCallResult, useSingleContractMultipleData, Result } from 'state/multicall/hooks'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PositionDetails } from 'types/position'
-import { useV3NFTPositionManagerContract } from './useContract'
-import { BigNumber } from '@ethersproject/bignumber'
 import { useActiveWeb3ReactSol } from './web3'
 import * as anchor from '@project-serum/anchor'
 import idl from '../constants/cyclos-core.json'
@@ -13,8 +10,6 @@ import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { POSITION_SEED } from 'constants/tokens'
 import PositionList from 'components/PositionList'
-import { FeeAmount } from '@uniswap/v3-sdk'
-import JSBI from 'jsbi'
 
 interface UseV3PositionsResults {
   loading: boolean
@@ -30,7 +25,7 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
   // use loading to denote loading state
   // store fetched position state data in useState too.
   const { chainId, account } = useActiveWeb3ReactSol()
-  const { connection, connected, wallet } = useSolana()
+  const { connection, wallet } = useSolana()
 
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: false,
@@ -44,7 +39,7 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
   useEffect(() => {
     setLoading(false)
     // console.log('USE MEMO')
-    ;(async () => {
+    async function fetchPools() {
       if (!tokenId) {
         // console.log('NOT WORK')
         setLoading(false)
@@ -88,7 +83,8 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
         tokensOwed0: tokenState.tokensOwed0,
         tokensOwed1: tokenState.tokensOwed1,
       })
-    })()
+    }
+    fetchPools()
   }, [chainId, account])
 
   // console.log('RENDER RUN', positionDetail)
@@ -130,7 +126,7 @@ export function useV3Positions(account: string | null | undefined): UseV3Positio
 
   useEffect(() => {
     async function fetchNFT() {
-      if (!account) return
+      if (!account || account == '11111111111111111111111111111111') return
       setLoading(true)
       // const [mintAuthority, _] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 

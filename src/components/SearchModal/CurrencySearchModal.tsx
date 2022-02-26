@@ -32,7 +32,7 @@ export default function CurrencySearchModal({
   onCurrencySelect,
   selectedCurrency,
   otherSelectedCurrency,
-  showCommonBases = false,
+  showCommonBases = true,
   showCurrencyAmount = true,
   disableNonToken = false,
 }: CurrencySearchModalProps) {

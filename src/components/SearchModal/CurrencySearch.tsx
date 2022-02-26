@@ -174,7 +174,9 @@ export function CurrencySearch({
             onKeyDown={handleEnter}
           />
         </Row>
-        {showCommonBases && <CommonBases onSelect={handleCurrencySelect} selectedCurrency={selectedCurrency} />}
+        {showCommonBases && (
+          <CommonBases chainId={chainId} onSelect={handleCurrencySelect} selectedCurrency={selectedCurrency} />
+        )}
       </PaddedColumn>
       <Separator />
       {searchToken && !searchTokenIsAdded ? (
