@@ -165,7 +165,7 @@ export function useCurrencyBalances(
   return useMemo(
     () =>
       currencies?.map((currency) => {
-        if (!account || !currency) return undefined
+        if (!account || !currency || !allTokenBalances) return undefined
         if (currency.symbol == 'SOL') return solBalance[WSOL_MAIN.address]
         if (currency.isToken) return allTokenBalances[currency.address]
         return undefined
