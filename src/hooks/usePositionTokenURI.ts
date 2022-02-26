@@ -68,11 +68,9 @@ const useAsync = <T, E = string>(asyncFunction: () => Promise<T>, immediate = tr
 
 export function usePositionTokenURI(tokenId: TokenId | undefined): UsePositionTokenURIResult {
   const fetchNFT = useCallback(async () => {
-    const res = await fetch(
-      `https://asia-south1-cyclos-finance.cloudfunctions.net/encodedSvg?mint=${tokenId?.toString()}`
-    )
+    const res = await fetch(`https://asia-south1-cyclos-finance.cloudfunctions.net/nft?mint=${tokenId?.toString()}`)
     const body = await res.text()
-    return body
+    return JSON.parse(body).image
   }, [tokenId])
 
   const { status, value: result, error } = useAsync<string>(fetchNFT)
