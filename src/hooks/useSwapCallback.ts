@@ -14,24 +14,17 @@ import {
 } from '@uniswap/v3-sdk'
 import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@uniswap/sdk-core'
 import * as anchor from '@project-serum/anchor'
-import idl from '../constants/cyclos-core.json'
-import { useEffect, useMemo, useState } from 'react'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import { PROGRAM_ID, PROGRAM_ID_STR, SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
-import { calculateGasMargin } from '../utils/calculateGasMargin'
-import { useTransactionAdder } from '../state/transactions/hooks'
-import { isAddress, shortenAddress } from '../utils'
-import isZero from '../utils/isZero'
 import { useActiveWeb3ReactSol } from './web3'
 import useTransactionDeadline from './useTransactionDeadline'
-import { AccountMeta, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
-import { CysTrade } from './useBestV3Trade'
+import { AccountMeta, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js'
 import { useSolana } from '@saberhq/use-solana'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { BN } from '@project-serum/anchor'
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { u16ToSeed } from 'state/mint/v3/utils'
-import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED, WSOL_LOCAL } from 'constants/tokens'
+import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED } from 'constants/tokens'
 import { useSwapState } from 'state/swap/hooks'
 import { useCurrency } from './Tokens'
 
@@ -286,30 +279,6 @@ export function useSwapCallback(
       ? [minterWallet0, minterWallet1, vault0, vault1, true]
       : [minterWallet1, minterWallet0, vault1, vault0, false]
 
-    // console.log(
-    //   trade?.swaps.map((s) => s),
-    //   trade?.outputAmount.toFixed(2),
-    //   trade?.inputAmount.toFixed(2),
-    //   inputToken.toString(),
-    //   zeroForOne,
-    //   fee,
-    //   f,
-    //   t0.symbol,
-    //   token0.toString(),
-    //   t1.symbol,
-    //   token1.toString(),
-    //   swapAccounts
-    // )
-
-    // console.log('zero for one', zeroForOne)
-    // const inputAmount = CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
-
-    // console.log('input amount in useSwapCallback', inputAmount.currency.name)
-    // const [_expectedAmountOut, _expectedNewPool, swapAccounts] = await uniPoolA.getOutputAmount(
-    //   CurrencyAmount.fromRawAmount(uniTokenInput, amountIn.toNumber())
-    // )
-    // console.log('got swap accounts', swapAccounts, 'expected amount out', _expectedAmountOut.toSignificant())
-
     const deadline = new BN(Date.now() / 1000 + 100_000)
 
     const tx = new Transaction()
@@ -322,7 +291,7 @@ export function useSwapCallback(
     const WSOL_ATA = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
-      new PublicKey(WSOL_LOCAL.address),
+      NATIVE_MINT,
       signer
     )
 
@@ -381,45 +350,45 @@ export function useSwapCallback(
       console.log(`Wrapping native SOL`)
 
       // WRAP NATIVE SOL
-      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        new PublicKey(WSOL_LOCAL.address),
-        signer
-      )
-      tx.add(
-        Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          new PublicKey(WSOL_LOCAL.address),
-          wrappedSolPubkey,
-          signer,
-          signer
+      const account = await connection.getAccountInfo(WSOL_ATA)
+      if (!account) {
+        tx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            NATIVE_MINT,
+            WSOL_ATA,
+            signer,
+            signer
+          )
         )
-      )
+      }
+
       // If swapping from SOL
-      if (inputCurrency.symbol == 'SOL') {
+      if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
         tx.add(
           SystemProgram.transfer({
             fromPubkey: signer,
-            toPubkey: wrappedSolPubkey,
+            toPubkey: WSOL_ATA,
             lamports: amountIn.toNumber(),
+          }),
+          new TransactionInstruction({
+            keys: [
+              {
+                pubkey: WSOL_ATA,
+                isSigner: false,
+                isWritable: true,
+              },
+            ],
+            data: Buffer.from(new Uint8Array([17])),
+            programId: TOKEN_PROGRAM_ID,
           })
         )
       }
-      // Initialize the account.
-      tx.add(
-        Token.createInitAccountInstruction(
-          TOKEN_PROGRAM_ID,
-          new PublicKey(WSOL_LOCAL.address),
-          wrappedSolPubkey,
-          signer
-        )
-      )
     }
 
-    const iAccount = isSol ? WSOL_ATA : inputTokenAccount
-    const oAccount = isSol ? WSOL_ATA : outputTokenAccount
+    const iAccount = inputCurrency.symbol == 'SOL' ? WSOL_ATA : inputTokenAccount
+    const oAccount = outputCurrency.symbol == 'SOL' ? WSOL_ATA : outputTokenAccount
 
     // console.log(swapAccounts)
 
@@ -477,14 +446,7 @@ export function useSwapCallback(
     // UNWRAP NATIVE SOL
     if (isSol) {
       console.log(`Unwrapping native SOL`)
-
-      const wrappedSolPubkey = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        new PublicKey(WSOL_LOCAL.address),
-        signer
-      )
-      tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, wrappedSolPubkey, signer, signer, []))
+      tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, signer, signer, []))
     }
 
     tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
@@ -501,14 +463,6 @@ export function useSwapCallback(
     // return ''
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
-}
-
-function mostSignificantBit(x: BN) {
-  return x.bitLength() - 1
-}
-
-function leastSignificantBit(x: BN) {
-  return x.zeroBits()
 }
 
 export class SolanaTickDataProvider implements TickDataProvider {
@@ -595,7 +549,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
       nextBit = nextInitBit.next
       initialized = nextInitBit.initialized
     } catch (error) {
-      // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
     // console.log(

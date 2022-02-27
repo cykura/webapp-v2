@@ -424,28 +424,19 @@ export default function AddLiquidity({
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
-    // console.log(tickLowerState.toString(), ' tick lower state')
-
     const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
-    // console.log(tickUpperState.toString(), ' tick upper state')
-
     const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
-    // console.log(bitmapLowerState.toString(), ' bitmap lower state')
     const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
-    // console.log(bitmapUpperState.toString(), ' bitmap upper state')
-
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
-    // console.log(factoryState.toString(), ' factory State')
-
     const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
       [
         POSITION_SEED,
@@ -458,21 +449,12 @@ export default function AddLiquidity({
       ],
       cyclosCore.programId
     )
-    // console.log(corePositionState.toString(), ' core position State')
 
     const tickLowerStateInfo = await connection.getAccountInfo(tickLowerState)
     const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
     const bitmapLowerStateInfo = await connection.getAccountInfo(bitmapLowerState)
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
-
-    // console.log(
-    //   tickLowerStateInfo,
-    //   tickUpperStateInfo,
-    //   bitmapLowerStateInfo,
-    //   bitmapUpperStateInfo,
-    //   corePositionStateInfo
-    // )
 
     // Build the transaction
     if (
@@ -566,7 +548,6 @@ export default function AddLiquidity({
     }
 
     // Then finally mint the required position
-    // Need to fix this wallet.publicKey is undefined
     const nftMintKeypair = new anchor.web3.Keypair()
 
     const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
@@ -581,9 +562,7 @@ export default function AddLiquidity({
       wallet.publicKey
     )
 
-    // const amount0Desired = new BN(1_000_000)
-    // const amount1Desired = new BN(1_000_000)
-    // console.log(amount0Desired.toString(), amount1Desired.toString())
+    // Add slippage amounts here
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
@@ -622,40 +601,12 @@ export default function AddLiquidity({
     )[0]
 
     if (noLiquidity || !existingPosition) {
-      // console.log(
-      //   tickLowerState.toString(),
-      //   tickUpperState.toString(),
-      //   bitmapLowerState.toString(),
-      //   bitmapUpperState.toString(),
-      //   corePositionState.toString()
-      // )
       // Create new position
       console.log('Creating new position')
       try {
         const tx1 = new Transaction()
         const tx2 = new Transaction()
 
-        // console.log(
-        //   `
-        //   pool addr ${poolState.toString()}
-        //   factoryState ${factoryState.toString()}
-        //   nftMint ${nftMintKeypair.toString()}
-        //   nftAccount ${positionNftAccount.toString()}
-        //   poolState ${poolState.toString()}
-        //   userATA0 ${userATA0.toString()}
-        //   userATA1 ${userATA1.toString()}
-        //   vault0 ${vault0.toString()}
-        //   vault1 ${vault1.toString()}
-        //   tickLowerState ${tickLowerState.toString()}
-        //   tickUpperState ${tickUpperState.toString()}
-        //   bitmapLower ${bitmapLowerState.toString()}
-        //   bitmapUpper ${bitmapUpperState.toString()}
-        //   corePosition ${corePositionState.toString()}
-        //   latestObservationState ${latestObservationState.toString()}
-        //   nextObservationState ${nextObservationState.toString()}
-        //   tokenizedPositionState ${tokenizedPositionState.toString()}
-        //   `
-        // )
         // If Native SOL is used
         const account = await connection.getAccountInfo(WSOL_ATA)
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
