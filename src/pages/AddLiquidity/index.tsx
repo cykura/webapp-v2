@@ -332,6 +332,9 @@ export default function AddLiquidity({
     //  this can be checked using `noLiquidity`
     console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
 
+    // Check to see if WSOL_ATA created during pool creation
+    let isSOLAccount = false
+
     // Create and init pool
     if (noLiquidity) {
       console.log('Creating and init pool')
@@ -340,6 +343,8 @@ export default function AddLiquidity({
 
         const account = await connection.getAccountInfo(WSOL_ATA)
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          isSOLAccount = true
+
           const amount =
             token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
           console.log(amount)
@@ -608,43 +613,45 @@ export default function AddLiquidity({
         const tx2 = new Transaction()
 
         // If Native SOL is used
-        const account = await connection.getAccountInfo(WSOL_ATA)
-        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
-          const amount =
-            token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
-          // console.log(amount)
-          if (!account) {
-            tx1.add(
-              Token.createAssociatedTokenAccountInstruction(
-                ASSOCIATED_TOKEN_PROGRAM_ID,
-                TOKEN_PROGRAM_ID,
-                NATIVE_MINT,
-                WSOL_ATA,
-                wallet?.publicKey,
-                wallet?.publicKey
+        if (!isSOLAccount) {
+          const account = await connection.getAccountInfo(WSOL_ATA)
+          if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+            const amount =
+              token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
+            // console.log(amount)
+            if (!account) {
+              tx1.add(
+                Token.createAssociatedTokenAccountInstruction(
+                  ASSOCIATED_TOKEN_PROGRAM_ID,
+                  TOKEN_PROGRAM_ID,
+                  NATIVE_MINT,
+                  WSOL_ATA,
+                  wallet?.publicKey,
+                  wallet?.publicKey
+                )
               )
+            }
+            tx1.add(
+              SystemProgram.transfer({
+                fromPubkey: wallet?.publicKey,
+                toPubkey: WSOL_ATA,
+                lamports: amount,
+              }),
+              new TransactionInstruction({
+                keys: [
+                  {
+                    pubkey: WSOL_ATA,
+                    isSigner: false,
+                    isWritable: true,
+                  },
+                ],
+                data: Buffer.from(new Uint8Array([17])),
+                programId: TOKEN_PROGRAM_ID,
+              })
             )
+            tx1.feePayer = wallet?.publicKey
+            tx1.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
           }
-          tx1.add(
-            SystemProgram.transfer({
-              fromPubkey: wallet?.publicKey,
-              toPubkey: WSOL_ATA,
-              lamports: amount,
-            }),
-            new TransactionInstruction({
-              keys: [
-                {
-                  pubkey: WSOL_ATA,
-                  isSigner: false,
-                  isWritable: true,
-                },
-              ],
-              data: Buffer.from(new Uint8Array([17])),
-              programId: TOKEN_PROGRAM_ID,
-            })
-          )
-          tx1.feePayer = wallet?.publicKey
-          tx1.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
         }
 
         const mintIx = cyclosCore.instruction.mintTokenizedPosition(
@@ -691,6 +698,13 @@ export default function AddLiquidity({
 
         tx2.add(mintIx)
 
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          // Close the WSOL_ATA
+          tx2.add(
+            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+          )
+        }
+
         setAttemptingTxn(true)
 
         tx2.feePayer = wallet?.publicKey
@@ -699,10 +713,8 @@ export default function AddLiquidity({
         // console.log(tx1)
         // console.log(tx2)
         // console.log(tx.signatures.map((s) => s.publicKey.toString()))
-
         // const str1 = tx.serializeMessage().toString('base64')
         // console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
-
         // const txnHash1 = await providerMut?.send(tx1)
 
         // Cannot sent empty transactions. So add creation of ATA only if required
@@ -860,6 +872,13 @@ export default function AddLiquidity({
         )
 
         tx.add(ix)
+
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          // Close the WSOL_ATA
+          tx.add(
+            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+          )
+        }
 
         tx.feePayer = wallet?.publicKey
         tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
