@@ -3,7 +3,6 @@ import { Pool, u32ToSeed } from '@uniswap/v3-sdk'
 import { CurrencyAmount, Currency } from '@uniswap/sdk-core'
 import { useV3PositionFromTokenId } from './useV3Positions'
 import JSBI from 'jsbi'
-import idl from '../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { TICK_SEED, POOL_SEED, POSITION_SEED } from '../constants/tokens'
 import { PROGRAM_ID_STR } from '../constants/addresses'
@@ -11,6 +10,7 @@ import { useSolana } from '@saberhq/use-solana'
 import { useActiveWeb3ReactSol } from './web3'
 import * as anchor from '@project-serum/anchor'
 import { useToken } from './Tokens'
+import { CyclosCore, IDL } from 'types/cyclos-core'
 
 // compute current + counterfactual fees for a v3 position
 export function useV3PositionFees(
@@ -46,7 +46,6 @@ export function useV3PositionFees(
   >([undefined, undefined])
 
   useEffect(() => {
-    // console.log('useEffect called')
     ;(async () => {
       if (
         !pool ||
@@ -70,7 +69,7 @@ export function useV3PositionFees(
       const provider = new anchor.Provider(connection, wallet as Wallet, {
         skipPreflight: false,
       })
-      const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+      const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
       const current_above_lower = pool.tickCurrent >= tickLower
       const current_below_upper = pool.tickCurrent < tickUpper
@@ -120,26 +119,25 @@ export function useV3PositionFees(
 
       const tickLowerStateData = await cyclosCore.account.tickState.fetch(tickLowerState)
       const tickUpperStateData = await cyclosCore.account.tickState.fetch(tickUpperState)
-
       const poolStateData = await cyclosCore.account.poolState.fetch(poolState)
 
-      let { feeGrowthOutside0X32: outside0Lower, feeGrowthOutside1X32: outside1Lower } = tickLowerStateData
-      let { feeGrowthOutside0X32: outside0Upper, feeGrowthOutside1X32: outside1Upper } = tickUpperStateData
-      let { feeGrowthGlobal0X32, feeGrowthGlobal1X32 } = poolStateData
+      const { feeGrowthOutside0X32: outside0LowerBN, feeGrowthOutside1X32: outside1LowerBN } = tickLowerStateData
+      const { feeGrowthOutside0X32: outside0UpperBN, feeGrowthOutside1X32: outside1UpperBN } = tickUpperStateData
+      const { feeGrowthGlobal0X32: feeGrowthGlobal0X32BN, feeGrowthGlobal1X32: feeGrowthGlobal1X32BN } = poolStateData
 
-      outside0Lower = JSBI.BigInt(outside0Lower.toString())
-      outside1Lower = JSBI.BigInt(outside1Lower.toString())
-      outside0Upper = JSBI.BigInt(outside0Upper.toString())
-      outside1Upper = JSBI.BigInt(outside1Upper.toString())
-      feeGrowthGlobal0X32 = JSBI.BigInt(feeGrowthGlobal0X32.toString())
-      feeGrowthGlobal1X32 = JSBI.BigInt(feeGrowthGlobal1X32.toString())
+      const outside0Lower = JSBI.BigInt(outside0LowerBN.toString())
+      const outside1Lower = JSBI.BigInt(outside1LowerBN.toString())
+      const outside0Upper = JSBI.BigInt(outside0UpperBN.toString())
+      const outside1Upper = JSBI.BigInt(outside1UpperBN.toString())
+      const feeGrowthGlobal0X32 = JSBI.BigInt(feeGrowthGlobal0X32BN.toString())
+      const feeGrowthGlobal1X32 = JSBI.BigInt(feeGrowthGlobal1X32BN.toString())
       // coreInside0X32 = JSBI.BigInt(coreInside0X32.toString())
       // coreInside1X32 = JSBI.BigInt(coreInside1X32.toString())
       // coreTokensOwed0 = JSBI.BigInt(coreTokensOwed0.toString())
       // coreTokensOwed1 = JSBI.BigInt(coreTokensOwed1.toString())
 
-      const feeGrowthInside0LastX32 = JSBI.BigInt(feeGrowthInside0LastX128.toString())
-      const feeGrowthInside1LastX32 = JSBI.BigInt(feeGrowthInside1LastX128.toString())
+      const posFeeGrowthInside0LastX32 = JSBI.BigInt(feeGrowthInside0LastX128.toString())
+      const posFeeGrowthInside1LastX32 = JSBI.BigInt(feeGrowthInside1LastX128.toString())
       const posLiquidity = JSBI.BigInt(liquidity.toString())
       const posTokensOwed0 = JSBI.BigInt(tokensOwed0.toString())
       const posTokensOwed1 = JSBI.BigInt(tokensOwed1.toString())
@@ -182,26 +180,26 @@ export function useV3PositionFees(
       let tokensOwedX: JSBI
       let tokensOwedY: JSBI
 
-      if (JSBI.lessThan(feeGrowthInsideX, feeGrowthInside0LastX32)) {
+      if (JSBI.lessThan(feeGrowthInsideX, posFeeGrowthInside0LastX32)) {
         tokensOwedX = JSBI.divide(
-          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideX), JSBI.subtract(Q64MAX, feeGrowthInside0LastX32)),
+          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideX), JSBI.subtract(Q64MAX, posFeeGrowthInside0LastX32)),
           DENO
         )
       } else {
         tokensOwedX = JSBI.divide(
-          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideX), feeGrowthInside0LastX32),
+          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideX), posFeeGrowthInside0LastX32),
           DENO
         )
       }
 
-      if (JSBI.lessThan(feeGrowthInsideY, feeGrowthInside1LastX32)) {
+      if (JSBI.lessThan(feeGrowthInsideY, posFeeGrowthInside1LastX32)) {
         tokensOwedY = JSBI.divide(
-          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideY), JSBI.subtract(Q64MAX, feeGrowthInside1LastX32)),
+          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideY), JSBI.subtract(Q64MAX, posFeeGrowthInside1LastX32)),
           DENO
         )
       } else {
         tokensOwedY = JSBI.divide(
-          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideY), feeGrowthInside1LastX32),
+          JSBI.add(JSBI.multiply(posLiquidity, feeGrowthInsideY), posFeeGrowthInside1LastX32),
           DENO
         )
       }
