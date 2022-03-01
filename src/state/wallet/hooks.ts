@@ -26,7 +26,7 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   }, [account, connected])
 
   const fetchSolBalance = () => {
-    if (!uncheckedAddress) return
+    if (!uncheckedAddress || uncheckedAddress == '11111111111111111111111111111111') return
     // Native Sol balance
     connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
       setBalance(data)
@@ -53,6 +53,7 @@ export function useTokenBalancesWithLoadingIndicator(
   const [tokenBalanceList, setTokenBalanceList] = useState<{
     [tokenAddress: string]: CurrencyAmount<Token> | undefined
   }>({})
+  const [solBalances, setSolBalances] = useState<{ [key: string]: string | undefined }>({})
   const [loading, setLoading] = useState(true)
 
   function isAddress(value: any): string | false {
@@ -76,7 +77,7 @@ export function useTokenBalancesWithLoadingIndicator(
   }, [address, connected])
 
   const fetchTokenBalances = () => {
-    if (!address) return
+    if (!address || address == '11111111111111111111111111111111') return
     connection
       .getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
@@ -88,16 +89,36 @@ export function useTokenBalancesWithLoadingIndicator(
           const amt: string | undefined = v.account.data.parsed.info.tokenAmount.amount
           tokenBalancesMap[add] = amt
         })
-
-        const balanceList: { [key: string]: CurrencyAmount<Token> } = {}
-        validatedTokens?.map((token: Token) => {
-          const tkAdd: string = token.address
-          const value = tokenBalancesMap[tkAdd] ?? ''
-          const amount = JSBI.BigInt(value ?? '0')
-          if (amount) {
-            balanceList[tkAdd] = CurrencyAmount.fromRawAmount(token, amount)
+        validatedTokens.forEach((token: Token) => {
+          if (tokenBalancesMap[token.address]) {
+            // set balance of token
+            setSolBalances((p) => {
+              p[token.address] = tokenBalancesMap[token.address]
+              return p
+            })
+          } else {
+            // account doesn't have token then set to 0
+            setSolBalances((p) => {
+              p[token.address] = '0'
+              return p
+            })
           }
         })
+        const balanceList =
+          validatedTokens.length > 0
+            ? validatedTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>(
+                (memo, token, i) => {
+                  const tkAdd: string = token.address
+                  const value = solBalances[tkAdd]
+                  const amount = JSBI.BigInt(value ?? 0)
+                  if (amount) {
+                    memo[token.address] = CurrencyAmount.fromRawAmount(token, amount)
+                  }
+                  return memo
+                },
+                {}
+              )
+            : {}
         setTokenBalanceList(balanceList)
       })
       .catch((e) => {
@@ -143,7 +164,7 @@ export function useCurrencyBalances(
   return useMemo(
     () =>
       currencies?.map((currency) => {
-        if (!account || !currency) return undefined
+        if (!account || !currency || !allTokenBalances) return undefined
         if (currency.symbol == 'SOL') return solBalance[WSOL_MAIN.address]
         if (currency.isToken) return allTokenBalances[currency.address]
         return undefined

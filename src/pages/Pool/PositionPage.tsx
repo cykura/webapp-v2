@@ -23,24 +23,19 @@ import CurrencyLogo from 'components/CurrencyLogo'
 import { currencyId } from 'utils/currencyId'
 import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
-import { BigNumber } from '@ethersproject/bignumber'
 import { Token, Currency, CurrencyAmount, Percent, Fraction, Price } from '@uniswap/sdk-core'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useIsTransactionPending, useTransactionAdder } from 'state/transactions/hooks'
-import ReactGA from 'react-ga'
 import TransactionConfirmationModal, { ConfirmationModalContent } from 'components/TransactionConfirmationModal'
-import { TransactionResponse } from '@ethersproject/providers'
 import { Dots } from 'components/swap/styleds'
 import { getPriceOrderingFromPositionForUI } from '../../components/PositionListItem'
 import useTheme from '../../hooks/useTheme'
 import RateToggle from '../../components/RateToggle'
-import { useSingleCallResult } from 'state/multicall/hooks'
 import RangeBadge from '../../components/Badge/RangeBadge'
 import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
-import Toggle from 'components/Toggle'
 import { Network } from '@saberhq/solana-contrib'
 import JSBI from 'jsbi'
 import { PROGRAM_ID_STR } from 'constants/addresses'
@@ -48,7 +43,7 @@ import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
 import idl from '../../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token as SPLToken } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token as SPLToken, NATIVE_MINT } from '@solana/spl-token'
 import {
   TICK_SEED,
   POOL_SEED,
@@ -59,6 +54,7 @@ import {
   WSOL_LOCAL,
 } from 'constants/tokens'
 import { u16ToSeed } from 'state/mint/v3/utils'
+import { Transaction } from '@solana/web3.js'
 
 const { BN, web3 } = anchor
 const { PublicKey } = web3
@@ -309,7 +305,7 @@ export function PositionPage({
     params: { tokenId: tokenIdFromUrl },
   },
 }: RouteComponentProps<{ tokenId?: string }>) {
-  const { network } = useSolana()
+  const { network, connection, wallet, providerMut } = useSolana()
   const { account, librarySol } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
@@ -387,8 +383,6 @@ export function PositionPage({
   const isCollectPending = useIsTransactionPending(collectMigrationHash ?? undefined)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const { connection, wallet } = useSolana()
-
   const addTransaction = useTransactionAdder()
   const positionManager = useV3NFTPositionManagerContract()
 
@@ -398,12 +392,11 @@ export function PositionPage({
       !network ||
       !feeValue0 ||
       !feeValue1 ||
-      // !positionManager ||
-      !wallet ||
+      !providerMut ||
+      !wallet?.publicKey ||
       !account ||
       !tokenId ||
       !parsedTokenId ||
-      // !librarySol ||
       !pool ||
       !tickLower ||
       !tickUpper ||
@@ -411,8 +404,6 @@ export function PositionPage({
       !token1 ||
       !feeAmount ||
       !liquidity ||
-      // !tokensOwed0 ||
-      // !tokensOwed1 ||
       !feeGrowthInside0LastX128 ||
       !feeGrowthInside1LastX128
     )
@@ -554,12 +545,38 @@ export function PositionPage({
         )
       )[0]
 
-      const txHash = await cyclosCore.rpc.collectFromTokenized(
+      const tx = new Transaction()
+
+      const WSOL_ATA = await SPLToken.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        NATIVE_MINT,
+        wallet?.publicKey
+      )
+
+      if (token0Add.toString() == NATIVE_MINT.toString() || token1Add.toString() == NATIVE_MINT.toString()) {
+        // Create a ATA and receice WSOL in this
+        const account = await connection.getAccountInfo(WSOL_ATA)
+        if (!account) {
+          tx.add(
+            SPLToken.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              NATIVE_MINT,
+              WSOL_ATA,
+              wallet?.publicKey,
+              wallet?.publicKey
+            )
+          )
+        }
+      }
+
+      const collectIx = cyclosCore.instruction.collectFromTokenized(
         new BN(2).pow(new BN(64)).subn(1),
         new BN(2).pow(new BN(64)).subn(1),
         {
           accounts: {
-            ownerOrDelegate: owner,
+            ownerOrDelegate: wallet?.publicKey,
             nftAccount: positionNftAccount,
             tokenizedPositionState: tokenizedPositionState,
             factoryState,
@@ -580,57 +597,27 @@ export function PositionPage({
           },
         }
       )
-      setCollectMigrationHash(txHash)
+
+      tx.add(collectIx)
+
+      if (token0Add.toString() == NATIVE_MINT.toString() || token1Add.toString() == NATIVE_MINT.toString()) {
+        // Close the WSOL_ATA
+        tx.add(
+          SPLToken.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+        )
+      }
+
+      tx.feePayer = wallet?.publicKey
+      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+
+      const txHash = await providerMut.send(tx)
+
+      setCollectMigrationHash(txHash.signature)
     } catch (e) {
       setCollecting(false)
 
       console.log(e)
     }
-
-    // const { calldata, value } = NonfungiblePositionManager.collectCallParameters({
-    //   tokenId: tokenId.toString(),
-    //   expectedCurrencyOwed0: feeValue0,
-    //   expectedCurrencyOwed1: feeValue1,
-    //   recipient: account,
-    // })
-
-    // const txn = {
-    //   to: positionManager.address,
-    //   data: calldata,
-    //   value,
-    // }
-
-    // librarySol
-    //   ?.getSigner()
-    //   .estimateGas(txn)
-    //   .then((estimate: any) => {
-    //     const newTxn = {
-    //       ...txn,
-    //       gasLimit: calculateGasMargin(estimate),
-    //     }
-
-    //     return librarySol
-    //       ?.getSigner()
-    //       .sendTransaction(newTxn)
-    //       .then((response: TransactionResponse) => {
-    //         setCollectMigrationHash(response.hash)
-    //         setCollecting(false)
-
-    //         ReactGA.event({
-    //           category: 'Liquidity',
-    //           action: 'CollectV3',
-    //           label: [feeValue0.currency.symbol, feeValue1.currency.symbol].join('/'),
-    //         })
-
-    //         addTransaction(response, {
-    //           summary: `Collect ${feeValue0.currency.symbol}/${feeValue1.currency.symbol} fees`,
-    //         })
-    //       })
-    //   })
-    //   .catch((error: any) => {
-    //     setCollecting(false)
-    //     console.error(error)
-    //   })
   }, [network, feeValue0, feeValue1, positionManager, account, tokenId, addTransaction, librarySol])
 
   // const owner = useSingleCallResult(!!tokenId ? positionManager : null, 'ownerOf', [tokenId]).result?.[0]

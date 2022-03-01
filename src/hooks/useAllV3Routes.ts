@@ -54,12 +54,8 @@ export function useAllV3Routes(
 
   // const [singleHopOnly] = useUserSingleHopOnly()
   const singleHopOnly = true
-  // console.log('Inside useAllV3Routes', currencyIn?.name, currencyOut?.name)
 
   const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
-
-  // const [p, setP] = useState<PublicKey[]>([])
-  // setP(pools)
   // console.log(pools, currencyIn?.symbol, currencyOut?.symbol)
 
   return useMemo(() => {

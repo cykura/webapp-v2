@@ -25,6 +25,8 @@ import {
   SOLUSDT_MAIN,
   SOLUSDC_MAIN,
   SOL_LOCAL,
+  WSOL_LOCAL,
+  CYS_MAIN,
 } from './tokens'
 
 type ChainTokenList = {
@@ -47,7 +49,7 @@ const WETH_ONLY: ChainTokenList = {
 export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   // Need to use USDT as a base too
   // [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [104]: [SOLUSDC_LOCAL],
+  [104]: [SOLUSDC_LOCAL, SOLUSDT_LOCAL],
   [103]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
   [101]: [SOLUSDC_MAIN],
 }
@@ -82,9 +84,9 @@ export const CUSTOM_BASES: { [chainId: number]: { [tokenAddress: string]: Token[
  */
 export const COMMON_BASES: ChainCurrencyList = {
   // [1]: [ExtendedEther.onChain(1), DAI, USDC, USDT],
-  [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL, SOLCYS_LOCAL, SOL_LOCAL],
+  [104]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL, SOLCYS_LOCAL, WSOL_LOCAL],
   [103]: [SOLUSDT_LOCAL, SOLUSDC_LOCAL],
-  [101]: [SOLUSDT_MAIN, SOLUSDC_MAIN],
+  [101]: [SOLUSDT_MAIN, SOLUSDC_MAIN, CYS_MAIN, WSOL_LOCAL],
 }
 
 // used to construct the list of all pairs we consider by default in the frontend

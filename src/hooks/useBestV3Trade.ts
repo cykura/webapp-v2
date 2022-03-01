@@ -26,20 +26,6 @@ export enum V3TradeState {
   SYNCING,
 }
 
-export type CysTrade =
-  | {
-      route: PublicKey | null
-      inputAmount: CurrencyAmount<Currency>
-      outputAmount: CurrencyAmount<Currency>
-    }
-  | null
-  | undefined
-
-export interface CyclosTrade {
-  state: V3TradeState
-  trade: CysTrade
-}
-
 // /**
 //  * Returns the best v3 trade for a desired exact input swap
 //  * @param amountIn the amount to swap in

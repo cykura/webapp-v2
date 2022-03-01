@@ -332,6 +332,9 @@ export default function AddLiquidity({
     //  this can be checked using `noLiquidity`
     console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
 
+    // Check to see if WSOL_ATA created during pool creation
+    let isSOLAccount = false
+
     // Create and init pool
     if (noLiquidity) {
       console.log('Creating and init pool')
@@ -340,6 +343,8 @@ export default function AddLiquidity({
 
         const account = await connection.getAccountInfo(WSOL_ATA)
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          isSOLAccount = true
+
           const amount =
             token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
           console.log(amount)
@@ -424,28 +429,19 @@ export default function AddLiquidity({
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
-    // console.log(tickLowerState.toString(), ' tick lower state')
-
     const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
-    // console.log(tickUpperState.toString(), ' tick upper state')
-
     const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
-    // console.log(bitmapLowerState.toString(), ' bitmap lower state')
     const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
-    // console.log(bitmapUpperState.toString(), ' bitmap upper state')
-
     const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
-    // console.log(factoryState.toString(), ' factory State')
-
     const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
       [
         POSITION_SEED,
@@ -458,21 +454,12 @@ export default function AddLiquidity({
       ],
       cyclosCore.programId
     )
-    // console.log(corePositionState.toString(), ' core position State')
 
     const tickLowerStateInfo = await connection.getAccountInfo(tickLowerState)
     const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
     const bitmapLowerStateInfo = await connection.getAccountInfo(bitmapLowerState)
     const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
     const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
-
-    // console.log(
-    //   tickLowerStateInfo,
-    //   tickUpperStateInfo,
-    //   bitmapLowerStateInfo,
-    //   bitmapUpperStateInfo,
-    //   corePositionStateInfo
-    // )
 
     // Build the transaction
     if (
@@ -566,7 +553,6 @@ export default function AddLiquidity({
     }
 
     // Then finally mint the required position
-    // Need to fix this wallet.publicKey is undefined
     const nftMintKeypair = new anchor.web3.Keypair()
 
     const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
@@ -581,9 +567,7 @@ export default function AddLiquidity({
       wallet.publicKey
     )
 
-    // const amount0Desired = new BN(1_000_000)
-    // const amount1Desired = new BN(1_000_000)
-    // console.log(amount0Desired.toString(), amount1Desired.toString())
+    // Add slippage amounts here
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
@@ -622,78 +606,52 @@ export default function AddLiquidity({
     )[0]
 
     if (noLiquidity || !existingPosition) {
-      // console.log(
-      //   tickLowerState.toString(),
-      //   tickUpperState.toString(),
-      //   bitmapLowerState.toString(),
-      //   bitmapUpperState.toString(),
-      //   corePositionState.toString()
-      // )
       // Create new position
       console.log('Creating new position')
       try {
         const tx1 = new Transaction()
         const tx2 = new Transaction()
 
-        // console.log(
-        //   `
-        //   pool addr ${poolState.toString()}
-        //   factoryState ${factoryState.toString()}
-        //   nftMint ${nftMintKeypair.toString()}
-        //   nftAccount ${positionNftAccount.toString()}
-        //   poolState ${poolState.toString()}
-        //   userATA0 ${userATA0.toString()}
-        //   userATA1 ${userATA1.toString()}
-        //   vault0 ${vault0.toString()}
-        //   vault1 ${vault1.toString()}
-        //   tickLowerState ${tickLowerState.toString()}
-        //   tickUpperState ${tickUpperState.toString()}
-        //   bitmapLower ${bitmapLowerState.toString()}
-        //   bitmapUpper ${bitmapUpperState.toString()}
-        //   corePosition ${corePositionState.toString()}
-        //   latestObservationState ${latestObservationState.toString()}
-        //   nextObservationState ${nextObservationState.toString()}
-        //   tokenizedPositionState ${tokenizedPositionState.toString()}
-        //   `
-        // )
         // If Native SOL is used
-        const account = await connection.getAccountInfo(WSOL_ATA)
-        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
-          const amount =
-            token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
-          // console.log(amount)
-          if (!account) {
-            tx1.add(
-              Token.createAssociatedTokenAccountInstruction(
-                ASSOCIATED_TOKEN_PROGRAM_ID,
-                TOKEN_PROGRAM_ID,
-                NATIVE_MINT,
-                WSOL_ATA,
-                wallet?.publicKey,
-                wallet?.publicKey
+        if (!isSOLAccount) {
+          const account = await connection.getAccountInfo(WSOL_ATA)
+          if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+            const amount =
+              token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
+            // console.log(amount)
+            if (!account) {
+              tx1.add(
+                Token.createAssociatedTokenAccountInstruction(
+                  ASSOCIATED_TOKEN_PROGRAM_ID,
+                  TOKEN_PROGRAM_ID,
+                  NATIVE_MINT,
+                  WSOL_ATA,
+                  wallet?.publicKey,
+                  wallet?.publicKey
+                )
               )
+            }
+            tx1.add(
+              SystemProgram.transfer({
+                fromPubkey: wallet?.publicKey,
+                toPubkey: WSOL_ATA,
+                lamports: amount,
+              }),
+              new TransactionInstruction({
+                keys: [
+                  {
+                    pubkey: WSOL_ATA,
+                    isSigner: false,
+                    isWritable: true,
+                  },
+                ],
+                data: Buffer.from(new Uint8Array([17])),
+                programId: TOKEN_PROGRAM_ID,
+              })
             )
+            tx1.feePayer = wallet?.publicKey
+            tx1.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
           }
-          tx1.add(
-            SystemProgram.transfer({
-              fromPubkey: wallet?.publicKey,
-              toPubkey: WSOL_ATA,
-              lamports: amount,
-            }),
-            new TransactionInstruction({
-              keys: [
-                {
-                  pubkey: WSOL_ATA,
-                  isSigner: false,
-                  isWritable: true,
-                },
-              ],
-              data: Buffer.from(new Uint8Array([17])),
-              programId: TOKEN_PROGRAM_ID,
-            })
-          )
-          tx1.feePayer = wallet?.publicKey
-          tx1.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
         }
 
         const mintIx = cyclosCore.instruction.mintTokenizedPosition(
@@ -740,6 +698,13 @@ export default function AddLiquidity({
 
         tx2.add(mintIx)
 
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          // Close the WSOL_ATA
+          tx2.add(
+            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+          )
+        }
+
         setAttemptingTxn(true)
 
         tx2.feePayer = wallet?.publicKey
@@ -748,10 +713,8 @@ export default function AddLiquidity({
         // console.log(tx1)
         // console.log(tx2)
         // console.log(tx.signatures.map((s) => s.publicKey.toString()))
-
         // const str1 = tx.serializeMessage().toString('base64')
         // console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
-
         // const txnHash1 = await providerMut?.send(tx1)
 
         // Cannot sent empty transactions. So add creation of ATA only if required
@@ -909,6 +872,13 @@ export default function AddLiquidity({
         )
 
         tx.add(ix)
+
+        if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+          // Close the WSOL_ATA
+          tx.add(
+            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
+          )
+        }
 
         tx.feePayer = wallet?.publicKey
         tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash

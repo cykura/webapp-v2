@@ -171,7 +171,7 @@ export default function SwapModalHeader({
           </TYPE.italic>
         )}
       </AutoColumn>
-      {recipient !== null ? (
+      {/* {recipient !== null ? (
         <AutoColumn justify="flex-start" gap="sm" style={{ padding: '12px 0 0 0px' }}>
           <TYPE.main>
             <span>
@@ -180,7 +180,7 @@ export default function SwapModalHeader({
             </span>
           </TYPE.main>
         </AutoColumn>
-      ) : null}
+      ) : null} */}
     </AutoColumn>
   )
 }
