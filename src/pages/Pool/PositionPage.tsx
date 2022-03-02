@@ -304,6 +304,7 @@ export function PositionPage({
   match: {
     params: { tokenId: tokenIdFromUrl },
   },
+  history,
 }: RouteComponentProps<{ tokenId?: string }>) {
   const { network, connection, wallet, providerMut } = useSolana()
   const { account, librarySol } = useActiveWeb3ReactSol()
@@ -321,10 +322,8 @@ export function PositionPage({
     tickLower,
     tickUpper,
     tokenId,
-    feeGrowthInside0LastX128,
-    feeGrowthInside1LastX128,
-    tokensOwed0,
-    tokensOwed1,
+    feeGrowthInside0LastX32,
+    feeGrowthInside1LastX32,
   } = positionDetails || {}
 
   const removed = JSBI.EQ(liquidity, 0)
@@ -390,22 +389,22 @@ export function PositionPage({
     console.log('collect called')
     if (
       !network ||
-      !feeValue0 ||
-      !feeValue1 ||
+      feeValue0 === undefined ||
+      feeValue1 === undefined ||
       !providerMut ||
       !wallet?.publicKey ||
       !account ||
       !tokenId ||
       !parsedTokenId ||
       !pool ||
-      !tickLower ||
-      !tickUpper ||
+      tickLower === undefined ||
+      tickUpper === undefined ||
       !token0 ||
       !token1 ||
-      !feeAmount ||
-      !liquidity ||
-      !feeGrowthInside0LastX128 ||
-      !feeGrowthInside1LastX128
+      feeAmount === undefined ||
+      liquidity === undefined ||
+      feeGrowthInside0LastX32 === undefined ||
+      feeGrowthInside1LastX32 === undefined
     )
       return
 
@@ -704,7 +703,12 @@ export function PositionPage({
       <PageWrapper>
         <TransactionConfirmationModal
           isOpen={showConfirm}
-          onDismiss={() => setShowConfirm(false)}
+          onDismiss={() => {
+            setShowConfirm(false)
+            if (tokenId) {
+              return history.go(0)
+            }
+          }}
           attemptingTxn={collecting}
           hash={collectMigrationHash ?? ''}
           content={() => (

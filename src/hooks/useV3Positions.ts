@@ -9,7 +9,7 @@ import { PROGRAM_ID_STR } from 'constants/addresses'
 import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { POSITION_SEED } from 'constants/tokens'
-import PositionList from 'components/PositionList'
+import { CyclosCore, IDL } from '@uniswap/v3-sdk'
 
 interface UseV3PositionsResults {
   loading: boolean
@@ -30,7 +30,7 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
   const provider = new anchor.Provider(connection, wallet as Wallet, {
     skipPreflight: false,
   })
-  const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
   const [loading, setLoading] = useState<boolean>(true)
   const [positionDetail, setpositionDetail] = useState<PositionDetails | undefined>(undefined)
@@ -46,42 +46,37 @@ export function useV3PositionFromTokenId(tokenId: string | undefined): UseV3Posi
         setpositionDetail(undefined)
         return
       }
-      let pState: any
-      let tokenState: any
+      let poolState: any
+      let tokenizedPositionData: any
+
       try {
-        // console.log('FETCHING')
         const [tokenizedPositionState, _] = await PublicKey.findProgramAddress(
           [POSITION_SEED, new PublicKey(tokenId).toBuffer()],
           cyclosCore.programId
         )
-        const tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
-        const poolState = await cyclosCore.account.poolState.fetch(tokenizedPositionData.poolId)
-        tokenState = tokenizedPositionData
-        pState = poolState
-        // console.log('THIS RUNS?')
+        tokenizedPositionData = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPositionState)
+        poolState = await cyclosCore.account.poolState.fetch(tokenizedPositionData.poolId)
       } catch (e) {
         setLoading(false)
         setpositionDetail(undefined)
         console.log(`Something went wrong fetching ${tokenId}`, e)
         return
       }
-      // console.log(pState)
-      // console.log(tokenState)
       setLoading(false)
       setpositionDetail({
         nonce: '1',
-        tokenId: tokenState.mint.toString(),
+        tokenId: tokenizedPositionData.mint.toString(),
         operator: wallet?.publicKey?.toString() ?? 'undefined',
-        token0: pState.token0.toString(),
-        token1: pState.token1.toString(),
-        fee: pState.fee,
-        tickLower: tokenState.tickLower,
-        tickUpper: tokenState.tickUpper,
-        liquidity: tokenState.liquidity.toNumber(),
-        feeGrowthInside0LastX128: tokenState.feeGrowthInside0LastX32,
-        feeGrowthInside1LastX128: tokenState.feeGrowthInside1LastX32,
-        tokensOwed0: tokenState.tokensOwed0,
-        tokensOwed1: tokenState.tokensOwed1,
+        token0: poolState.token0.toString(),
+        token1: poolState.token1.toString(),
+        fee: poolState.fee,
+        tickLower: tokenizedPositionData.tickLower,
+        tickUpper: tokenizedPositionData.tickUpper,
+        liquidity: tokenizedPositionData.liquidity,
+        feeGrowthInside0LastX32: tokenizedPositionData.feeGrowthInside0LastX32,
+        feeGrowthInside1LastX32: tokenizedPositionData.feeGrowthInside1LastX32,
+        tokensOwed0: tokenizedPositionData.tokensOwed0,
+        tokensOwed1: tokenizedPositionData.tokensOwed1,
       })
     }
     fetchPools()
