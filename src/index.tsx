@@ -24,25 +24,7 @@ if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
 }
 
-const GOOGLE_ANALYTICS_ID: string | undefined = process.env.REACT_APP_GOOGLE_ANALYTICS_ID
-if (typeof GOOGLE_ANALYTICS_ID === 'string') {
-  ReactGA.initialize(GOOGLE_ANALYTICS_ID, {
-    gaOptions: {
-      storage: 'none',
-      storeGac: false,
-    },
-  })
-  ReactGA.set({
-    anonymizeIp: true,
-    customBrowserType: !isMobile
-      ? 'desktop'
-      : 'web3' in window || 'ethereum' in window
-      ? 'mobileWeb3'
-      : 'mobileRegular',
-  })
-} else {
-  ReactGA.initialize('test', { testMode: true, debug: true })
-}
+const DEFAULT_NETWORK: any = process.env.REACT_APP_DEFAULT_NETWORK ?? 'mainnet-beta'
 
 function Updaters() {
   return (
@@ -63,7 +45,7 @@ ReactDOM.render(
     <Provider store={store}>
       <WalletKitProvider
         app={{ name: 'cyclos' }}
-        // defaultNetwork="localnet"
+        defaultNetwork={DEFAULT_NETWORK}
         networkConfigs={{
           'mainnet-beta': {
             name: 'Custom RPC',
