@@ -140,7 +140,7 @@ export default function Pool() {
           <span>Learn</span>
         </MenuItem>
       ),
-      link: 'https://cyclos.io/',
+      link: 'https://cykura.io/',
       external: true,
     },
   ]

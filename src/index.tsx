@@ -44,7 +44,7 @@ ReactDOM.render(
   <StrictMode>
     <Provider store={store}>
       <WalletKitProvider
-        app={{ name: 'cyclos' }}
+        app={{ name: 'cykura' }}
         defaultNetwork={DEFAULT_NETWORK}
         networkConfigs={{
           'mainnet-beta': {
