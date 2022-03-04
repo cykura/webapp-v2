@@ -1,5 +1,5 @@
-import { Currency } from '@uniswap/sdk-core'
-import { FeeAmount, Pool, tickToPrice, TICK_SPACINGS } from '@uniswap/v3-sdk'
+import { Currency } from '@cykura/sdk-core'
+import { FeeAmount, Pool, tickToPrice, TICK_SPACINGS } from '@cykura/sdk'
 import JSBI from 'jsbi'
 import { PoolState, usePool } from './usePools'
 import { useEffect, useMemo, useState } from 'react'

@@ -1,4 +1,4 @@
-import { Currency } from '@uniswap/sdk-core'
+import { Currency } from '@cykura/sdk-core'
 import { SOLCYS_LOCAL } from 'constants/tokens'
 
 export function currencyId(currency: Currency): string {

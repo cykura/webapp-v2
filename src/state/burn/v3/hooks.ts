@@ -1,5 +1,5 @@
-import { CurrencyAmount, Percent, Currency } from '@uniswap/sdk-core'
-import { Position } from '@uniswap/v3-sdk'
+import { CurrencyAmount, Percent, Currency } from '@cykura/sdk-core'
+import { Position } from '@cykura/sdk'
 import { usePool } from 'hooks/usePools'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useToken } from 'hooks/Tokens'

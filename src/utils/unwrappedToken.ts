@@ -1,4 +1,4 @@
-import { Currency } from '@uniswap/sdk-core'
+import { Currency } from '@cykura/sdk-core'
 import { ExtendedEther, WETH9_EXTENDED } from '../constants/tokens'
 import { supportedChainId } from './supportedChainId'
 

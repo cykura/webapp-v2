@@ -12,8 +12,8 @@ import {
   TICK_SPACINGS,
   encodeSqrtRatioX32,
   u32ToSeed,
-} from '@uniswap/v3-sdk'
-import { Currency, Token, CurrencyAmount, Price, Rounding, sqrt } from '@uniswap/sdk-core'
+} from '@cykura/sdk'
+import { Currency, Token, CurrencyAmount, Price, Rounding, sqrt } from '@cykura/sdk-core'
 import { useSolana } from '@saberhq/use-solana'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from '../../../hooks/web3'

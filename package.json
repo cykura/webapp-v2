@@ -4,6 +4,7 @@
   "homepage": ".",
   "private": true,
   "devDependencies": {
+    "@cykura/sdk": "^0.1.0",
     "@metamask/jazzicon": "^2.0.0",
     "@popperjs/core": "^2.4.4",
     "@reach/dialog": "^0.10.3",
@@ -34,8 +35,6 @@
     "@uniswap/token-lists": "^1.0.0-beta.19",
     "@uniswap/v3-core": "1.0.0",
     "@uniswap/v3-periphery": "^1.1.1",
-    "@uniswap/v3-sdk": "git+https://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:x-oauth-basic@github.com/cykura/sdk.git#eb6178ca7aa7e6f3341e3635ef2f0252888ae6dc",
-    "@uniswap/sdk-core": "git+https://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:x-oauth-basic@github.com/cykura/sdk-core.git#d166bc946e06cdf51c5e368e85666b17529cd026",
     "ajv": "^6.12.3",
     "copy-to-clipboard": "^3.2.0",
     "cross-env": "^7.0.2",

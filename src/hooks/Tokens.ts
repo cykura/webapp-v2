@@ -1,5 +1,5 @@
 import { parseBytes32String } from '@ethersproject/strings'
-import { Currency, Token, WSOL } from '@uniswap/sdk-core'
+import { Currency, Token, WSOL } from '@cykura/sdk-core'
 import { arrayify } from 'ethers/lib/utils'
 import { useEffect, useMemo, useState } from 'react'
 import {

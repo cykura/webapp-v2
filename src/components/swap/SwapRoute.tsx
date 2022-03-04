@@ -1,5 +1,5 @@
-import { Currency, TradeType } from '@uniswap/sdk-core'
-import { Trade as V3Trade, FeeAmount } from '@uniswap/v3-sdk'
+import { Currency, TradeType } from '@cykura/sdk-core'
+import { Trade as V3Trade, FeeAmount } from '@cykura/sdk'
 import { Fragment, memo, useContext } from 'react'
 import { ChevronRight } from 'react-feather'
 import { Flex } from 'rebass'
