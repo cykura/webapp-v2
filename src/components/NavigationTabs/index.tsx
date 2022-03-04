@@ -89,6 +89,9 @@ export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' | 'staking' }
       <StyledNavLink id={`stake-nav-link`} to={'/staking'} isActive={() => active === 'staking'}>
         <span>Staking</span>
       </StyledNavLink>
+      <ExternalStyledNavLink href={'https://analytics.cykura.io/'} target={'_blank'}>
+        <span>Analytics &#8599;</span>
+      </ExternalStyledNavLink>
     </Tabs>
   )
 }

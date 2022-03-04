@@ -284,6 +284,9 @@ export default function Header() {
         <StyledNavLink id={`stake-nav-link`} to={'/staking'}>
           <span>Staking</span>
         </StyledNavLink>
+        <ExternalStyledNavLink href={'https://analytics.cykura.io/'} target={'_blank'}>
+          <span>Analytics &#8599;</span>
+        </ExternalStyledNavLink>
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>
