@@ -2,7 +2,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, Token as SplToken, NATIVE_MINT } from '@solana/spl-token'
 import { useSolana } from '@saberhq/use-solana'
 
-import { Currency, Token, CurrencyAmount } from '@uniswap/sdk-core'
+import { Currency, Token, CurrencyAmount } from '@cykura/sdk-core'
 import JSBI from 'jsbi'
 import { useEffect, useMemo, useState } from 'react'
 import { UNI, WSOL_LOCAL, WSOL_MAIN } from '../../constants/tokens'

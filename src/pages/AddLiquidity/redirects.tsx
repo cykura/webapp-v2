@@ -1,6 +1,6 @@
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
-import { SOLCYS_LOCAL, WETH9_EXTENDED } from '../../constants/tokens'
+import { SOLCYS_LOCAL } from '../../constants/tokens'
 import AddLiquidity from './index'
 
 export function RedirectDuplicateTokenIds(

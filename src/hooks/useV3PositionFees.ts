@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CyclosCore, IDL, Pool, u32ToSeed } from '@uniswap/v3-sdk'
-import { CurrencyAmount, Currency } from '@uniswap/sdk-core'
+import { CyclosCore, IDL, Pool, u32ToSeed } from '@cykura/sdk'
+import { CurrencyAmount, Currency } from '@cykura/sdk-core'
 import { useV3PositionFromTokenId } from './useV3Positions'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { TICK_SEED, POOL_SEED } from '../constants/tokens'

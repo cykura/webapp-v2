@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react'
-import { Token } from '@uniswap/sdk-core'
+import { Token } from '@cykura/sdk-core'
 import { AutoRow, RowFixed } from 'components/Row'
 import { AutoColumn } from 'components/Column'
 import CurrencyLogo from 'components/CurrencyLogo'

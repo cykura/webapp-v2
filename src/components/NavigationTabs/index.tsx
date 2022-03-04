@@ -2,7 +2,7 @@ import styled from 'styled-components/macro'
 import { darken } from 'polished'
 
 import { NavLink, Link as HistoryLink, useLocation } from 'react-router-dom'
-import { Percent } from '@uniswap/sdk-core'
+import { Percent } from '@cykura/sdk-core'
 
 import { ArrowLeft } from 'react-feather'
 import Row, { RowBetween } from '../Row'

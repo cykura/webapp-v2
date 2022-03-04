@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
-import { Currency, CurrencyAmount, Fraction, Percent, TradeType } from '@uniswap/sdk-core'
-import { Trade as V3Trade } from '@uniswap/v3-sdk'
+import { Currency, CurrencyAmount, Fraction, Percent, TradeType } from '@cykura/sdk-core'
+import { Trade as V3Trade } from '@cykura/sdk'
 import {
   ALLOWED_PRICE_IMPACT_HIGH,
   ALLOWED_PRICE_IMPACT_LOW,

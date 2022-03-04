@@ -9,7 +9,7 @@ import { PROGRAM_ID_STR } from 'constants/addresses'
 import { TOKEN_PROGRAM_ID, Token as SplToken } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { POSITION_SEED } from 'constants/tokens'
-import { CyclosCore, IDL } from '@uniswap/v3-sdk'
+import { CyclosCore, IDL } from '@cykura/sdk'
 
 interface UseV3PositionsResults {
   loading: boolean

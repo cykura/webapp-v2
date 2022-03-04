@@ -2,7 +2,7 @@ import { Contract } from '@ethersproject/contracts'
 import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import { abi as MulticallABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/UniswapInterfaceMulticall.sol/UniswapInterfaceMulticall.json'
 
-import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, QUOTER_ADDRESSES, MULTICALL_ADDRESS } from 'constants/addresses'
+import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, MULTICALL_ADDRESS } from 'constants/addresses'
 import { abi as NFTPositionManagerABI } from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import { useMemo } from 'react'
 import { getContract } from 'utils'
@@ -48,8 +48,4 @@ export function useMulticall2Contract() {
 
 export function useV3NFTPositionManagerContract(withSignerIfPossible?: boolean) {
   return useContract(NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, NFTPositionManagerABI, withSignerIfPossible)
-}
-
-export function useV3Quoter() {
-  return useContract(QUOTER_ADDRESSES, QuoterABI)
 }

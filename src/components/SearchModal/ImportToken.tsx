@@ -1,5 +1,5 @@
 import { TokenList } from '@uniswap/token-lists/dist/types'
-import { Token, Currency } from '@uniswap/sdk-core'
+import { Token, Currency } from '@cykura/sdk-core'
 import styled from 'styled-components/macro'
 import { TYPE, CloseIcon } from 'theme'
 import Card from 'components/Card'

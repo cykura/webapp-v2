@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react'
-import { Percent } from '@uniswap/sdk-core'
+import { Percent } from '@cykura/sdk-core'
 import styled, { ThemeContext } from 'styled-components/macro'
 
 import QuestionHelper from '../QuestionHelper'
@@ -82,7 +82,7 @@ const OptionCustom = styled(FancyButton)<{ active?: boolean; warning?: boolean }
 const SlippageEmojiContainer = styled.span`
   color: #f3841e;
   ${({ theme }) => theme.mediaWidth.upToSmall`
-    display: none;  
+    display: none;
   `}
 `
 

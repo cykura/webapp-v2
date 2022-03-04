@@ -1,4 +1,4 @@
-import { Currency, Token } from '@uniswap/sdk-core'
+import { Currency, Token } from '@cykura/sdk-core'
 import flatMap from 'lodash.flatmap'
 import { useMemo } from 'react'
 import { BASES_TO_CHECK_TRADES_AGAINST } from '../constants/routing'

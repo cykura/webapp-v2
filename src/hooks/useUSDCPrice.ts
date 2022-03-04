@@ -1,4 +1,4 @@
-import { Currency, CurrencyAmount, Price, Token } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Price, Token } from '@cykura/sdk-core'
 import { useMemo } from 'react'
 import { SOLUSDC, SOLUSDC_LOCAL, SOLUSDC_MAIN } from '../constants/tokens'
 import { useBestV3TradeExactOut } from './useBestV3Trade'

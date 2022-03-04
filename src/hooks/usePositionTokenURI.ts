@@ -1,4 +1,4 @@
-import { Position } from '@uniswap/v3-sdk'
+import { Position } from '@cykura/sdk'
 import { getPriceOrderingFromPositionForUI } from 'components/PositionListItem'
 import { BigNumber } from 'ethers'
 import JSBI from 'jsbi'

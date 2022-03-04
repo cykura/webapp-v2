@@ -1,5 +1,5 @@
-import { FeeAmount } from '@uniswap/v3-sdk'
-import { Token } from '@uniswap/sdk-core'
+import { FeeAmount } from '@cykura/sdk'
+import { Token } from '@cykura/sdk-core'
 // import { useFeeTierDistributionQuery } from 'state/data/enhanced'
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import { reduce } from 'lodash'

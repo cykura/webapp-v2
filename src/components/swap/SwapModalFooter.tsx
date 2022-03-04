@@ -1,5 +1,5 @@
-import { Currency, TradeType } from '@uniswap/sdk-core'
-import { Trade as V3Trade } from '@uniswap/v3-sdk'
+import { Currency, TradeType } from '@cykura/sdk-core'
+import { Trade as V3Trade } from '@cykura/sdk'
 
 import { ReactNode } from 'react'
 import { Text } from 'rebass'
