@@ -1,7 +1,7 @@
 import { u32ToSeed } from '@cykura/sdk'
 import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
-import { PROGRAM_ID_STR, V3_CORE_FACTORY_ADDRESSES } from '../constants/addresses'
+import { PROGRAM_ID_STR } from '../constants/addresses'
 import { Token, Currency } from '@cykura/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from './web3'

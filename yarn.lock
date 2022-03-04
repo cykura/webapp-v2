@@ -1105,10 +1105,10 @@
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-10.1.0.tgz#f0950bba18819512d42f7197e56c518aa491cf18"
   integrity sha512-ij4wRiunFfaJxjB0BdrYHIH8FxBJpOwNPhhAcunlmPdXudL1WQV1qoP9un6JsEBAgQH+7UXyyjh0g7jTxXK6tg==
 
-"@cykura/sdk-core@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@cykura/sdk-core/-/sdk-core-0.1.1.tgz#6e54d7546ec53b97dee929727037630e2e17ce1a"
-  integrity sha512-DHbC5RZ3QBmGVd4X5cLXZddgcisUroCP04OMwo/Ix59WoBhnGThAne3s5DtqcyLdMvws7uEmNMetocmMe6gb7w==
+"@cykura/sdk-core@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@cykura/sdk-core/-/sdk-core-0.1.2.tgz#a4235999bb3e18496fc1602c117a2f9a9b28c407"
+  integrity sha512-L0roCY5DEaFl+y8PBGVn2Znhfjwc5+82oE9oYhNFsE5JPkN7ujmsEHZxDn12oeTcyMM/He67emXS9x9zu+Rw3Q==
   dependencies:
     "@ethersproject/address" "^5.0.2"
     "@project-serum/anchor" "^0.22.0"
@@ -1120,12 +1120,12 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@cykura/sdk@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.0.tgz#de45b1184fe725d4d0b237b8581a29998657cc95"
-  integrity sha512-ynU4kMGcq7OcMElFGPU4DgGOXW7uu+f7RH95NnXIRQ8Ikcd74UMda07Gz/xGaLXa9+6FLCQrwfRd+7L8GDyFOw==
+"@cykura/sdk@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.1.tgz#29ba2dda05e5b781d42112acd716cb54647abed6"
+  integrity sha512-qgNpdfcp95oHZlzoUzACvNiQgNLyN406Y/xOEe3FtwOEuvrzT+ajuNTtug6UgWglqQFfGP+SRnozXagcHxSTvQ==
   dependencies:
-    "@cykura/sdk-core" "^0.1.1"
+    "@cykura/sdk-core" "^0.1.2"
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"
     "@project-serum/anchor" "^0.20.1"

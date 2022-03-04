@@ -8,6 +8,7 @@ import computeSurroundingTicks from 'utils/computeSurroundingTicks'
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import ms from 'ms.macro'
 import cloneDeep from 'lodash/cloneDeep'
+import { PublicKey } from '@solana/web3.js'
 // import { AllV3TicksQuery } from 'state/data/generated'
 
 const PRICE_FIXED_DIGITS = 8
@@ -29,7 +30,7 @@ export function useAllV3Ticks(
   currencyB: Currency | undefined,
   feeAmount: FeeAmount | undefined
 ) {
-  const [poolAddress, setPoolAddress] = useState<string | undefined>()
+  const [poolAddress, setPoolAddress] = useState<PublicKey | undefined>()
   if (currencyA && currencyB && feeAmount) {
     Pool.getAddress(currencyA?.wrapped, currencyB?.wrapped, feeAmount).then((address) => {
       setPoolAddress(address)
