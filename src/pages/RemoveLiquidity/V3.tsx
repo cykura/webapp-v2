@@ -9,7 +9,6 @@ import {
   POOL_SEED,
   POSITION_SEED,
 } from '../../constants/tokens'
-import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import AppBody from '../AppBody'
 import { BigNumber } from '@ethersproject/bignumber'
 import useDebouncedChangeHandler from 'hooks/useDebouncedChangeHandler'

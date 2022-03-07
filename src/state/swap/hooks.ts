@@ -34,7 +34,11 @@ export function useSwapActionHandlers(): {
       dispatch(
         selectCurrency({
           field,
-          currencyId: currency.isToken ? currency.address : currency.isNative ? SOLCYS_LOCAL.address : '',
+          currencyId: currency.isToken
+            ? currency.address.toString()
+            : currency.isNative
+            ? SOLCYS_LOCAL.address.toString()
+            : '',
         })
       )
     },
@@ -196,7 +200,7 @@ function parseCurrencyFromURLParameter(urlParam: any): string {
   if (typeof urlParam === 'string') {
     const valid = isAddress(urlParam)
     if (valid) return valid
-    if (urlParam.toUpperCase() === 'CYS') return SOLCYS_LOCAL.address
+    if (urlParam.toUpperCase() === 'CYS') return SOLCYS_LOCAL.address.toString()
   }
   return ''
 }
@@ -214,7 +218,7 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
   let outputCurrency = parseCurrencyFromURLParameter(parsedQs.outputCurrency)
   if (inputCurrency === '' && outputCurrency === '') {
     // default to wSOL input
-    inputCurrency = SOLCYS_LOCAL.address
+    inputCurrency = SOLCYS_LOCAL.address.toString()
   } else if (inputCurrency === outputCurrency) {
     // clear output if identical
     outputCurrency = ''

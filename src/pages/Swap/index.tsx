@@ -82,13 +82,13 @@ export default function Swap({ history }: RouteComponentProps) {
     currencies,
     inputError: swapInputError,
   } = useDerivedSwapInfo()
-  const tokensList = useMemo(
-    () =>
-      [currencies[Field.INPUT]?.wrapped?.address, currencies[Field.OUTPUT]?.wrapped?.address].filter(
-        (t): t is string => !!t
-      ),
-    [currencies]
-  )
+  // const tokensList = useMemo(
+  //   () =>
+  //     [currencies[Field.INPUT]?.wrapped?.address, currencies[Field.OUTPUT]?.wrapped?.address].filter(
+  //       (t): t is string => !!t
+  //     ),
+  //   [currencies]
+  // )
   // const { haveAllATAs, createATA } = useVerifyATA(tokensList)
   // console.log(trade?.inputAmount.toSignificant(), trade?.outputAmount.toSignificant())
   // let trade: V3Trade<Currency, Currency, TradeType> | undefined

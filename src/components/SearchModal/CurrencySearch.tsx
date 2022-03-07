@@ -5,10 +5,10 @@ import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens, useToken, useIsUserAddedToken, useSearchInactiveTokenLists } from '../../hooks/Tokens'
-import { CloseIcon, TYPE, ButtonText, IconWrapper } from '../../theme'
+import { CloseIcon, TYPE } from '../../theme'
 import { isAddress } from '../../utils'
 import Column from '../Column'
-import Row, { RowBetween, RowFixed } from '../Row'
+import Row, { RowBetween } from '../Row'
 import CommonBases from './CommonBases'
 import CurrencyList from './CurrencyList'
 import { filterTokens, useSortedTokensByQuery } from './filtering'
@@ -91,7 +91,7 @@ export function CurrencySearch({
       ReactGA.event({
         category: 'Currency Select',
         action: 'Search by address',
-        label: isAddressSearch,
+        label: isAddressSearch.toString(),
       })
     }
   }, [isAddressSearch])

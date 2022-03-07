@@ -1,7 +1,7 @@
 import { TokenInfo } from '@uniswap/token-lists'
+import { Token } from '@cykura/sdk-core'
 import { useMemo } from 'react'
 import { isAddress } from '../../utils'
-import { Token } from '@cykura/sdk-core'
 
 const alwaysTrue = () => true
 
@@ -13,8 +13,8 @@ export function createTokenFilterFunction<T extends Token | TokenInfo>(search: s
   const searchingAddress = isAddress(search)
 
   if (searchingAddress) {
-    const lower = searchingAddress.toLowerCase()
-    return (t: T) => ('isToken' in t ? searchingAddress === t.address : lower === t.address.toLowerCase())
+    const lower = searchingAddress.toString().toLowerCase()
+    return (t: T) => ('isToken' in t ? searchingAddress === t.address.toString() : lower === t.address.toLowerCase())
   }
 
   const lowerSearchParts = search

@@ -7,12 +7,11 @@ import user from './user/reducer'
 import transactions from './transactions/reducer'
 import swap from './swap/reducer'
 import mintV3 from './mint/v3/reducer'
-import lists from './lists/reducer'
 import burnV3 from './burn/v3/reducer'
 import logs from './logs/slice'
 import multicall from './multicall/reducer'
 
-const PERSISTED_KEYS: string[] = ['user', 'transactions', 'lists']
+const PERSISTED_KEYS: string[] = ['user', 'transactions']
 
 const store = configureStore({
   reducer: {
@@ -23,7 +22,6 @@ const store = configureStore({
     mintV3,
     burnV3,
     multicall,
-    lists,
     logs,
   },
   middleware: (getDefaultMiddleware) =>

@@ -24,6 +24,7 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
   const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
   const stablecoin = amountOut?.currency
 
+  // find the best route which gives USDC output
   const v3USDCTrade = useBestV3TradeExactOut(currency, amountOut)
 
   return useMemo(() => {
@@ -36,9 +37,11 @@ export default function useUSDCPrice(currency?: Currency): Price<Currency, Token
 
     // handle usdc
     if (currency?.wrapped.equals(stablecoin)) {
-      // console.log('Fetching USDC price')
       return new Price(stablecoin, stablecoin, '1', '1')
     }
+
+    // console.log('trade input amt', v3USDCTrade?.trade?.inputAmount?.quotient.toString())
+    // console.log('trade output amt', v3USDCTrade?.trade?.outputAmount?.quotient.toString())
 
     // Works for CYS, USDX, SOL
     if (v3USDCTrade.trade && v3USDCTrade.trade.inputAmount.toSignificant().toString() !== '0') {

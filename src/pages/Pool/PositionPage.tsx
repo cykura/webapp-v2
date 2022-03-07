@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NonfungiblePositionManager, Pool, Position, u32ToSeed } from '@cykura/sdk'
-
 import { PoolState, usePool } from 'hooks/usePools'
 import { useToken } from 'hooks/Tokens'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { Link, RouteComponentProps } from 'react-router-dom'
 import { unwrappedToken } from 'utils/unwrappedToken'
 import { usePositionTokenURI } from '../../hooks/usePositionTokenURI'
-import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { getExplorerLink, ExplorerDataType } from '../../utils/getExplorerLink'
 import { LoadingRows } from './styleds'
 import styled from 'styled-components/macro'
@@ -19,7 +17,6 @@ import Badge from 'components/Badge'
 import { ButtonConfirmed, ButtonPrimary, ButtonGray } from 'components/Button'
 import { DarkCard, LightCard } from 'components/Card'
 import CurrencyLogo from 'components/CurrencyLogo'
-
 import { currencyId } from 'utils/currencyId'
 import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
@@ -195,7 +192,7 @@ function LinkedCurrency({ network, currency }: { network?: Network; currency?: C
 
   if (network && address) {
     return (
-      <ExternalLink href={getExplorerLink(network, address, ExplorerDataType.TOKEN)}>
+      <ExternalLink href={getExplorerLink(network, address.toString(), ExplorerDataType.TOKEN)}>
         <RowFixed>
           <CurrencyLogo currency={currency} size={'20px'} style={{ marginRight: '0.5rem' }} />
           <TYPE.main>{currency?.symbol} ↗</TYPE.main>
@@ -627,6 +624,7 @@ export function PositionPage({
   const price0 = useUSDCPrice(token0 ?? undefined)
   const price1 = useUSDCPrice(token1 ?? undefined)
   // console.log(price0?.toSignificant(), price1?.toSignificant())
+  console.log('price0', price0, 'pr1', price1, 'position', position)
 
   const fiatValueOfFees: CurrencyAmount<Currency> | null = useMemo(() => {
     if (!price0 || !price1 || !feeValue0 || !feeValue1) return null
@@ -648,6 +646,8 @@ export function PositionPage({
     const amount1 = price1.quote(position.amount1)
     return amount0.add(amount1)
   }, [price0, price1, position])
+
+  // console.log('fiat value of liq', fiatValueOfLiquidity, 'fiat fees', fiatValueOfFees)
 
   const feeValueUpper = inverted ? feeValue0 : feeValue1
   const feeValueLower = inverted ? feeValue1 : feeValue0

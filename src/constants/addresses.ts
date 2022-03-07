@@ -4,7 +4,6 @@ import { SupportedChainId } from './chains'
 
 type AddressMap = { [chainId: number]: string }
 
-export const UNI_ADDRESS: AddressMap = constructSameAddressMap('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
 export const MULTICALL_ADDRESS: AddressMap = {
   ...constructSameAddressMap('0x1F98415757620B543A52E61c46B32eB19261F984'),
   [SupportedChainId.ARBITRUM_RINKEBY]: '0xa501c031958F579dB7676fF1CE78AD305794d579',

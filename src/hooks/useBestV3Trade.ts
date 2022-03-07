@@ -1,22 +1,8 @@
-import { AccountMeta, PublicKey } from '@solana/web3.js'
-import JSBI from 'jsbi'
-import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@cykura/sdk-core'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AccountMeta } from '@solana/web3.js'
+import { Pool, Route, SwapAccount, Trade } from '@cykura/sdk'
+import { Currency, CurrencyAmount, Token, TradeType } from '@cykura/sdk-core'
+import { useEffect, useMemo, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
-import { usePool } from './usePools'
-import { BN } from '@project-serum/anchor'
-import { useDerivedSwapInfo } from 'state/swap/hooks'
-import { SolanaTickDataProvider } from './useSwapCallback'
-import { useSolana } from '@saberhq/use-solana'
-import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
-import { PROGRAM_ID_STR } from 'constants/addresses'
-import { CyclosCore, IDL } from 'types/cyclos-core'
-import * as anchor from '@project-serum/anchor'
-import { Pool, Route, Trade } from '@cykura/sdk'
-import usePrevious from './usePrevious'
-import { SOL_LOCAL, USDC, WSOL_LOCAL } from 'constants/tokens'
-import { NATIVE_MINT } from '@solana/spl-token'
-import { useAllTokens, useToken } from './Tokens'
 
 export enum V3TradeState {
   LOADING,
@@ -59,7 +45,7 @@ export function useBestV3TradeExactIn(
       const result: any = Promise.all(
         routes.map((route, i) => {
           // console.log(i + 1, ' ROUTE')
-          const { input, output, pools, tokenPath } = route as any
+          const { input, output, pools, tokenPath } = route
           const pairTokenPath = tokenPath
             .slice()
             .map((_: any, i: any, a: any) => a.slice(0 + i, i + 2))
@@ -68,7 +54,7 @@ export function useBestV3TradeExactIn(
           // console.log(`Pairs will be ${pairTokenPath}`)
 
           // Wrt to the pools, gives where there tokens in the tokenPath is sorted or not.
-          const order = pools.map((pool: any, index: any) => {
+          const orders = pools.map((pool, index) => {
             // return pairTokenPath[index].split(' ')[0]
             if (
               pool.token0.symbol == pairTokenPath[index].split(' ')[0] &&
@@ -80,11 +66,15 @@ export function useBestV3TradeExactIn(
           })
           // console.log('Order wrt Pools', order)
           const res = Promise.all(
-            order.map(async (o: any, i: any) => {
-              const pool = pools[i] as any
+            orders.map(async (poolOrder, index) => {
+              const pool = pools[index]
               if (!amountIn || !currencyOut) return
-              const amtIn = CurrencyAmount.fromRawAmount(amountIn.currency, amountIn.numerator.toString())
-              if (o) {
+
+              const amtIn = CurrencyAmount.fromRawAmount(
+                amountIn.currency,
+                amountIn.numerator.toString()
+              ) as CurrencyAmount<Token>
+              if (poolOrder) {
                 // sorted order of pool present
                 // CYS -> USDC. Input CYS
                 // console.log('IF in')
@@ -102,8 +92,9 @@ export function useBestV3TradeExactIn(
                   // console.log(a.toFixed())
                   return await pool.getOutputAmount(amtIn)
                 } catch (e) {
-                  console.log(pool, o)
+                  console.log(pool, poolOrder)
                   console.log('This fails?', e)
+                  return undefined
                 }
               }
             })
@@ -113,14 +104,10 @@ export function useBestV3TradeExactIn(
         })
       )
 
-      const d = await result
-      // console.log(d)
-      setAmounts(d)
+      const fetchedAmounts = await result
+      setAmounts(fetchedAmounts)
     }
-    // console.log('fetchPoolState called')
-    fetchPoolState().then(() => {
-      // console.log('Inside the then call', routes)
-    })
+    fetchPoolState()
   }, [routes, routesLoading, amountIn?.toExact()])
 
   return useMemo(() => {
@@ -253,25 +240,23 @@ export function useBestV3TradeExactOut(
   accounts: AccountMeta[] | undefined
 } {
   const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
-  // console.log(routesLoading, routes)
-  const [amounts, setAmounts] = useState<any>([])
+  const [amounts, setAmounts] = useState<([CurrencyAmount<Token>, Pool, SwapAccount[]] | undefined)[][]>([])
 
   useEffect(() => {
-    // console.log(route)
     async function fetchPoolState() {
-      const result: any = Promise.all(
-        routes.map((route, i) => {
-          const { input, output, pools, tokenPath } = route as any
+      const result = Promise.all(
+        routes.map((route) => {
+          const { pools, tokenPath } = route
 
           const pairTokenPath = tokenPath
             .slice()
-            .map((_: any, i: any, a: any) => a.slice(0 + i, i + 2))
-            .filter((ar: any) => ar.length == 2)
-            .map((a: any) => `${a[0].symbol} ${a[1].symbol}`)
+            .map((_, i, a) => a.slice(0 + i, i + 2))
+            .filter((ar) => ar.length == 2)
+            .map((a) => `${a[0].symbol} ${a[1].symbol}`)
 
           // console.log(`Pairs will be ${pairTokenPath}`)
           // Wrt to the pools, gives where there tokens in the tokenPath is sorted or not.
-          const order = pools.map((pool: any, index: any) => {
+          const orderMap = pools.map((pool, index) => {
             if (
               pool.token0.symbol == pairTokenPath[index].split(' ')[0] &&
               pool.token1.symbol === pairTokenPath[index].split(' ')[1]
@@ -283,33 +268,29 @@ export function useBestV3TradeExactOut(
           // console.log(order)
 
           const res = Promise.all(
-            order.map(async (o: any, i: any) => {
-              const pool = pools[i] as any
+            orderMap.map(async (o, i) => {
+              const pool = pools[i]
               // console.log(o, ' is the TRUTH')
               if (!amountOut || !currencyIn) return
-              const amtOut = CurrencyAmount.fromRawAmount(amountOut.currency, amountOut.numerator.toString())
-              if (o) {
-                // sorted order of pool present
-                // CYS -> USDC. Input USDC
-                // console.log('IF out')
-                // console.log(currencyIn?.symbol, amountOut?.currency.symbol)
-                return await pool.getOutputAmount(amtOut)
-              } else {
-                // console.log(pool.token0.symbol, pool.token1.symbol)
-                try {
-                  // This works for single pair
-                  // USDC -> CYS. Input CYS
-                  // const { numerator, denominator } = amountOut.multiply('-1')
-                  // const amtOut = CurrencyAmount.fromFractionalAmount(currencyIn, numerator, denominator)
-                  // console.log('ELSE out')
-                  // console.log(currencyIn?.symbol, amountOut?.currency.symbol)
-                  // const a = CurrencyAmount.fromRawAmount(amountOut.currency, amtOut.numerator.toString())
-                  return await pool.getOutputAmount(amtOut)
-                } catch (e) {
-                  console.log(pool, o)
-                  console.log('This fails?', e)
-                }
-              }
+              const amtOut = CurrencyAmount.fromRawAmount(
+                amountOut.currency,
+                amountOut.numerator.toString()
+              ) as CurrencyAmount<Token>
+
+              return await pool.getOutputAmount(amtOut)
+
+              // if (o) {
+              //   return await pool.getOutputAmount(amtOut)
+              // } else {
+              //   // console.log(pool.token0.symbol, pool.token1.symbol)
+              //   try {
+              //     return await pool.getOutputAmount(amtOut)
+              //   } catch (e) {
+              //     console.log(pool, o)
+              //     console.log('This fails?', e)
+              //     return undefined
+              //   }
+              // }
             })
           )
           // console.log(result)
@@ -317,11 +298,10 @@ export function useBestV3TradeExactOut(
         })
       )
       const d = await result
-      // console.log(d)
       setAmounts(d)
     }
 
-    fetchPoolState().then()
+    fetchPoolState()
   }, [routes, routesLoading, amountOut?.toExact()])
 
   return useMemo(() => {
@@ -341,75 +321,52 @@ export function useBestV3TradeExactOut(
       }
     }
 
-    const absAmounts = amounts.flat().map((amount: any) => {
-      const amt: CurrencyAmount<Currency> = amount[0]
-      // const ZERO = CurrencyAmount.fromRawAmount(amountOut.currency, 0)
+    // amountIn, pool, pool-pubkey
+    const absAmounts = amounts
+      .flat()
+      .filter((amt) => amt !== undefined)
+      .map((amount) => {
+        const amt: CurrencyAmount<Currency> = amount![0]
 
-      let absAmt = amt
-      // If negative. take abs
-      if (+amt.toFixed(2) < 0) {
-        const { numerator, denominator } = amt.multiply('-1')
-        absAmt = CurrencyAmount.fromFractionalAmount(currencyIn, numerator, denominator)
-      }
-
-      return [absAmt, amount[1], amount[2]]
-    })
-
-    // if (amounts) {
-    //   console.log(
-    //     'OUT',
-    //     absAmounts.map((a: any) => `${a[0].toFixed(2)} ${a[1].token0.symbol} ${a[1].token1.symbol} ${a[1].fee} `)
-    //   )
-    // }
-
-    const { bestRoute, amountIn, swapAccounts } = absAmounts.reduce(
-      (
-        currentBest: {
-          bestRoute: Route<Currency, Currency> | null
-          amountIn: CurrencyAmount<typeof currencyIn> | null
-          swapAccounts: AccountMeta[] | undefined
-        },
-        amount: any,
-        i: any
-      ) => {
-        if (!amount) return currentBest
-
-        if (currentBest.amountIn === null) {
-          return {
-            bestRoute: routes[i],
-            amountIn: amount[0],
-            swapAccounts: amount[2],
-          }
-        } else if (currentBest.amountIn.greaterThan(amount[0])) {
-          return {
-            bestRoute: routes[i],
-            amountIn: amount[0],
-            swapAccounts: amount[2],
-          }
+        let absAmt = amt
+        // If negative. take abs
+        if (+amt.toFixed(2) < 0) {
+          const { numerator, denominator } = amt.multiply('-1')
+          absAmt = CurrencyAmount.fromFractionalAmount(currencyIn, numerator, denominator)
         }
 
-        return currentBest
-      },
-      {
-        bestRoute: null,
-        amountIn: null,
-        swapAccounts: null,
-      }
-    )
+        return [absAmt, amount![1], amount![2]]
+      })
 
-    if (!bestRoute || !amountIn) {
+    let bestPath:
+      | {
+          bestRoute: Route<Currency, Currency>
+          amountIn: CurrencyAmount<typeof currencyIn>
+          swapAccounts: AccountMeta[]
+        }
+      | undefined = undefined
+
+    for (const index in absAmounts) {
+      const amount = absAmounts[index]
+      // find the path which gives the smallest amountIn
+      if (!bestPath || bestPath.amountIn.lessThan(amount[0] as CurrencyAmount<Currency>)) {
+        bestPath = {
+          bestRoute: routes[index],
+          amountIn: amount[0] as CurrencyAmount<Currency>,
+          swapAccounts: amount[2] as AccountMeta[],
+        }
+      }
+    }
+
+    if (!bestPath) {
       return {
         state: V3TradeState.NO_ROUTE_FOUND,
         trade: null,
         accounts: undefined,
       }
     }
+    const { bestRoute, amountIn, swapAccounts } = bestPath
 
-    // console.log(
-    //   bestRoute,
-    //   swapAccounts.map((i: any) => i.toString()),
-    //   'OUT'
-    // )
     return {
       state: V3TradeState.VALID,
       trade: Trade.createUncheckedTrade({
