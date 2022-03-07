@@ -2,16 +2,13 @@ import 'inter-ui'
 import '@reach/dialog/styles.css'
 import { WalletKitProvider } from '@gokiprotocol/walletkit'
 import { StrictMode } from 'react'
-import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
-import ReactGA from 'react-ga'
 import { Provider } from 'react-redux'
 import { HashRouter } from 'react-router-dom'
 import App from './pages/App'
 import store from './state'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 import ApplicationUpdater from './state/application/updater'
-import ListsUpdater from './state/lists/updater'
 import MulticallUpdater from './state/multicall/updater'
 import LogsUpdater from './state/logs/updater'
 import TransactionUpdater from './state/transactions/updater'
@@ -29,7 +26,6 @@ const DEFAULT_NETWORK: any = process.env.REACT_APP_DEFAULT_NETWORK ?? 'mainnet-b
 function Updaters() {
   return (
     <>
-      <ListsUpdater />
       <UserUpdater />
       <ApplicationUpdater />
       <TransactionUpdater />

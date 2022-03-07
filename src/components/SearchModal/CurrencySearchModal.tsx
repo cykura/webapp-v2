@@ -1,12 +1,10 @@
 import { Currency, Token } from '@cykura/sdk-core'
 import { useCallback, useEffect, useState } from 'react'
 import useLast from '../../hooks/useLast'
-import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import Modal from '../Modal'
 import { CurrencySearch } from './CurrencySearch'
 import { ImportToken } from './ImportToken'
 import usePrevious from 'hooks/usePrevious'
-import { TokenList } from '@uniswap/token-lists'
 
 interface CurrencySearchModalProps {
   isOpen: boolean
@@ -82,7 +80,6 @@ export default function CurrencySearchModal({
         <ImportToken
           tokens={[importToken]}
           onDismiss={onDismiss}
-          list={importToken instanceof WrappedTokenInfo ? importToken.list : undefined}
           onBack={() =>
             setModalView(prevView && prevView !== CurrencyModalView.importToken ? prevView : CurrencyModalView.search)
           }

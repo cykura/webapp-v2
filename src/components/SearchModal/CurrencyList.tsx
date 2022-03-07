@@ -4,7 +4,6 @@ import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
 import styled from 'styled-components/macro'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
-import { useCombinedActiveList } from '../../state/lists/hooks'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import { useCurrencyBalance } from '../../state/wallet/hooks'
 import { TYPE } from '../../theme'
@@ -15,12 +14,11 @@ import CurrencyLogo from '../CurrencyLogo'
 import { MouseoverTooltip } from '../Tooltip'
 import { MenuItem } from './styleds'
 import Loader from '../Loader'
-import { isTokenOnList } from '../../utils'
 import ImportRow from './ImportRow'
 import { LightGreyCard } from 'components/Card'
 
 function currencyKey(currency: Currency): string {
-  return currency.isToken ? currency.address : 'SOL'
+  return currency.isToken ? currency.address.toString() : 'SOL'
 }
 
 const StyledBalanceText = styled(Text)`
@@ -107,8 +105,7 @@ function CurrencyRow({
 }) {
   const { account } = useActiveWeb3ReactSol()
   const key = currencyKey(currency)
-  const selectedTokenList = useCombinedActiveList()
-  const isOnSelectedList = isTokenOnList(selectedTokenList, currency.isToken ? currency : undefined)
+  const isOnSelectedList = false
   const customAdded = useIsUserAddedToken(currency)
   const balance = useCurrencyBalance(account ?? undefined, currency)
 
@@ -189,8 +186,6 @@ export default function CurrencyList({
   setImportToken: (token: Token) => void
   showCurrencyAmount?: boolean
 }) {
-  const { account } = useActiveWeb3ReactSol()
-
   const itemData: (Currency | BreakLine)[] = useMemo(() => {
     if (otherListTokens && otherListTokens?.length > 0) {
       return [...currencies, BREAK_LINE, ...otherListTokens]

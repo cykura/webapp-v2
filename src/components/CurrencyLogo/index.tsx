@@ -1,4 +1,5 @@
 import { Currency } from '@cykura/sdk-core'
+import { PublicKey } from '@solana/web3.js'
 import { SOL_ICON, CYS_ICON, USDC_ICON, USDT_ICON } from 'constants/tokens'
 import React, { useMemo } from 'react'
 import styled from 'styled-components/macro'
@@ -6,8 +7,8 @@ import useHttpLocations from '../../hooks/useHttpLocations'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import Logo from '../Logo'
 
-export const getTokenLogoURL = (address: string) =>
-  `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${address}/logo.png`
+export const getTokenLogoURL = (address: PublicKey) =>
+  `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${address.toString()}/logo.png`
 
 const WSOL_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'

@@ -1,12 +1,10 @@
 import { useCallback, useContext, useMemo, useState } from 'react'
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
-import { TransactionResponse } from '@ethersproject/providers'
 import { Currency, CurrencyAmount, Percent } from '@cykura/sdk-core'
 import { AlertTriangle, AlertCircle } from 'react-feather'
-import ReactGA from 'react-ga'
 import { ZERO_PERCENT } from '../../constants/misc'
-import { NONFUNGIBLE_POSITION_MANAGER_ADDRESSES, PROGRAM_ID_STR } from '../../constants/addresses'
+import { PROGRAM_ID_STR } from '../../constants/addresses'
 import {
   BITMAP_SEED,
   FEE_SEED,
@@ -17,7 +15,6 @@ import {
   TICK_SEED,
   METADATA_SEED,
   WSOL_LOCAL,
-  SOL_LOCAL,
 } from '../../constants/tokens'
 import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
@@ -30,7 +27,6 @@ import TransactionConfirmationModal, { ConfirmationModalContent } from '../../co
 import CurrencyInputPanel from '../../components/CurrencyInputPanel'
 import { RowBetween, RowFixed } from '../../components/Row'
 import { useUSDCValue } from '../../hooks/useUSDCPrice'
-import { calculateGasMargin } from '../../utils/calculateGasMargin'
 import { Review } from './Review'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
@@ -213,8 +209,8 @@ export default function AddLiquidity({
     // Convinence helpers
     // We get the arbitary SOL addr taken locally when selected from the drop down list
     // Convert this NATIVE_MINT as further all calculations are based on this
-    const tokenA = currencyA?.wrapped.address == NATIVE_MINT.toString() ? WSOL_LOCAL : currencyA?.wrapped
-    const tokenB = currencyB?.wrapped.address == NATIVE_MINT.toString() ? WSOL_LOCAL : currencyB?.wrapped
+    const tokenA = currencyA?.wrapped.address.equals(NATIVE_MINT) ? WSOL_LOCAL : currencyA?.wrapped
+    const tokenB = currencyB?.wrapped.address.equals(NATIVE_MINT) ? WSOL_LOCAL : currencyB?.wrapped
     const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
     console.log(`POOL CREATION\ttoken0 ${tk0?.address} ${tk0.symbol}\ttoken1 ${tk1?.address} ${tk1.symbol}`)
@@ -919,10 +915,10 @@ export default function AddLiquidity({
       } else {
         // prevent weth + eth
         const isETHOrWETHNew =
-          currencyIdNew === 'CYS' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address)
+          currencyIdNew === 'CYS' || (chainId !== undefined && currencyIdNew === SOLCYS_LOCAL.address.toString())
         const isETHOrWETHOther =
           currencyIdOther !== undefined &&
-          (currencyIdOther === 'CYS' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address))
+          (currencyIdOther === 'CYS' || (chainId !== undefined && currencyIdOther === SOLCYS_LOCAL.address.toString()))
 
         if (isETHOrWETHNew && isETHOrWETHOther) {
           return [currencyIdNew, undefined]
