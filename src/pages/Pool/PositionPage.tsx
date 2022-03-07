@@ -309,6 +309,7 @@ export function PositionPage({
   match: {
     params: { tokenId: tokenIdFromUrl },
   },
+  history,
 }: RouteComponentProps<{ tokenId?: string }>) {
   const { network, connection, wallet, providerMut } = useSolana()
   const { account, librarySol } = useActiveWeb3ReactSol()
@@ -709,7 +710,12 @@ export function PositionPage({
       <PageWrapper>
         <TransactionConfirmationModal
           isOpen={showConfirm}
-          onDismiss={() => setShowConfirm(false)}
+          onDismiss={() => {
+            setShowConfirm(false)
+            if (tokenId) {
+              return history.go(0)
+            }
+          }}
           attemptingTxn={collecting}
           hash={collectMigrationHash ?? ''}
           content={() => (
