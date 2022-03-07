@@ -9,6 +9,7 @@ import {
   CYS_MAIN,
   WSOL_MAIN,
   WSOL_LOCAL,
+  UST_MAIN,
 } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -44,6 +45,7 @@ export function useAllTokens(): { [address: string]: Token } {
       [SOLUSDT_MAIN.address.toString()]: SOLUSDT_MAIN,
       [CYS_MAIN.address.toString()]: CYS_MAIN,
       [WSOL_MAIN.address.toString()]: WSOL_MAIN,
+      [UST_MAIN.address.toString()]: UST_MAIN,
     }
     userAddedTokens.forEach((token) => {
       map[token.address.toString()] = token

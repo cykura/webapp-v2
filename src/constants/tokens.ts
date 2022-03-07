@@ -17,6 +17,13 @@ export const SOLUSDT_MAIN = new Token(
   'USDT',
   'USDT'
 )
+export const UST_MAIN = new Token(
+  101,
+  new PublicKey('9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i'),
+  6,
+  'UST',
+  'UST (Wormhole)'
+)
 export const CYS_MAIN = new Token(
   101,
   new PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg'),
