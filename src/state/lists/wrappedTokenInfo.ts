@@ -1,4 +1,6 @@
 import { Currency, Token } from '@cykura/sdk-core'
+import { BN } from '@project-serum/anchor'
+import { PublicKey } from '@solana/web3.js'
 import { Tags, TokenInfo } from '@uniswap/token-lists'
 import { TokenList } from '@uniswap/token-lists/dist/types'
 import { isAddress } from '../../utils'
@@ -22,13 +24,14 @@ export class WrappedTokenInfo implements Token {
     this.list = list
   }
 
-  private _checksummedAddress: string | null = null
+  private _checksummedAddress: PublicKey | null = null
 
-  public get address(): string {
+  public get address(): PublicKey {
     if (this._checksummedAddress) return this._checksummedAddress
     const checksummedAddress = isAddress(this.tokenInfo.address)
     if (!checksummedAddress) throw new Error(`Invalid token address: ${this.tokenInfo.address}`)
-    return (this._checksummedAddress = checksummedAddress)
+    console.log('converting to address', checksummedAddress)
+    return (this._checksummedAddress = new PublicKey(checksummedAddress))
   }
 
   public get chainId(): number {
@@ -67,12 +70,16 @@ export class WrappedTokenInfo implements Token {
   }
 
   equals(other: Currency): boolean {
-    return other.chainId === this.chainId && other.isToken && other.address.toLowerCase() === this.address.toLowerCase()
+    return other.chainId === this.chainId && other.isToken && other.address === this.address
   }
 
   sortsBefore(other: Token): boolean {
     if (this.equals(other)) throw new Error('Addresses should not be equal')
-    return this.address.toLowerCase() < other.address.toLowerCase()
+
+    const thisKeyAsNumber = new BN(this.address.toBuffer())
+    const otherKeyAsNumber = new BN(other.address.toBuffer())
+
+    return thisKeyAsNumber.lt(otherKeyAsNumber)
   }
 
   public get wrapped(): Token {

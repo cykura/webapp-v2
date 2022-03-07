@@ -5,9 +5,8 @@ import { PROGRAM_ID_STR } from '../constants/addresses'
 import { Token, Currency } from '@cykura/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
 import { useActiveWeb3ReactSol } from './web3'
-
 import { Pool, FeeAmount } from '@cykura/sdk'
-import { POOL_SEED, SOLUSDC_LOCAL, SOLUSDT_LOCAL } from 'constants/tokens'
+import { POOL_SEED } from 'constants/tokens'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import JSBI from 'jsbi'
 import { SolanaTickDataProvider } from './useSwapCallback'
@@ -127,9 +126,7 @@ export function usePools(
     // const allFetchedPublicKeys = allFetchedPoolStates.map((p: any, i: any) => Object.keys(p))
     const allFetchedPublicKeys = Object.keys(allFetchedPoolStates)
     // console.log("PK 's of all fetched pool states", allFetchedPublicKeys)
-    const existingPools = poolAddresses.map((p: any) =>
-      allFetchedPublicKeys.flat(1).includes(p.toString()) ? true : false
-    )
+    const existingPools = poolAddresses.map((p) => p && allFetchedPublicKeys.flat(1).includes(p))
     // console.log(
     //   "PK's of all constructed pools",
     //   poolAddresses.map((p: any) => p)

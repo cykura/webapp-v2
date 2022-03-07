@@ -22,8 +22,8 @@ function getTokenComparator(balances: {
     // 1 = b is first
 
     // sort by balances
-    const balanceA = balances[tokenA.address]
-    const balanceB = balances[tokenB.address]
+    const balanceA = balances[tokenA.address.toString()]
+    const balanceB = balances[tokenB.address.toString()]
 
     const balanceComp = balanceComparator(balanceA, balanceB)
     if (balanceComp !== 0) return balanceComp
