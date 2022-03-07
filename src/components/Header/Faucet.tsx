@@ -86,8 +86,7 @@ const SOL = {
   address: new PublicKey('EC1x3JZ1PBW4MqH711rqfERaign6cxLTBNb3mi5LK9vP'),
   decimal: 9,
   name: 'Wrapped SOL',
-  logoURI:
-    'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png',
+  logoURI: 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png',
 }
 
 function Faucet() {

@@ -1,8 +1,8 @@
 import { Field } from '../../state/mint/v3/actions'
 import { AutoColumn } from 'components/Column'
 import styled from 'styled-components/macro'
-import { Currency, CurrencyAmount, Price } from '@uniswap/sdk-core'
-import { Position } from '@uniswap/v3-sdk'
+import { Currency, CurrencyAmount, Price } from '@cykura/sdk-core'
+import { Position } from '@cykura/sdk'
 import { PositionPreview } from 'components/PositionPreview'
 
 const Wrapper = styled.div`

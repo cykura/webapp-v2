@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { FeeAmount } from '@uniswap/v3-sdk'
-import { Token } from '@uniswap/sdk-core'
+import { FeeAmount } from '@cykura/sdk'
+import { Token } from '@cykura/sdk-core'
 
 import { AutoColumn } from 'components/Column'
 import { DynamicSection } from 'pages/AddLiquidity/styled'

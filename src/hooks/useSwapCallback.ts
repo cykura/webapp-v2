@@ -11,8 +11,8 @@ import {
   tickPosition,
   Trade as V3Trade,
   u32ToSeed,
-} from '@uniswap/v3-sdk'
-import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@uniswap/sdk-core'
+} from '@cykura/sdk'
+import { Currency, Percent, TradeType, Token as UniToken, BigintIsh, CurrencyAmount } from '@cykura/sdk-core'
 import * as anchor from '@project-serum/anchor'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import { PROGRAM_ID, PROGRAM_ID_STR, SWAP_ROUTER_ADDRESSES } from '../constants/addresses'
@@ -549,7 +549,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
       nextBit = nextInitBit.next
       initialized = nextInitBit.initialized
     } catch (error) {
-      console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+      // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
     // console.log(

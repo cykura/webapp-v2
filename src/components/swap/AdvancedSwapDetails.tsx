@@ -1,5 +1,5 @@
-import { Percent, Currency, TradeType } from '@uniswap/sdk-core'
-import { Trade as V3Trade } from '@uniswap/v3-sdk'
+import { Percent, Currency, TradeType } from '@cykura/sdk-core'
+import { Trade as V3Trade } from '@cykura/sdk'
 import { useContext, useMemo } from 'react'
 import { ThemeContext } from 'styled-components/macro'
 import { TYPE } from '../../theme'

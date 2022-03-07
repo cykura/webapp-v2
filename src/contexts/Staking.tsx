@@ -13,6 +13,7 @@ import {
   NO_LOCK_STK_VAULT,
   PoolType,
   STAKING_PROGRAM,
+  TM_LOCK_REWARDS_VAULT,
 } from '../constants/addresses'
 import idl from '../constants/rewards.json'
 import { ConnectedWallet, useConnectedWallet, useSolana } from '@saberhq/use-solana'
@@ -284,12 +285,14 @@ export function StakingProvider(props: IProps) {
   const unstake = async (input: number, poolType: PoolType) => {
     let POOL_ID = NO_LOCK_POOL
     let STAKING_VAULT = NO_LOCK_STK_VAULT
+    let POOL_SIGNER = NO_LOCK_POOL_SIGNER
     let userAccount = userAccountNoLock
 
     // Switch Pools
     if (poolType === PoolType.TWOLOCK) {
       POOL_ID = TM_LOCK_POOL
       STAKING_VAULT = TM_LOCK_STK_VAULT
+      POOL_SIGNER = TM_LOCK_POOL_SIGNER
       userAccount = userAccount2mLock
     }
 
@@ -302,7 +305,7 @@ export function StakingProvider(props: IProps) {
         user: userAccount.account,
         owner: wallet.publicKey,
         stakeFromAccount: ownerTokenAcc,
-        poolSigner: NO_LOCK_POOL_SIGNER,
+        poolSigner: POOL_SIGNER,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     })
@@ -331,12 +334,16 @@ export function StakingProvider(props: IProps) {
   const claim = async (poolType: PoolType) => {
     let POOL_ID = NO_LOCK_POOL
     let STAKING_VAULT = NO_LOCK_STK_VAULT
+    let REWARD_VAULT = NO_LOCK_REWARDS_VAULT
+    let POOL_SIGNER = NO_LOCK_POOL_SIGNER
     let userAccount = userAccountNoLock
 
     // Switch Pools
     if (poolType === PoolType.TWOLOCK) {
       POOL_ID = TM_LOCK_POOL
       STAKING_VAULT = TM_LOCK_STK_VAULT
+      REWARD_VAULT = TM_LOCK_REWARDS_VAULT
+      POOL_SIGNER = TM_LOCK_POOL_SIGNER
       userAccount = userAccount2mLock
     }
 
@@ -344,11 +351,11 @@ export function StakingProvider(props: IProps) {
       accounts: {
         pool: POOL_ID,
         stakingVault: STAKING_VAULT,
-        rewardVault: NO_LOCK_REWARDS_VAULT,
+        rewardVault: REWARD_VAULT,
         user: userAccount.account,
         owner: wallet.publicKey,
         rewardAccount: ownerTokenAcc,
-        poolSigner: NO_LOCK_POOL_SIGNER,
+        poolSigner: POOL_SIGNER,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     })

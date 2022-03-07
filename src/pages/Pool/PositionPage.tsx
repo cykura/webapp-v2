@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { NonfungiblePositionManager, Pool, Position, u32ToSeed } from '@uniswap/v3-sdk'
+import { NonfungiblePositionManager, Pool, Position, u32ToSeed } from '@cykura/sdk'
 
 import { PoolState, usePool } from 'hooks/usePools'
 import { useToken } from 'hooks/Tokens'
@@ -23,24 +23,19 @@ import CurrencyLogo from 'components/CurrencyLogo'
 import { currencyId } from 'utils/currencyId'
 import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
 import { useV3PositionFees } from 'hooks/useV3PositionFees'
-import { BigNumber } from '@ethersproject/bignumber'
-import { Token, Currency, CurrencyAmount, Percent, Fraction, Price } from '@uniswap/sdk-core'
+import { Token, Currency, CurrencyAmount, Percent, Fraction, Price } from '@cykura/sdk-core'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useIsTransactionPending, useTransactionAdder } from 'state/transactions/hooks'
-import ReactGA from 'react-ga'
 import TransactionConfirmationModal, { ConfirmationModalContent } from 'components/TransactionConfirmationModal'
-import { TransactionResponse } from '@ethersproject/providers'
 import { Dots } from 'components/swap/styleds'
 import { getPriceOrderingFromPositionForUI } from '../../components/PositionListItem'
 import useTheme from '../../hooks/useTheme'
 import RateToggle from '../../components/RateToggle'
-import { useSingleCallResult } from 'state/multicall/hooks'
 import RangeBadge from '../../components/Badge/RangeBadge'
 import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import useUSDCPrice from 'hooks/useUSDCPrice'
 import Loader from 'components/Loader'
-import Toggle from 'components/Toggle'
 import { Network } from '@saberhq/solana-contrib'
 import JSBI from 'jsbi'
 import { PROGRAM_ID_STR } from 'constants/addresses'
@@ -327,10 +322,8 @@ export function PositionPage({
     tickLower,
     tickUpper,
     tokenId,
-    feeGrowthInside0LastX128,
-    feeGrowthInside1LastX128,
-    tokensOwed0,
-    tokensOwed1,
+    feeGrowthInside0LastX32,
+    feeGrowthInside1LastX32,
   } = positionDetails || {}
 
   const removed = JSBI.EQ(liquidity, 0)
@@ -396,22 +389,22 @@ export function PositionPage({
     console.log('collect called')
     if (
       !network ||
-      !feeValue0 ||
-      !feeValue1 ||
+      feeValue0 === undefined ||
+      feeValue1 === undefined ||
       !providerMut ||
       !wallet?.publicKey ||
       !account ||
       !tokenId ||
       !parsedTokenId ||
       !pool ||
-      !tickLower ||
-      !tickUpper ||
+      tickLower === undefined ||
+      tickUpper === undefined ||
       !token0 ||
       !token1 ||
-      !feeAmount ||
-      !liquidity ||
-      !feeGrowthInside0LastX128 ||
-      !feeGrowthInside1LastX128
+      feeAmount === undefined ||
+      liquidity === undefined ||
+      feeGrowthInside0LastX32 === undefined ||
+      feeGrowthInside1LastX32 === undefined
     )
       return
 

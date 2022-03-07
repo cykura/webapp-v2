@@ -6,7 +6,7 @@ import styled, { keyframes } from 'styled-components/macro'
 import { TYPE } from 'theme'
 import { AutoColumn } from 'components/Column'
 import { ButtonPrimary } from 'components/Button'
-import { FeeAmount } from '@uniswap/v3-sdk'
+import { FeeAmount } from '@cykura/sdk'
 import { formattedFeeAmount } from 'utils'
 
 const pulse = (color: string) => keyframes`

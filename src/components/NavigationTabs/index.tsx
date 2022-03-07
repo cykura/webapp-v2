@@ -2,7 +2,7 @@ import styled from 'styled-components/macro'
 import { darken } from 'polished'
 
 import { NavLink, Link as HistoryLink, useLocation } from 'react-router-dom'
-import { Percent } from '@uniswap/sdk-core'
+import { Percent } from '@cykura/sdk-core'
 
 import { ArrowLeft } from 'react-feather'
 import Row, { RowBetween } from '../Row'
@@ -89,6 +89,9 @@ export function SwapPoolTabs({ active }: { active: 'swap' | 'pool' | 'staking' }
       <StyledNavLink id={`stake-nav-link`} to={'/staking'} isActive={() => active === 'staking'}>
         <span>Staking</span>
       </StyledNavLink>
+      <ExternalStyledNavLink href={'https://analytics.cykura.io/'} target={'_blank'}>
+        <span>Analytics &#8599;</span>
+      </ExternalStyledNavLink>
     </Tabs>
   )
 }

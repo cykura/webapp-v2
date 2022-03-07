@@ -476,12 +476,7 @@ const StakeCard = (props: any) => {
                 </ResponsiveButtonPrimary>
               </ColumnCenter>
             </InputRow>
-            <ButtonSecondary
-              disabled={!+stakeAccountDetails?.balanceStaked?.toString()}
-              onClick={() => handleClaim(poolType)}
-            >
-              Claim Rewards
-            </ButtonSecondary>
+            <ButtonSecondary onClick={() => handleClaim(poolType)}>Claim Rewards</ButtonSecondary>
           </>
         ) : (
           <>

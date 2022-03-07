@@ -1,7 +1,7 @@
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
-import { Currency, CurrencyAmount, Fraction, Token, TradeType } from '@uniswap/sdk-core'
-import { Trade as V3Trade } from '@uniswap/v3-sdk'
+import { Currency, CurrencyAmount, Fraction, Token, TradeType } from '@cykura/sdk-core'
+import { Trade as V3Trade } from '@cykura/sdk'
 import { AdvancedSwapDetails } from 'components/swap/AdvancedSwapDetails'
 import { MouseoverTooltipContent } from 'components/Tooltip'
 import useDebounce from 'hooks/useDebounce'
@@ -370,6 +370,14 @@ export default function Swap({ history }: RouteComponentProps) {
                   </TYPE.main>
                 </GreyCard>
               ) : (
+                // ATA check and creation handled within the swap txn
+                // : !haveAllATAs && !isValid ? (
+                //   <ButtonError onClick={handleCreateATA}>
+                //     <Text fontSize={20} fontWeight={500}>
+                //       Create Accounts
+                //     </Text>
+                //   </ButtonError>
+                // ) :
                 <ButtonError
                   onClick={() => {
                     // handleSwap()
@@ -415,7 +423,6 @@ export default function Swap({ history }: RouteComponentProps) {
           </AutoColumn>
         </Wrapper>
       </AppBody>
-      <SwitchLocaleLink />
     </>
   )
 }

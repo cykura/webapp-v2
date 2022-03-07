@@ -1,4 +1,4 @@
-import { Currency } from '@uniswap/sdk-core'
+import { Currency } from '@cykura/sdk-core'
 import { SOL_ICON, CYS_ICON, USDC_ICON, USDT_ICON } from 'constants/tokens'
 import React, { useMemo } from 'react'
 import styled from 'styled-components/macro'

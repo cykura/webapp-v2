@@ -15,7 +15,7 @@ import Faucet from './Faucet'
 import { useSOLBalance } from 'state/wallet/hooks'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
-import { CurrencyAmount, Currency } from '@uniswap/sdk-core'
+import { CurrencyAmount, Currency } from '@cykura/sdk-core'
 
 const HeaderFrame = styled.div<{ showBackground: boolean }>`
   display: grid;
@@ -284,6 +284,9 @@ export default function Header() {
         <StyledNavLink id={`stake-nav-link`} to={'/staking'}>
           <span>Staking</span>
         </StyledNavLink>
+        <ExternalStyledNavLink href={'https://analytics.cykura.io/'} target={'_blank'}>
+          <span>Analytics &#8599;</span>
+        </ExternalStyledNavLink>
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>

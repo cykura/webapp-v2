@@ -1,5 +1,5 @@
-import { Currency } from '@uniswap/sdk-core'
-import { Pool, Route } from '@uniswap/v3-sdk'
+import { Currency } from '@cykura/sdk-core'
+import { Pool, Route } from '@cykura/sdk'
 import { useMemo, useState } from 'react'
 import { useUserSingleHopOnly } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'

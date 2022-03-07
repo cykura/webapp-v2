@@ -1,6 +1,6 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import JSBI from 'jsbi'
-import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@uniswap/sdk-core'
+import { Currency, CurrencyAmount, Fraction, TradeType, Token as UniToken } from '@cykura/sdk-core'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
 import { usePool } from './usePools'
@@ -12,7 +12,7 @@ import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { PROGRAM_ID_STR } from 'constants/addresses'
 import { CyclosCore, IDL } from 'types/cyclos-core'
 import * as anchor from '@project-serum/anchor'
-import { Pool, Route, Trade } from '@uniswap/v3-sdk'
+import { Pool, Route, Trade } from '@cykura/sdk'
 import usePrevious from './usePrevious'
 import { SOL_LOCAL, USDC, WSOL_LOCAL } from 'constants/tokens'
 import { NATIVE_MINT } from '@solana/spl-token'
@@ -133,6 +133,7 @@ export function useBestV3TradeExactIn(
     }
 
     if (routesLoading) {
+      // console.log('LOADING TRADE')
       return {
         state: V3TradeState.LOADING,
         trade: null,

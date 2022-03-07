@@ -1,5 +1,5 @@
-import { Currency, Token } from '@uniswap/sdk-core'
-import { FeeAmount, Pool } from '@uniswap/v3-sdk'
+import { Currency, Token } from '@cykura/sdk-core'
+import { FeeAmount, Pool } from '@cykura/sdk'
 import { useEffect, useMemo, useState } from 'react'
 import { useAllCurrencyCombinations } from './useAllCurrencyCombinations'
 import { PoolState, usePools } from './usePools'

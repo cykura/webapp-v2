@@ -1,4 +1,4 @@
-import { Pool, Position } from '@uniswap/v3-sdk'
+import { Pool, Position } from '@cykura/sdk'
 import { usePool } from 'hooks/usePools'
 import { PositionDetails } from 'types/position'
 import { useCurrency } from './Tokens'
