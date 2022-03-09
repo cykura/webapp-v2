@@ -82,6 +82,8 @@ export default function Swap({ history }: RouteComponentProps) {
     currencies,
     inputError: swapInputError,
   } = useDerivedSwapInfo()
+  console.log('swap accounts', swapAccounts)
+
   // const tokensList = useMemo(
   //   () =>
   //     [currencies[Field.INPUT]?.wrapped?.address, currencies[Field.OUTPUT]?.wrapped?.address].filter(
