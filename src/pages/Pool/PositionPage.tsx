@@ -624,7 +624,7 @@ export function PositionPage({
   const price0 = useUSDCPrice(token0 ?? undefined)
   const price1 = useUSDCPrice(token1 ?? undefined)
   // console.log(price0?.toSignificant(), price1?.toSignificant())
-  console.log('price0', price0, 'pr1', price1, 'position', position)
+  // console.log('price0', price0, 'pr1', price1, 'position', position)
 
   const fiatValueOfFees: CurrencyAmount<Currency> | null = useMemo(() => {
     if (!price0 || !price1 || !feeValue0 || !feeValue1) return null

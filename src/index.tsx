@@ -21,8 +21,6 @@ if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
 }
 
-const DEFAULT_NETWORK: any = process.env.REACT_APP_DEFAULT_NETWORK ?? 'mainnet-beta'
-
 function Updaters() {
   return (
     <>
@@ -40,8 +38,8 @@ ReactDOM.render(
   <StrictMode>
     <Provider store={store}>
       <WalletKitProvider
-        app={{ name: 'cykura' }}
-        defaultNetwork={DEFAULT_NETWORK}
+        app={{ name: 'Cykura' }}
+        defaultNetwork="mainnet-beta"
         networkConfigs={{
           'mainnet-beta': {
             name: 'Custom RPC',

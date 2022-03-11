@@ -23,7 +23,7 @@ export function useActiveWeb3ReactSol(): any {
       break
     }
     default:
-      chainId = 103
+      chainId = 101
   }
 
   return {

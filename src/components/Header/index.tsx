@@ -16,6 +16,7 @@ import { useSOLBalance } from 'state/wallet/hooks'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { CurrencyAmount, Currency } from '@cykura/sdk-core'
+import NetworkSelector from './NetworkSelector'
 
 const HeaderFrame = styled.div<{ showBackground: boolean }>`
   display: grid;
@@ -290,6 +291,7 @@ export default function Header() {
       </HeaderLinks>
       <HeaderControls>
         <HeaderElement>
+          <NetworkSelector />
           <AccountElement
             active={!!wallet?.connected}
             style={{ pointerEvents: 'auto' }}

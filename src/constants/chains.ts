@@ -11,6 +11,10 @@ export enum SupportedChainId {
   ARBITRUM_RINKEBY = 421611,
   OPTIMISM = 10,
   OPTIMISTIC_KOVAN = 69,
+  LOCALNET = 104,
+  DEVNET = 103,
+  TESTNET = 102,
+  MAINNET_BETA = 101,
 }
 
 export const L2_CHAIN_IDS = [SupportedChainId.ARBITRUM_ONE, SupportedChainId.OPTIMISM]
