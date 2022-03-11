@@ -1,5 +1,5 @@
 import { AccountMeta } from '@solana/web3.js'
-import { Pool, Route, SwapAccount, Trade } from '@cykura/sdk'
+import { Pool, Route, Trade } from '@cykura/sdk'
 import { Currency, CurrencyAmount, Token, TradeType } from '@cykura/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
@@ -240,7 +240,7 @@ export function useBestV3TradeExactOut(
   accounts: AccountMeta[] | undefined
 } {
   const { routes, loading: routesLoading } = useAllV3Routes(currencyIn, amountOut?.currency)
-  const [amounts, setAmounts] = useState<([CurrencyAmount<Token>, Pool, SwapAccount[]] | undefined)[][]>([])
+  const [amounts, setAmounts] = useState<([CurrencyAmount<Token>, Pool, AccountMeta[]] | undefined)[][]>([])
 
   useEffect(() => {
     async function fetchPoolState() {

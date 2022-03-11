@@ -474,13 +474,13 @@ export class SolanaTickDataProvider implements TickDataProvider {
     this.pool = pool
   }
 
-  async getTick(tick: number): Promise<{ liquidityNet: BigintIsh }> {
+  async getTick(tick: number): Promise<{ liquidityNet: JSBI }> {
     try {
       const tickState = await this.getTickAddress(tick)
 
       const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
       return {
-        liquidityNet: liquidityNet.toString(),
+        liquidityNet: JSBI.BigInt(liquidityNet),
       }
     } catch (e) {
       console.log('Fetching tick state fails', e)
@@ -491,7 +491,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
   }
 
   async getTickAddress(tick: number): Promise<anchor.web3.PublicKey> {
-    return (
+    const tickAddress = (
       await PublicKey.findProgramAddress(
         [
           TICK_SEED,
@@ -503,6 +503,7 @@ export class SolanaTickDataProvider implements TickDataProvider {
         this.program.programId
       )
     )[0]
+    return tickAddress
   }
 
   async nextInitializedTickWithinOneWord(
@@ -545,24 +546,15 @@ export class SolanaTickDataProvider implements TickDataProvider {
     try {
       const { word: wordArray } = await this.program.account.tickBitmapState.fetch(bitmapState)
       const word = generateBitmapWord(wordArray)
+      // gives 180, smart contract giving 182
       const nextInitBit = nextInitializedBit(word, bitPos, lte)
+
       nextBit = nextInitBit.next
       initialized = nextInitBit.initialized
     } catch (error) {
       // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
     }
     const nextTick = (wordPos * 256 + nextBit) * tickSpacing
-    // console.log(
-    //   'netxTick',
-    //   nextTick,
-    //   'init',
-    //   initialized,
-    //   'wordPos',
-    //   wordPos,
-    //   'bitPos',
-    //   nextBit,
-    //   bitmapState.toString()
-    // )
     return [nextTick, initialized, wordPos, bitPos, bitmapState]
   }
 }

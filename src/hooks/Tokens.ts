@@ -44,7 +44,7 @@ export function useAllTokens(): { [address: string]: Token } {
       [SOLUSDC_MAIN.address.toString()]: SOLUSDC_MAIN,
       [SOLUSDT_MAIN.address.toString()]: SOLUSDT_MAIN,
       [CYS_MAIN.address.toString()]: CYS_MAIN,
-      [WSOL_MAIN.address.toString()]: WSOL_MAIN,
+      // [WSOL_MAIN.address.toString()]: WSOL_MAIN,
       [UST_MAIN.address.toString()]: UST_MAIN,
     }
     userAddedTokens.forEach((token) => {
