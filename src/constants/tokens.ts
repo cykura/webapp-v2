@@ -24,6 +24,7 @@ export const UST_MAIN = new Token(
   'UST',
   'UST (Wormhole)'
 )
+export const STEP = new Token(101, new PublicKey('StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT'), 9, 'STEP', 'Step')
 export const CYS_MAIN = new Token(
   101,
   new PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg'),
