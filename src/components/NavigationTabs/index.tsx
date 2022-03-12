@@ -7,11 +7,13 @@ import { Percent } from '@cykura/sdk-core'
 import { ArrowLeft } from 'react-feather'
 import Row, { RowBetween } from '../Row'
 import SettingsTab from '../Settings'
+import { ReactNode } from 'react'
 
 import { useAppDispatch } from 'state/hooks'
 import { resetMintState as resetMintV3State } from 'state/mint/v3/actions'
 import { TYPE } from 'theme'
 import useTheme from 'hooks/useTheme'
+import { Box } from 'rebass'
 
 const Tabs = styled.div`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -116,11 +118,14 @@ export function AddRemoveTabs({
   creating,
   defaultSlippage,
   positionID,
+  children,
 }: {
   adding: boolean
   creating: boolean
   defaultSlippage: Percent
   positionID?: string | undefined
+  showBackLink?: boolean
+  children?: ReactNode | undefined
 }) {
   const theme = useTheme()
   // reset states on back
@@ -145,10 +150,15 @@ export function AddRemoveTabs({
         >
           <StyledArrowLeft stroke={theme.text2} />
         </HistoryLink>
-        <TYPE.mediumHeader fontWeight={500} fontSize={20}>
+        <TYPE.mediumHeader
+          fontWeight={500}
+          fontSize={20}
+          style={{ flex: '1', margin: 'auto', textAlign: children ? 'start' : 'center' }}
+        >
           {creating ? <span>Create a pair</span> : adding ? <span>Add Liquidity</span> : <span>Remove Liquidity</span>}
         </TYPE.mediumHeader>
-        {/* <SettingsTab placeholderSlippage={defaultSlippage} /> */}
+        <Box style={{ marginRight: '.5rem' }}>{children}</Box>
+        <SettingsTab placeholderSlippage={defaultSlippage} />
         <span>&nbsp;</span>
       </RowBetween>
     </Tabs>

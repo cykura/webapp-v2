@@ -16,7 +16,6 @@ import {
   METADATA_SEED,
   WSOL_LOCAL,
 } from '../../constants/tokens'
-import { useV3NFTPositionManagerContract } from '../../hooks/useContract'
 import { RouteComponentProps } from 'react-router-dom'
 import { Text } from 'rebass'
 import { ThemeContext } from 'styled-components/macro'
@@ -30,11 +29,9 @@ import { useUSDCValue } from '../../hooks/useUSDCPrice'
 import { Review } from './Review'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
-import useTransactionDeadline from '../../hooks/useTransactionDeadline'
 import { Field, Bound } from '../../state/mint/v3/actions'
-import { useTransactionAdder } from '../../state/transactions/hooks'
 import { useIsExpertMode, useUserSlippageToleranceWithDefault } from '../../state/user/hooks'
-import { TYPE, ExternalLink } from '../../theme'
+import { TYPE } from '../../theme'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import AppBody from '../AppBody'
 import { currencyId } from '../../utils/currencyId'
@@ -45,7 +42,7 @@ import {
   useRangeHopCallbacks,
   useV3DerivedMintInfo,
 } from 'state/mint/v3/hooks'
-import { encodeSqrtRatioX32, FeeAmount, NonfungiblePositionManager, u32ToSeed } from '@cykura/sdk'
+import { encodeSqrtRatioX32, FeeAmount, u32ToSeed } from '@cykura/sdk'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { useDerivedPositionInfo } from 'hooks/useDerivedPositionInfo'
 import { PositionPreview } from 'components/PositionPreview'
@@ -64,6 +61,7 @@ import { useSnackbar } from 'notistack'
 import * as metaplex from '@metaplex/js'
 import { TransactionInstruction } from '@solana/web3.js'
 import JSBI from 'jsbi'
+import LiquidityChartRangeInput from 'components/LiquidityChartRangeInput'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -82,8 +80,6 @@ export default function AddLiquidity({
   const theme = useContext(ThemeContext)
   const { enqueueSnackbar } = useSnackbar()
   const expertMode = useIsExpertMode()
-  const addTransaction = useTransactionAdder()
-  const positionManager = useV3NFTPositionManagerContract()
 
   // check for existing position if tokenId in url
   const { position: existingPositionDetails, loading: positionLoading } = useV3PositionFromTokenId(tokenId ?? undefined)
@@ -1089,11 +1085,25 @@ export default function AddLiquidity({
               )}
 
               {hasExistingPosition && existingPosition ? (
-                <PositionPreview
-                  position={existingPosition}
-                  title={<span>Selected Range</span>}
-                  inRange={!outOfRange}
-                />
+                <>
+                  <PositionPreview
+                    position={existingPosition}
+                    title={<span>Selected Range</span>}
+                    inRange={!outOfRange}
+                  />
+                  <LiquidityChartRangeInput
+                    currencyA={baseCurrency ?? undefined}
+                    currencyB={quoteCurrency ?? undefined}
+                    feeAmount={feeAmount}
+                    ticksAtLimit={{ [Bound.LOWER]: false, [Bound.UPPER]: false }}
+                    price={price ? parseFloat((invertPrice ? price.invert() : price).toSignificant(8)) : undefined}
+                    priceLower={priceLower}
+                    priceUpper={priceUpper}
+                    onLeftRangeInput={onLeftRangeInput}
+                    onRightRangeInput={onRightRangeInput}
+                    interactive={!hasExistingPosition}
+                  />
+                </>
               ) : (
                 <>
                   {noLiquidity && (
@@ -1215,6 +1225,19 @@ export default function AddLiquidity({
                       currencyA={baseCurrency}
                       currencyB={quoteCurrency}
                       feeAmount={feeAmount}
+                    />
+
+                    <LiquidityChartRangeInput
+                      currencyA={baseCurrency ?? undefined}
+                      currencyB={quoteCurrency ?? undefined}
+                      feeAmount={feeAmount}
+                      ticksAtLimit={{ [Bound.LOWER]: false, [Bound.UPPER]: false }}
+                      price={price ? parseFloat((invertPrice ? price.invert() : price).toSignificant(8)) : undefined}
+                      priceLower={priceLower}
+                      priceUpper={priceUpper}
+                      onLeftRangeInput={onLeftRangeInput}
+                      onRightRangeInput={onRightRangeInput}
+                      interactive={!hasExistingPosition}
                     />
 
                     {price && baseCurrency && quoteCurrency && !noLiquidity && (
