@@ -1,14 +1,26 @@
 import { Currency } from '@cykura/sdk-core'
 import { PublicKey } from '@solana/web3.js'
-import { SOL_ICON, CYS_ICON, USDC_ICON, USDT_ICON } from 'constants/tokens'
+import { SOL_ICON, CYS_ICON, USDC_ICON, USDT_ICON, SPACE_FALCON } from 'constants/tokens'
 import React, { useMemo } from 'react'
 import styled from 'styled-components/macro'
 import useHttpLocations from '../../hooks/useHttpLocations'
 import { WrappedTokenInfo } from '../../state/lists/wrappedTokenInfo'
 import Logo from '../Logo'
 
-export const getTokenLogoURL = (address: PublicKey) =>
-  `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${address.toString()}/logo.png`
+/**
+ * Get token logo URL for the given address
+ *
+ * TODO read URL from Solana token list. Some tokens like Space Falcon have .svg extension for logo
+ * @param address
+ * @returns
+ */
+export const getTokenLogoURL = (address: PublicKey) => {
+  if (address.equals(SPACE_FALCON.address)) {
+    return `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${address.toString()}/logo.svg`
+  } else {
+    return `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${address.toString()}/logo.png`
+  }
+}
 
 const WSOL_ICON =
   'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'

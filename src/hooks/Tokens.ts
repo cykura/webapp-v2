@@ -11,6 +11,8 @@ import {
   WSOL_LOCAL,
   UST_MAIN,
   STEP,
+  SPACE_FALCON,
+  SOLANIUM,
 } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -45,9 +47,11 @@ export function useAllTokens(): { [address: string]: Token } {
       [SOLUSDC_MAIN.address.toString()]: SOLUSDC_MAIN,
       [SOLUSDT_MAIN.address.toString()]: SOLUSDT_MAIN,
       [CYS_MAIN.address.toString()]: CYS_MAIN,
-      // [WSOL_MAIN.address.toString()]: WSOL_MAIN,
+      [SPACE_FALCON.address.toString()]: SPACE_FALCON,
+      [WSOL_MAIN.address.toString()]: WSOL_MAIN,
       [STEP.address.toString()]: STEP,
       [UST_MAIN.address.toString()]: UST_MAIN,
+      [SOLANIUM.address.toString()]: SOLANIUM,
     }
     userAddedTokens.forEach((token) => {
       map[token.address.toString()] = token

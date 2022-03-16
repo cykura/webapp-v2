@@ -1,6 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 import { Token } from '@cykura/sdk-core'
 
+// TODO fetch tokens from a curated JSON file. Current approach gets ugly as more tokens are listed
 // Mainnet TOKENS
 
 export const SOLUSDC_MAIN = new Token(
@@ -25,6 +26,20 @@ export const UST_MAIN = new Token(
   'UST (Wormhole)'
 )
 export const STEP = new Token(101, new PublicKey('StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT'), 9, 'STEP', 'Step')
+export const SPACE_FALCON = new Token(
+  101,
+  new PublicKey('HovGjrBGTfna4dvg6exkMxXuexB3tUfEZKcut8AWowXj'),
+  4,
+  'FCON',
+  'Space Falcon'
+)
+export const SOLANIUM = new Token(
+  101,
+  new PublicKey('xxxxa1sKNGwFtw2kFn8XauW9xq8hBZ5kVtcSesTT9fW'),
+  6,
+  'SLIM',
+  'Solanium'
+)
 export const CYS_MAIN = new Token(
   101,
   new PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg'),
