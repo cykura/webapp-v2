@@ -8,7 +8,7 @@ import Header from '../components/Header'
 import Popups from '../components/Popups'
 import DarkModeQueryParamReader from '../theme/DarkModeQueryParamReader'
 import AddLiquidity from './AddLiquidity'
-import AddLiquidity2 from './AddLiquidity/indexnew'
+// import AddLiquidity2 from './AddLiquidity/indexnew'
 import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
 import Pool from './Pool'
 import { PositionPage } from './Pool/PositionPage'
@@ -86,7 +86,7 @@ export default function App() {
               exact
               strict
               path="/increase/:currencyIdA?/:currencyIdB?/:feeAmount?/:tokenId?"
-              component={AddLiquidity2}
+              component={AddLiquidity}
             />
 
             <Route exact strict path="/remove/:tokenId" component={RemoveLiquidityV3} />

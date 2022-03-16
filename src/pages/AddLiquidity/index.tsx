@@ -314,15 +314,32 @@ export default function AddLiquidity({
     )
     // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
-    const amount0Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    )
-    const amount1Desired = new BN(
-      +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
-    )
+    const [amount0Desired, amount1Desired] = invertPrice
+      ? [
+          new BN(+formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)),
+          new BN(+formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)),
+        ]
+      : [
+          new BN(+formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)),
+          new BN(+formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)),
+        ]
+
+    // const amount0Desired = new BN(
+    //   +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
+    // )
+    // const amount1Desired = new BN(
+    //   +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
+    // )
     // If pool not exist, create and init pool and create tick and bitmap tokens accounts
     //  this can be checked using `noLiquidity`
-    console.log(amount0Desired.toNumber(), amount1Desired.toNumber())
+    console.log(
+      'invert price',
+      invertPrice,
+      'amount0 desired',
+      amount0Desired.toNumber(),
+      'amount1 desired',
+      amount1Desired.toNumber()
+    )
 
     // Check to see if WSOL_ATA created during pool creation
     let isSOLAccount = false
@@ -1091,7 +1108,7 @@ export default function AddLiquidity({
                     title={<span>Selected Range</span>}
                     inRange={!outOfRange}
                   />
-                  <LiquidityChartRangeInput
+                  {/* <LiquidityChartRangeInput
                     currencyA={baseCurrency ?? undefined}
                     currencyB={quoteCurrency ?? undefined}
                     feeAmount={feeAmount}
@@ -1102,7 +1119,7 @@ export default function AddLiquidity({
                     onLeftRangeInput={onLeftRangeInput}
                     onRightRangeInput={onRightRangeInput}
                     interactive={!hasExistingPosition}
-                  />
+                  /> */}
                 </>
               ) : (
                 <>
@@ -1227,7 +1244,7 @@ export default function AddLiquidity({
                       feeAmount={feeAmount}
                     />
 
-                    <LiquidityChartRangeInput
+                    {/* <LiquidityChartRangeInput
                       currencyA={baseCurrency ?? undefined}
                       currencyB={quoteCurrency ?? undefined}
                       feeAmount={feeAmount}
@@ -1238,7 +1255,7 @@ export default function AddLiquidity({
                       onLeftRangeInput={onLeftRangeInput}
                       onRightRangeInput={onRightRangeInput}
                       interactive={!hasExistingPosition}
-                    />
+                    /> */}
 
                     {price && baseCurrency && quoteCurrency && !noLiquidity && (
                       <LightCard style={{ padding: '12px' }}>

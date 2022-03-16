@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { FeeAmount } from '@cykura/sdk'
 import { Token } from '@cykura/sdk-core'
-
 import { AutoColumn } from 'components/Column'
 import { DynamicSection } from 'pages/AddLiquidity/styled'
 import { TYPE } from 'theme'
@@ -44,18 +43,26 @@ const FocusedOutlineCard = styled(Card)<{ pulsing: boolean }>`
 `
 
 const FeeAmountLabel = {
-  [FeeAmount.LOW]: {
-    label: '0.05',
+  [FeeAmount.SUPER_STABLE]: {
+    label: '0.002',
     description: <span>Best for stable pairs.</span>,
   },
-  [FeeAmount.MEDIUM]: {
-    label: '0.3',
+  [FeeAmount.TURBO_SPL]: {
+    label: '0.008',
     description: <span>Best for most pairs.</span>,
   },
-  [FeeAmount.HIGH]: {
-    label: '1',
+  // [FeeAmount.LOW]: {
+  //   label: '0.05',
+  //   description: <span>Best for stable pairs.</span>,
+  // },
+  [FeeAmount.MEDIUM]: {
+    label: '0.3',
     description: <span>Best for exotic pairs.</span>,
   },
+  // [FeeAmount.HIGH]: {
+  //   label: '1',
+  //   description: <span>Best for exotic pairs.</span>,
+  // },
 }
 
 const FeeTierPercentageBadge = ({ percentage }: { percentage: number | undefined }) => {
@@ -169,20 +176,38 @@ export default function FeeSelector({
           <RowBetween>
             <ButtonRadioChecked
               width="32%"
-              active={feeAmount === FeeAmount.LOW}
-              onClick={() => handleFeePoolSelectWithEvent(FeeAmount.LOW)}
+              active={feeAmount === FeeAmount.SUPER_STABLE}
+              onClick={() => handleFeePoolSelectWithEvent(FeeAmount.SUPER_STABLE)}
             >
               <AutoColumn gap="sm" justify="flex-start">
                 <AutoColumn justify="flex-start" gap="4px">
                   <ResponsiveText>
-                    <span>0.05% fee</span>
+                    <span>0.002% fee</span>
                   </ResponsiveText>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
                     <span>Best for stable pairs.</span>
                   </TYPE.main>
                 </AutoColumn>
 
-                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.LOW]} />}
+                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.SUPER_STABLE]} />}
+              </AutoColumn>
+            </ButtonRadioChecked>
+            <ButtonRadioChecked
+              width="32%"
+              active={feeAmount === FeeAmount.TURBO_SPL}
+              onClick={() => handleFeePoolSelectWithEvent(FeeAmount.TURBO_SPL)}
+            >
+              <AutoColumn gap="sm" justify="flex-start">
+                <AutoColumn justify="flex-start" gap="4px">
+                  <ResponsiveText>
+                    <span>0.008% fee</span>
+                  </ResponsiveText>
+                  <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
+                    <span>Best for most pairs.</span>
+                  </TYPE.main>
+                </AutoColumn>
+
+                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.TURBO_SPL]} />}
               </AutoColumn>
             </ButtonRadioChecked>
             <ButtonRadioChecked
@@ -196,29 +221,11 @@ export default function FeeSelector({
                     <span>0.3% fee</span>
                   </ResponsiveText>
                   <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
-                    <span>Best for most pairs.</span>
-                  </TYPE.main>
-                </AutoColumn>
-
-                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.MEDIUM]} />}
-              </AutoColumn>
-            </ButtonRadioChecked>
-            <ButtonRadioChecked
-              width="32%"
-              active={feeAmount === FeeAmount.HIGH}
-              onClick={() => handleFeePoolSelectWithEvent(FeeAmount.HIGH)}
-            >
-              <AutoColumn gap="sm" justify="flex-start">
-                <AutoColumn justify="flex-start" gap="4px">
-                  <ResponsiveText>
-                    <span>1% fee</span>
-                  </ResponsiveText>
-                  <TYPE.main fontWeight={400} fontSize="12px" textAlign="left">
                     <span>Best for exotic pairs.</span>
                   </TYPE.main>
                 </AutoColumn>
 
-                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.HIGH]} />}
+                {distributions && <FeeTierPercentageBadge percentage={distributions[FeeAmount.MEDIUM]} />}
               </AutoColumn>
             </ButtonRadioChecked>
           </RowBetween>

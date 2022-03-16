@@ -23,6 +23,8 @@ export function useV3SwapPools(
     () =>
       allCurrencyCombinations.reduce<[Token, Token, FeeAmount][]>((list, [tokenA, tokenB]) => {
         return list.concat([
+          [tokenA, tokenB, FeeAmount.SUPER_STABLE],
+          [tokenA, tokenB, FeeAmount.TURBO_SPL],
           [tokenA, tokenB, FeeAmount.LOW],
           [tokenA, tokenB, FeeAmount.MEDIUM],
           [tokenA, tokenB, FeeAmount.HIGH],
