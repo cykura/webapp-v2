@@ -2,6 +2,7 @@ import { useCallback, useContext, useMemo, useState } from 'react'
 import { useWalletKit } from '@gokiprotocol/walletkit'
 import { useSolana } from '@saberhq/use-solana'
 import { Currency, CurrencyAmount, Percent } from '@cykura/sdk-core'
+import { TICK_SPACINGS } from '@cykura/sdk'
 import { AlertTriangle, AlertCircle } from 'react-feather'
 import { ZERO_PERCENT } from '../../constants/misc'
 import { PROGRAM_ID_STR } from '../../constants/addresses'
@@ -199,7 +200,7 @@ export default function AddLiquidity({
     const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
     const fee = feeAmount ?? 500
-    const tickSpacing = fee / 50
+    const tickSpacing = TICK_SPACINGS[fee]
     console.log(feeAmount, tickSpacing)
 
     // Convinence helpers
@@ -272,7 +273,7 @@ export default function AddLiquidity({
     const tickUpper = ticks.UPPER ?? 10
 
     console.log(pool)
-    console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper)
+    console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper, 'spacing', tickSpacing)
 
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
@@ -509,7 +510,7 @@ export default function AddLiquidity({
           )
         }
         if (!bitmapLowerStateInfo) {
-          console.log('Creating tickbitMapLowerState')
+          console.log('Creating tickbitMapLowerState for word', wordPosLower)
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(wordPosLower, {
               accounts: {
@@ -522,7 +523,7 @@ export default function AddLiquidity({
           )
         }
         if (!bitmapUpperStateInfo && bitmapLowerState.toString() !== bitmapUpperState.toString()) {
-          console.log('Creating tickbitMapUpperState')
+          console.log('Creating tickbitMapUpperState for word', wordPosUpper)
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(wordPosUpper, {
               accounts: {
