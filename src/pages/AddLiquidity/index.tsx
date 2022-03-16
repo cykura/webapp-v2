@@ -730,7 +730,7 @@ export default function AddLiquidity({
         // Cannot sent empty transactions. So add creation of ATA only if required
         const sendReq = [{ tx: tx2, signers: [nftMintKeypair] }]
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
-          sendReq.unshift({ tx: tx1, signers: [] })
+          sendReq.push({ tx: tx1, signers: [] })
         }
 
         const pendingHash = await providerMut?.sendAll(sendReq)
