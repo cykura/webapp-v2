@@ -4,7 +4,7 @@ import { useContext, useState } from 'react'
 import { ArrowDown, AlertTriangle } from 'react-feather'
 import { Text } from 'rebass'
 import styled, { ThemeContext } from 'styled-components/macro'
-import { useUSDCValue } from '../../hooks/useUSDCPrice'
+import { useUSDTValue } from '../../hooks/useUSDTPrice'
 import { TYPE } from '../../theme'
 import { ButtonPrimary } from '../Button'
 import { computeFiatValuePriceImpact } from '../../utils/computeFiatValuePriceImpact'
@@ -54,8 +54,8 @@ export default function SwapModalHeader({
 
   const [showInverted, setShowInverted] = useState<boolean>(false)
 
-  const fiatValueInput = useUSDCValue(trade.inputAmount)
-  const fiatValueOutput = useUSDCValue(trade.outputAmount)
+  const fiatValueInput = useUSDTValue(trade.inputAmount)
+  const fiatValueOutput = useUSDTValue(trade.outputAmount)
 
   return (
     <AutoColumn gap={'4px'} style={{ marginTop: '1rem' }}>

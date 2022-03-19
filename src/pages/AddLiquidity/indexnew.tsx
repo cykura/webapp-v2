@@ -25,7 +25,7 @@ import { AutoColumn } from '../../components/Column'
 import TransactionConfirmationModal, { ConfirmationModalContent } from '../../components/TransactionConfirmationModal'
 import CurrencyInputPanel from '../../components/CurrencyInputPanel'
 import Row, { AutoRow, RowBetween, RowFixed } from '../../components/Row'
-import { useUSDCValue } from '../../hooks/useUSDCPrice'
+import { useUSDTValue } from '../../hooks/useUSDTPrice'
 import { Review } from './Review'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useCurrency } from '../../hooks/Tokens'
@@ -164,8 +164,8 @@ export default function AddLiquidity({
   }
 
   const usdcValues = {
-    [Field.CURRENCY_A]: useUSDCValue(parsedAmounts[Field.CURRENCY_A]),
-    [Field.CURRENCY_B]: useUSDCValue(parsedAmounts[Field.CURRENCY_B]),
+    [Field.CURRENCY_A]: useUSDTValue(parsedAmounts[Field.CURRENCY_A]),
+    [Field.CURRENCY_B]: useUSDTValue(parsedAmounts[Field.CURRENCY_B]),
   }
 
   // get the max amounts user can add

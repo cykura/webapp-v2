@@ -31,7 +31,7 @@ import useTheme from '../../hooks/useTheme'
 import RateToggle from '../../components/RateToggle'
 import RangeBadge from '../../components/Badge/RangeBadge'
 import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
-import useUSDCPrice from 'hooks/useUSDCPrice'
+import useUSDTPrice from 'hooks/useUSDTPrice'
 import Loader from 'components/Loader'
 import { Network } from '@saberhq/solana-contrib'
 import JSBI from 'jsbi'
@@ -621,8 +621,8 @@ export function PositionPage({
   const ownsNFT = positionDetails?.operator === account
 
   // usdc prices always in terms of tokens
-  const price0 = useUSDCPrice(token0 ?? undefined)
-  const price1 = useUSDCPrice(token1 ?? undefined)
+  const price0 = useUSDTPrice(token0 ?? undefined)
+  const price1 = useUSDTPrice(token1 ?? undefined)
   // console.log(price0?.toSignificant(), price1?.toSignificant())
   // console.log('price0', price0, 'pr1', price1, 'position', position)
 

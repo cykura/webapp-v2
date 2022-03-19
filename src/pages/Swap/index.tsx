@@ -28,7 +28,7 @@ import { SwitchLocaleLink } from '../../components/SwitchLocaleLink'
 import { useCurrency } from '../../hooks/Tokens'
 import { V3TradeState } from '../../hooks/useBestV3Trade'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
-import { useUSDCValue } from '../../hooks/useUSDCPrice'
+import { useUSDTValue } from '../../hooks/useUSDTPrice'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { Field } from '../../state/swap/actions'
 import {
@@ -92,8 +92,8 @@ export default function Swap({ history }: RouteComponentProps) {
     }
   }, [independentField, parsedAmount, trade])
 
-  const fiatValueInput = useUSDCValue(parsedAmounts[Field.INPUT])
-  const fiatValueOutput = useUSDCValue(parsedAmounts[Field.OUTPUT])
+  const fiatValueInput = useUSDTValue(parsedAmounts[Field.INPUT])
+  const fiatValueOutput = useUSDTValue(parsedAmounts[Field.OUTPUT])
   const priceImpact = computeFiatValuePriceImpact(fiatValueInput, fiatValueOutput)
 
   const { onSwitchTokens, onCurrencySelection, onUserInput, onChangeRecipient } = useSwapActionHandlers()
