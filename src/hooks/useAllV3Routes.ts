@@ -1,7 +1,6 @@
 import { Currency } from '@cykura/sdk-core'
 import { Pool, Route } from '@cykura/sdk'
-import { useMemo, useState } from 'react'
-import { useUserSingleHopOnly } from '../state/user/hooks'
+import { useMemo } from 'react'
 import { useActiveWeb3ReactSol } from './web3'
 import { useV3SwapPools } from './useV3SwapPools'
 
@@ -51,12 +50,9 @@ export function useAllV3Routes(
   currencyOut?: Currency
 ): { loading: boolean; routes: Route<Currency, Currency>[] } {
   const { chainId } = useActiveWeb3ReactSol()
-
+  const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
   // const [singleHopOnly] = useUserSingleHopOnly()
   const singleHopOnly = true
-
-  const { pools, loading: poolsLoading } = useV3SwapPools(currencyIn, currencyOut)
-  // console.log(pools, currencyIn?.symbol, currencyOut?.symbol)
 
   return useMemo(() => {
     if (poolsLoading || !chainId || !pools || !currencyIn || !currencyOut) return { loading: true, routes: [] }

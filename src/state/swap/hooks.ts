@@ -1,8 +1,6 @@
 import JSBI from 'jsbi'
-import { Trade as V3Trade } from '@cykura/sdk'
-import { useBestV3TradeExactIn, useBestV3TradeExactOut, V3TradeState } from '../../hooks/useBestV3Trade'
-import { parseUnits } from '@ethersproject/units'
-import { Currency, CurrencyAmount, Percent, TradeType } from '@cykura/sdk-core'
+import { useBestV3TradeExactIn } from '../../hooks/useBestV3Trade'
+import { Currency, CurrencyAmount } from '@cykura/sdk-core'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
 import { useActiveWeb3ReactSol } from '../../hooks/web3'
@@ -126,20 +124,8 @@ export function useDerivedSwapInfo() {
     outputCurrency ?? undefined,
   ])
 
-  const isExactIn: boolean = independentField === Field.INPUT
-  const parsedAmount = tryParseAmount(debouncedTypedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
-
-  const bestV3TradeExactIn = useBestV3TradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
-  const bestV3TradeExactOut = useBestV3TradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
-  // const { state, trade } = bestV3TradeExactIn
-  // console.log(
-  //   state,
-  //   trade?.inputAmount?.toSignificant(),
-  //   trade?.outputAmount?.toSignificant(),
-  //   trade?.route?.toString()
-  // )
-
-  const v3Trade = (isExactIn ? bestV3TradeExactIn : bestV3TradeExactOut) ?? undefined
+  const parsedAmount = tryParseAmount(debouncedTypedValue, inputCurrency ?? undefined)
+  const v3Trade = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
 
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],

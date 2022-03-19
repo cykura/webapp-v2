@@ -82,22 +82,7 @@ export default function Swap({ history }: RouteComponentProps) {
     currencies,
     inputError: swapInputError,
   } = useDerivedSwapInfo()
-  // const tokensList = useMemo(
-  //   () =>
-  //     [currencies[Field.INPUT]?.wrapped?.address, currencies[Field.OUTPUT]?.wrapped?.address].filter(
-  //       (t): t is string => !!t
-  //     ),
-  //   [currencies]
-  // )
-  // const { haveAllATAs, createATA } = useVerifyATA(tokensList)
-  // console.log(trade?.inputAmount.toSignificant(), trade?.outputAmount.toSignificant())
-  // let trade: V3Trade<Currency, Currency, TradeType> | undefined
-  // const {
-  //   wrapType,
-  //   execute: onWrap,
-  //   inputError: wrapInputError,
-  // } = useWrapCallback(currencies[Field.INPUT], currencies[Field.OUTPUT], typedValue)
-  // const showWrap: boolean = wrapType !== WrapType.NOT_APPLICABLE
+
   const recipientAddress = recipient
 
   const parsedAmounts = useMemo(() => {
@@ -154,19 +139,9 @@ export default function Swap({ history }: RouteComponentProps) {
       parsedAmounts[independentField]?.greaterThan(new Fraction(0, 1))
   )
   const routeNotFound = !trade?.route
-  // const isLoadingRoute = false
-  const isLoadingRoute = V3TradeState.LOADING === v3TradeState
-  // const {
-  //   state: signatureState,
-  //   signatureData,
-  //   gatherPermitSignature,
-  // } = useERC20PermitFromTrade(trade, allowedSlippage)
 
   const maxInputAmount: CurrencyAmount<Currency> | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
   const showMaxButton = Boolean(maxInputAmount?.greaterThan(0) && !parsedAmounts[Field.INPUT]?.equalTo(maxInputAmount))
-
-  // the callback to execute the swap
-  // console.log(trade, v3Trade)
 
   const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(
     trade,
@@ -246,7 +221,6 @@ export default function Swap({ history }: RouteComponentProps) {
   }, [attemptingTxn, onUserInput, swapErrorMessage, tradeToConfirm, txHash])
 
   const handleAcceptChanges = useCallback(() => {
-    // console.log('accepted')
     setSwapState({ tradeToConfirm: trade, swapErrorMessage, txHash, attemptingTxn, showConfirm })
   }, [attemptingTxn, showConfirm, swapErrorMessage, trade, txHash])
 
@@ -358,7 +332,7 @@ export default function Swap({ history }: RouteComponentProps) {
               ) : routeNotFound && userHasSpecifiedInputOutput ? (
                 <GreyCard style={{ textAlign: 'center' }}>
                   <TYPE.main mb="4px">
-                    {isLoadingRoute ? (
+                    {v3TradeState === V3TradeState.LOADING ? (
                       <Dots>
                         <span>Loading</span>
                       </Dots>
