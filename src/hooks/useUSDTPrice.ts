@@ -12,20 +12,28 @@ const STABLECOIN_AMOUNT_OUT: { [chainId: number]: CurrencyAmount<Token> } = {
   103: CurrencyAmount.fromRawAmount(SOLUSDC_LOCAL, 1000_000),
 }
 
+/**
+ * Gets the number of decimal places in a number
+ *
+ * @param x A number
+ * @returns decimal places
+ */
 function countDecimals(x: number) {
   if (Math.floor(x.valueOf()) === x.valueOf()) return 0
   return x.toString().split('.')[1].length || 0
 }
 
 /**
- * Returns the price in USDC of the input currency
- * @param currency currency to compute the USDC price of
+ * Returns the token price in USDT
+ *
+ * Uniswap finds the price in USDC from its own pools. Cykura uses Solscan API instead, which
+ * returns price in terms of USDT
+ *
+ * @param currency currency to price of
  */
 export default function useUSDTPrice(currency?: Currency): Price<Currency, Token> | undefined {
   const [price, setPrice] = useState<Price<Currency, Token>>()
-
   const { chainId } = useActiveWeb3ReactSol()
-
   const amountOut = chainId ? STABLECOIN_AMOUNT_OUT[chainId] : undefined
   const stablecoin = amountOut?.currency
 
@@ -38,8 +46,8 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
         const priceObj = new Price(
           currency,
           stablecoin,
-          JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimals)),
-          JSBI.BigInt(fetchedPrice * Math.pow(10, decimals))
+          JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimals + currency.decimals)),
+          JSBI.BigInt(fetchedPrice * Math.pow(10, decimals + stablecoin.decimals))
         )
         setPrice(priceObj)
       }
@@ -50,15 +58,17 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
   return price
 }
 
+/**
+ * Gets the monetary value of the given input token amount, in terms of USDT
+ *
+ * @param currencyAmount The input base amount
+ * @returns
+ */
 export function useUSDTValue(currencyAmount: CurrencyAmount<Currency> | undefined | null) {
   const price = useUSDTPrice(currencyAmount?.currency)
 
   return useMemo(() => {
     if (!price || !currencyAmount) return null
-    try {
-      return price.quote(currencyAmount)
-    } catch (error) {
-      return null
-    }
+    return price.quote(currencyAmount)
   }, [currencyAmount, price])
 }
