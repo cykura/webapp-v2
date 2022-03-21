@@ -16,6 +16,7 @@ import {
   TICK_SEED,
   METADATA_SEED,
   WSOL_LOCAL,
+  WSOL_MAIN,
 } from '../../constants/tokens'
 import { RouteComponentProps } from 'react-router-dom'
 import { Text } from 'rebass'
@@ -206,17 +207,15 @@ export default function AddLiquidity({
     // Convinence helpers
     // We get the arbitary SOL addr taken locally when selected from the drop down list
     // Convert this NATIVE_MINT as further all calculations are based on this
-    const tokenA = currencyA?.wrapped.address.equals(NATIVE_MINT) ? WSOL_LOCAL : currencyA?.wrapped
-    const tokenB = currencyB?.wrapped.address.equals(NATIVE_MINT) ? WSOL_LOCAL : currencyB?.wrapped
+    // TODO re-enable localnet and devnet support for WSOL
+    const tokenA = currencyA?.wrapped.address.equals(NATIVE_MINT) ? WSOL_MAIN : currencyA?.wrapped
+    const tokenB = currencyB?.wrapped.address.equals(NATIVE_MINT) ? WSOL_MAIN : currencyB?.wrapped
     const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
     console.log(`POOL CREATION\ttoken0 ${tk0?.address} ${tk0.symbol}\ttoken1 ${tk1?.address} ${tk1.symbol}`)
 
-    // const token1 = new anchor.web3.PublicKey(tk0.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk0.address)
-    // const token2 = new anchor.web3.PublicKey(tk1.address == SOL_LOCAL.address ? SOL_LOCAL.address : tk1.address)
     const token0 = new anchor.web3.PublicKey(tk0.address)
     const token1 = new anchor.web3.PublicKey(tk1.address)
-    // console.log(token0.toString(), token1.toString())
 
     const WSOL_ATA = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -224,7 +223,6 @@ export default function AddLiquidity({
       NATIVE_MINT,
       wallet?.publicKey
     )
-    // console.log(WSOL_ATA.toString(), ' WSOL ATA')
 
     // create fee state
     const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
@@ -244,23 +242,7 @@ export default function AddLiquidity({
       [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(0)],
       cyclosCore.programId
     )
-    // console.log(`initialObservationState -> ${initialObservationState.toString()}`)
 
-    // get init Price from UI - should encode into Q32.32
-    // let nr = +startPriceTypedValue
-    // if (invertPrice) {
-    //   nr = 1 / nr
-    // }
-    // nr = nr * 10e9
-    // const dr = 10e9
-
-    // console.log(price.numerator.toString(), price.denominator.toString())
-    // const sqrtPriceX32 = new BN(
-    //   encodeSqrtRatioX32(
-    //     JSBI.multiply(nr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.baseCurrency.decimals))),
-    //     JSBI.multiply(dr, JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(price.quoteCurrency.decimals)))
-    //   ).toString()
-    // )
     const nr = JSBI.BigInt(price.numerator.toString())
     const dr = JSBI.BigInt(price.denominator.toString())
     const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
