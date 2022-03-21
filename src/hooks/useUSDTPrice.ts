@@ -46,8 +46,8 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
         const priceObj = new Price(
           currency,
           stablecoin,
-          JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(decimals + currency.decimals)),
-          JSBI.BigInt(fetchedPrice * Math.pow(10, decimals + stablecoin.decimals))
+          JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(Math.round(decimals + currency.decimals))),
+          JSBI.BigInt(Math.round(fetchedPrice * Math.pow(10, decimals + stablecoin.decimals)))
         )
         setPrice(priceObj)
       }
