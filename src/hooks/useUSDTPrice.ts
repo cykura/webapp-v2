@@ -40,16 +40,22 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
   useEffect(() => {
     async function getPrice() {
       if (currency && stablecoin) {
-        const res = await fetch('https://public-api.solscan.io/market/token/' + (currency as Token).address.toString())
-        const fetchedPrice = (await res.json())['priceUsdt'] as number
-        const decimals = countDecimals(fetchedPrice)
-        const priceObj = new Price(
-          currency,
-          stablecoin,
-          JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(Math.round(decimals + currency.decimals))),
-          JSBI.BigInt(Math.round(fetchedPrice * Math.pow(10, decimals + stablecoin.decimals)))
-        )
-        setPrice(priceObj)
+        try {
+          const res = await fetch(
+            'https://public-api.solscan.io/market/token/' + (currency as Token).address.toString()
+          )
+          const fetchedPrice = (await res.json())['priceUsdt'] as number
+          const decimals = countDecimals(fetchedPrice)
+          const priceObj = new Price(
+            currency,
+            stablecoin,
+            JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(Math.round(decimals + currency.decimals))),
+            JSBI.BigInt(Math.round(fetchedPrice * Math.pow(10, decimals + stablecoin.decimals)))
+          )
+          setPrice(priceObj)
+        } catch (error) {
+          console.log('failed to fetch price for', currency.name)
+        }
       }
     }
     getPrice()
