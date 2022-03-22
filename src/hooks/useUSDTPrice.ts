@@ -70,11 +70,11 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
  * @param currencyAmount The input base amount
  * @returns
  */
-export function useUSDTValue(currencyAmount: CurrencyAmount<Currency> | undefined | null) {
+export function useUSDTValue(currencyAmount: CurrencyAmount<Currency> | undefined) {
   const price = useUSDTPrice(currencyAmount?.currency)
 
   return useMemo(() => {
-    if (!price || !currencyAmount) return null
+    if (!price || !currencyAmount || !currencyAmount.currency.equals(price.baseCurrency)) return undefined
     return price.quote(currencyAmount)
   }, [currencyAmount, price])
 }

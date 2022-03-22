@@ -29,7 +29,7 @@ export function useBestV3TradeExactIn(
   const [swaps, setSwaps] = useState<[CurrencyAmount<Token>, Pool, AccountMeta[]][][]>()
 
   useEffect(() => {
-    async function fetchSwapOutput() {
+    async function fetchPossibleSwaps() {
       if (!amountIn || !currencyOut || !routes.length) return
 
       // fetch the possible swaps for each pool in a route
@@ -50,7 +50,7 @@ export function useBestV3TradeExactIn(
       setSwaps(allPossibleSwaps)
     }
 
-    fetchSwapOutput()
+    fetchPossibleSwaps()
   }, [routes, routesLoading, amountIn?.toExact()])
 
   return useMemo(() => {
@@ -70,22 +70,22 @@ export function useBestV3TradeExactIn(
       }
     }
 
-    const absAmounts =
-      swaps?.flat().map((amount) => {
-        const amt: CurrencyAmount<Currency> = amount[0]
+    const possibleSwaps =
+      swaps?.flat().map((swap) => {
+        const amt: CurrencyAmount<Currency> = swap[0]
 
         let absAmt = amt
         // If negative. take abs
-        if (+amt.toFixed(2) < 0) {
+        if (amt.lessThan(0)) {
           const { numerator, denominator } = amt.multiply('-1')
           absAmt = CurrencyAmount.fromFractionalAmount(currencyOut, numerator, denominator)
         }
 
-        return [absAmt, amount[1], amount[2]]
+        return [absAmt, swap[1], swap[2]]
       }) ?? []
 
     // Return the best route
-    const { bestRoute, amountOut, swapAccounts } = absAmounts.reduce(
+    const { bestRoute, amountOut, swapAccounts } = possibleSwaps.reduce(
       (
         currentBest: {
           bestRoute: Route<Currency, Currency> | null
@@ -120,9 +120,9 @@ export function useBestV3TradeExactIn(
       }
     )
 
-    if (!bestRoute || !amountOut) {
+    if (!bestRoute || !amountOut || !bestRoute.output.equals(amountOut.currency)) {
       return {
-        state: V3TradeState.NO_ROUTE_FOUND,
+        state: V3TradeState.LOADING,
         trade: undefined,
         accounts: undefined,
       }
@@ -136,7 +136,7 @@ export function useBestV3TradeExactIn(
         inputAmount: amountIn,
         outputAmount: amountOut,
       }),
-      accounts: swapAccounts, // Figure out how to pass the actual accounts here
+      accounts: swapAccounts,
     }
   }, [amountIn, currencyOut, swaps, routes, routesLoading])
 }
