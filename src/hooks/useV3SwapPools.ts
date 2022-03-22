@@ -2,7 +2,7 @@ import { Currency, Token } from '@cykura/sdk-core'
 import { FeeAmount, Pool } from '@cykura/sdk'
 import { useMemo } from 'react'
 import { useAllCurrencyCombinations } from './useAllCurrencyCombinations'
-import { PoolState, usePools } from './usePools'
+import { usePools } from './usePools'
 
 /**
  * Returns all the existing pools that should be considered for swapping between an input currency and an output currency
@@ -18,32 +18,45 @@ export function useV3SwapPools(
 } {
   const allCurrencyCombinations = useAllCurrencyCombinations(currencyIn, currencyOut)
 
-  // Fee tier adds a new degree of freedom
-  const allCurrencyCombinationsWithAllFees: [Token, Token, FeeAmount][] = useMemo(
+  const feeCombos = useMemo(
     () =>
-      allCurrencyCombinations.reduce<[Token, Token, FeeAmount][]>((list, [tokenA, tokenB]) => {
-        return list.concat([
-          [tokenA, tokenB, FeeAmount.SUPER_STABLE],
-          [tokenA, tokenB, FeeAmount.TURBO_SPL],
-          [tokenA, tokenB, FeeAmount.LOW],
-          [tokenA, tokenB, FeeAmount.MEDIUM],
-          [tokenA, tokenB, FeeAmount.HIGH],
-        ])
-      }, []),
+      allCurrencyCombinations.reduce(
+        (prev, tokenPair) => {
+          for (const fee of [
+            FeeAmount.SUPER_STABLE,
+            FeeAmount.TURBO_SPL,
+            FeeAmount.LOW,
+            FeeAmount.MEDIUM,
+            FeeAmount.HIGH,
+          ]) {
+            prev.push({ tokenA: tokenPair[0], tokenB: tokenPair[1], fee })
+          }
+          return prev
+        },
+        [] as {
+          tokenA: Token
+          tokenB: Token
+          fee: FeeAmount
+        }[]
+      ),
     [allCurrencyCombinations]
   )
-  const pools = usePools(allCurrencyCombinationsWithAllFees)
+
+  const pools = usePools(feeCombos)
 
   return useMemo(() => {
-    // Remove un-initialized pools
-    const filteredPools = pools
-      .filter((tuple): tuple is [PoolState.EXISTS, Pool] => {
-        return tuple[0] === PoolState.EXISTS && tuple[1] !== null
-      })
-      .map(([, pool]) => pool)
+    if (!pools) {
+      return {
+        pools: [],
+        loading: true,
+      }
+    }
     return {
-      pools: filteredPools,
-      loading: pools.some(([state]) => state === PoolState.LOADING),
+      // Remove un-initialized pools
+      pools: pools!.filter((pool) => {
+        return pool !== undefined
+      }) as Pool[],
+      loading: false,
     }
   }, [pools, currencyIn, currencyOut])
 }

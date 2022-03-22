@@ -1,7 +1,7 @@
 import { Currency } from '@cykura/sdk-core'
 import { FeeAmount, nearestUsableTick, Pool, tickPosition, tickToPrice, TICK_SPACINGS } from '@cykura/sdk'
 import JSBI from 'jsbi'
-import { PoolState, usePool } from './usePools'
+import { usePool } from './usePools'
 import { useEffect, useMemo, useState } from 'react'
 import computeSurroundingTicks from 'utils/computeSurroundingTicks'
 // import { useAllV3TicksQuery } from 'state/data/enhanced'
