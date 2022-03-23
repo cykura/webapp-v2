@@ -33,33 +33,7 @@ export default function Updater(): null {
     if (!librarySol || !chainId || typeof blockNumber !== 'number' || filtersNeedFetch.length === 0) return
 
     dispatch(fetchingLogs({ chainId, filters: filtersNeedFetch, blockNumber }))
-    filtersNeedFetch.forEach((filter) => {
-      librarySol
-        ?.getLogs({
-          ...filter,
-          fromBlock: 0,
-          toBlock: blockNumber,
-        })
-        .then((logs: any) => {
-          dispatch(
-            fetchedLogs({
-              chainId,
-              filter,
-              results: { logs, blockNumber },
-            })
-          )
-        })
-        .catch((error: any) => {
-          console.error('Failed to get logs', filter, error)
-          dispatch(
-            fetchedLogsError({
-              chainId,
-              filter,
-              blockNumber,
-            })
-          )
-        })
-    })
+    filtersNeedFetch.forEach((filter) => filter)
   }, [blockNumber, chainId, dispatch, filtersNeedFetch, librarySol])
 
   return null

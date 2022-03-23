@@ -1,6 +1,6 @@
+import { useSolana } from '@saberhq/use-solana'
 import { useContext, useCallback, ReactNode } from 'react'
 import styled, { ThemeContext } from 'styled-components/macro'
-import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { ExternalLink, TYPE } from '../../theme'
 import { ExplorerDataType, getExplorerLink } from '../../utils/getExplorerLink'
 import { AutoColumn } from '../Column'
@@ -81,7 +81,7 @@ export default function AddressInputPanel({
   // triggers whenever the typed value changes
   onChange: (value: string) => void
 }) {
-  const { chainId } = useActiveWeb3ReactSol()
+  const { network } = useSolana()
   const theme = useContext(ThemeContext)
 
   const handleInput = useCallback(
@@ -102,9 +102,9 @@ export default function AddressInputPanel({
               <TYPE.black color={theme.text2} fontWeight={500} fontSize={14}>
                 {label ?? <span>Recipient</span>}
               </TYPE.black>
-              {value && chainId && (
+              {value && network && (
                 <ExternalLink
-                  href={getExplorerLink(chainId, value, ExplorerDataType.ADDRESS)}
+                  href={getExplorerLink(network, value, ExplorerDataType.ADDRESS)}
                   style={{ fontSize: '14px' }}
                 >
                   <span>(View on Explorer)</span>

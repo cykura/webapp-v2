@@ -236,7 +236,8 @@ const StyledMenuButton = styled.button`
 `
 
 export default function Header() {
-  const { account, connected } = useActiveWeb3ReactSol()
+  const { account } = useActiveWeb3ReactSol()
+  const { connected } = useSolana()
   const wallet = useConnectedWallet()
   const [solBalance, setSolBalance] = useState<CurrencyAmount<Currency> | undefined>(undefined)
   const [reload, setReload] = useState(false)
