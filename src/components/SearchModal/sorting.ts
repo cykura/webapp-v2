@@ -18,9 +18,7 @@ function getTokenComparator(balances: {
   [tokenAddress: string]: CurrencyAmount<Currency> | undefined
 }): (tokenA: Token, tokenB: Token) => number {
   return function sortTokens(tokenA: Token, tokenB: Token): number {
-    // -1 = a is first
-    // 1 = b is first
-
+    // -1 => a is first, 1 => b is first
     // sort by balances
     const balanceA = balances[tokenA.address.toString()]
     const balanceB = balances[tokenB.address.toString()]
@@ -28,12 +26,7 @@ function getTokenComparator(balances: {
     const balanceComp = balanceComparator(balanceA, balanceB)
     if (balanceComp !== 0) return balanceComp
 
-    if (tokenA.symbol && tokenB.symbol) {
-      // sort by symbol
-      return tokenA.symbol.toLowerCase() < tokenB.symbol.toLowerCase() ? -1 : 1
-    } else {
-      return tokenA.symbol ? -1 : tokenB.symbol ? -1 : 0
-    }
+    return 0
   }
 }
 

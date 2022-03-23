@@ -1,5 +1,6 @@
 import { Text } from 'rebass'
 import { Currency } from '@cykura/sdk-core'
+import { useSolana } from '@saberhq/use-solana'
 import styled from 'styled-components/macro'
 
 import { COMMON_BASES } from '../../constants/routing'
@@ -27,14 +28,36 @@ const BaseWrapper = styled.div<{ disable?: boolean }>`
 `
 
 export default function CommonBases({
-  chainId,
+  incomingChainId,
   onSelect,
   selectedCurrency,
 }: {
-  chainId?: number
+  incomingChainId?: number
   selectedCurrency?: Currency | null
   onSelect: (currency: Currency) => void
 }) {
+  let chainId = 101
+  const { network } = useSolana()
+
+  switch (network) {
+    case 'mainnet-beta': {
+      chainId = 101
+      break
+    }
+    case 'testnet': {
+      chainId = 102
+      break
+    }
+    case 'devnet': {
+      chainId = 103
+      break
+    }
+    case 'localnet': {
+      chainId = 104
+      break
+    }
+  }
+
   const bases = typeof chainId !== 'undefined' ? COMMON_BASES[chainId] ?? [] : []
 
   return bases.length > 0 ? (

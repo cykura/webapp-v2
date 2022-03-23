@@ -1,7 +1,6 @@
 import { TokenInfo } from '@uniswap/token-lists'
 import { Token } from '@cykura/sdk-core'
 import { useMemo } from 'react'
-import { isAddress } from '../../utils'
 
 const alwaysTrue = () => true
 
@@ -10,7 +9,10 @@ const alwaysTrue = () => true
  * @param search the search query to apply to the token
  */
 export function createTokenFilterFunction<T extends Token | TokenInfo>(search: string): (tokens: T) => boolean {
-  const searchingAddress = isAddress(search)
+  // isAddress is supposed to check if the address is valid and return false
+  // TODO: Implement this in Solana
+  // For now replicating this by checking if serach term is less than 8 letters
+  const searchingAddress = search.length < 8 ? false : search
 
   if (searchingAddress) {
     const lower = searchingAddress.toString().toLowerCase()

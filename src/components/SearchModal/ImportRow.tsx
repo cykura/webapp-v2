@@ -77,8 +77,8 @@ export default function ImportRow({
           fontWeight={500}
           fontSize="14px"
           onClick={() => {
-            setImportToken && setImportToken(token)
             showImportView()
+            setImportToken && setImportToken(token)
           }}
         >
           <span>Import</span>
