@@ -1,16 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { Redirect, RouteComponentProps, useHistory } from 'react-router-dom'
-import {
-  BITMAP_SEED,
-  OBSERVATION_SEED,
-  SOLCYS_LOCAL,
-  TICK_SEED,
-  POOL_SEED,
-  POSITION_SEED,
-} from '../../constants/tokens'
+import { BITMAP_SEED, OBSERVATION_SEED, TICK_SEED, POOL_SEED, POSITION_SEED } from '../../constants/tokens'
 import AppBody from '../AppBody'
-import { BigNumber } from '@ethersproject/bignumber'
 import useDebouncedChangeHandler from 'hooks/useDebouncedChangeHandler'
 import { useBurnV3ActionHandlers, useBurnV3State, useDerivedV3BurnInfo } from 'state/burn/v3/hooks'
 import Slider from 'components/Slider'
@@ -22,23 +14,17 @@ import { LightCard } from 'components/Card'
 import { Text } from 'rebass'
 import CurrencyLogo from 'components/CurrencyLogo'
 import FormattedCurrencyAmount from 'components/FormattedCurrencyAmount'
-import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useUserSlippageToleranceWithDefault } from 'state/user/hooks'
-import useTransactionDeadline from 'hooks/useTransactionDeadline'
-import ReactGA from 'react-ga'
 import { useActiveWeb3ReactSol } from 'hooks/web3'
-import { TransactionResponse } from '@ethersproject/providers'
-import { useTransactionAdder } from 'state/transactions/hooks'
 import { Percent } from '@cykura/sdk-core'
 import { TYPE } from 'theme'
 import { Wrapper, SmallMaxButton, ResponsiveHeaderText } from './styled'
 import Loader from 'components/Loader'
 import DoubleCurrencyLogo from 'components/DoubleLogo'
-import { NonfungiblePositionManager, u32ToSeed } from '@cykura/sdk'
+import { TICK_SPACINGS, u32ToSeed } from '@cykura/sdk'
 import useTheme from 'hooks/useTheme'
 import { AddRemoveTabs } from 'components/NavigationTabs'
 import RangeBadge from 'components/Badge/RangeBadge'
-import Toggle from 'components/Toggle'
 import JSBI from 'jsbi'
 import * as anchor from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
@@ -77,7 +63,7 @@ export default function RemoveLiquidityV3({
 function Remove({ tokenId }: { tokenId: string | undefined }) {
   const { position } = useV3PositionFromTokenId(tokenId)
   const theme = useTheme()
-  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
+  const { account, chainId } = useActiveWeb3ReactSol()
   const { enqueueSnackbar } = useSnackbar()
   const { wallet, connection, providerMut } = useSolana()
 
@@ -113,8 +99,6 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [attemptingTxn, setAttemptingTxn] = useState(false)
   const [txnHash, setTxnHash] = useState<string | undefined>()
-  const addTransaction = useTransactionAdder()
-  const positionManager = useV3NFTPositionManagerContract()
 
   // Fetch tokens from position
   const currencyA = useCurrency(position?.token0)
@@ -168,8 +152,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     console.log(`Removing liq ${removeLiquidityAmount.toString()}`)
 
-    const fee = position.fee
-    const tickSpacing = fee / 50
+    const fee = position.fee ?? 500
+    const tickSpacing = TICK_SPACINGS[fee]
 
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
@@ -180,14 +164,14 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
 
     // create pool state
-    const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+    const [poolState] = await PublicKey.findProgramAddress(
       [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
       cyclosCore.programId
     )
 
-    const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+    const [factoryState] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
-    const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+    const [corePositionState] = await PublicKey.findProgramAddress(
       [
         POSITION_SEED,
         token0.toBuffer(),
@@ -200,46 +184,42 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       cyclosCore.programId
     )
 
-    const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+    const [tickLowerState] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
 
-    const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+    const [tickUpperState] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
 
-    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+    const [bitmapLowerState] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
-    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+    const [bitmapUpperState] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
 
     const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-    const lastObservationState = (
-      await PublicKey.findProgramAddress(
-        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
-        cyclosCore.programId
-      )
-    )[0]
+    const [lastObservationState] = await PublicKey.findProgramAddress(
+      [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+      cyclosCore.programId
+    )
 
-    const nextObservationState = (
-      await PublicKey.findProgramAddress(
-        [
-          OBSERVATION_SEED,
-          token0.toBuffer(),
-          token1.toBuffer(),
-          u32ToSeed(fee),
-          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
-        ],
-        cyclosCore.programId
-      )
-    )[0]
+    const [nextObservationState] = await PublicKey.findProgramAddress(
+      [
+        OBSERVATION_SEED,
+        token0.toBuffer(),
+        token1.toBuffer(),
+        u32ToSeed(fee),
+        u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+      ],
+      cyclosCore.programId
+    )
 
     const nftMint = new PublicKey(tokenId)
 
@@ -250,7 +230,7 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       wallet.publicKey
     )
 
-    const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+    const [tokenizedPositionState] = await PublicKey.findProgramAddress(
       [POSITION_SEED, nftMint.toBuffer()],
       cyclosCore.programId
     )
