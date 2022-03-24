@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useSolana } from '@saberhq/use-solana'
 import styled, { keyframes } from 'styled-components/macro'
-import { useActiveWeb3ReactSol } from '../../hooks/web3'
 
 import { useBlockNumber } from '../../state/application/hooks'
 import { ExternalLink, TYPE } from '../../theme'
@@ -65,7 +65,7 @@ const Spinner = styled.div`
 `
 
 export default function Polling() {
-  const { chainId } = useActiveWeb3ReactSol()
+  const { network } = useSolana()
 
   const blockNumber = useBlockNumber()
 
@@ -92,7 +92,7 @@ export default function Polling() {
 
   return (
     <ExternalLink
-      href={chainId && blockNumber ? getExplorerLink(chainId, blockNumber.toString(), ExplorerDataType.BLOCK) : ''}
+      href={network && blockNumber ? getExplorerLink(network, blockNumber.toString(), ExplorerDataType.BLOCK) : ''}
     >
       <StyledPolling onMouseEnter={() => setIsHover(true)} onMouseLeave={() => setIsHover(false)}>
         <StyledPollingNumber breathe={isMounting} hovering={isHover}>

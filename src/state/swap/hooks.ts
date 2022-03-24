@@ -109,7 +109,7 @@ export function useDerivedSwapInfo() {
   // const debouncedTypedValue = typedValue
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
-  const to: string | null = recipient ?? account
+  const to = recipient ?? account
 
   const relevantTokenBalances = useCurrencyBalances(account ?? undefined, [
     inputCurrency ?? undefined,

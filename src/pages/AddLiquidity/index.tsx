@@ -64,6 +64,7 @@ import * as metaplex from '@metaplex/js'
 import { TransactionInstruction } from '@solana/web3.js'
 import JSBI from 'jsbi'
 import LiquidityChartRangeInput from 'components/LiquidityChartRangeInput'
+import { SendTxRequest } from '@saberhq/solana-contrib'
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -73,9 +74,9 @@ export default function AddLiquidity({
   },
   history,
 }: RouteComponentProps<{ currencyIdA?: string; currencyIdB?: string; feeAmount?: string; tokenId?: string }>) {
-  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
+  const { account: accountString, chainId } = useActiveWeb3ReactSol()
   const { connect } = useWalletKit()
-  const { connected, wallet, connection, providerMut } = useSolana()
+  const { connected, wallet, connection } = useSolana()
   const { PublicKey, SystemProgram, Transaction, SYSVAR_RENT_PUBKEY } = anchor.web3
   const { BN } = anchor
 
@@ -191,7 +192,17 @@ export default function AddLiquidity({
   // console.log(+formattedAmounts[Field.CURRENCY_A])
   // console.log(+formattedAmounts[Field.CURRENCY_B])
   async function OnAdd() {
-    if (!wallet?.publicKey || !currencyA?.wrapped.address || !currencyB?.wrapped.address || !price) return
+    if (
+      !accountString ||
+      !currencyA?.wrapped.address ||
+      !currencyB?.wrapped.address ||
+      !price ||
+      !tickLower ||
+      !tickUpper
+    )
+      return
+
+    const account = new PublicKey(accountString)
 
     setAttemptingTxn(true)
 
@@ -207,12 +218,13 @@ export default function AddLiquidity({
     // Convinence helpers
     // We get the arbitary SOL addr taken locally when selected from the drop down list
     // Convert this NATIVE_MINT as further all calculations are based on this
-    // TODO re-enable localnet and devnet support for WSOL
-    const tokenA = currencyA?.wrapped.address.equals(NATIVE_MINT) ? WSOL_MAIN : currencyA?.wrapped
-    const tokenB = currencyB?.wrapped.address.equals(NATIVE_MINT) ? WSOL_MAIN : currencyB?.wrapped
-    const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    // TODO re-enable devnet support for WSOL
 
-    console.log(`POOL CREATION\ttoken0 ${tk0?.address} ${tk0.symbol}\ttoken1 ${tk1?.address} ${tk1.symbol}`)
+    const WSOL_TOKEN = chainId == 104 ? WSOL_LOCAL : WSOL_MAIN
+
+    const tokenA = currencyA?.wrapped.address.equals(NATIVE_MINT) ? WSOL_TOKEN : currencyA?.wrapped
+    const tokenB = currencyB?.wrapped.address.equals(NATIVE_MINT) ? WSOL_TOKEN : currencyB?.wrapped
+    const [tk0, tk1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
 
     const token0 = new anchor.web3.PublicKey(tk0.address)
     const token1 = new anchor.web3.PublicKey(tk1.address)
@@ -221,41 +233,38 @@ export default function AddLiquidity({
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       NATIVE_MINT,
-      wallet?.publicKey
+      account
     )
 
     // create fee state
-    const [feeState, feeStateBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [FEE_SEED, u32ToSeed(fee)],
-      cyclosCore.programId
-    )
-    // console.log(`feeState -> ${feeState.toString()}`)
+    const [feeState] = await anchor.web3.PublicKey.findProgramAddress([FEE_SEED, u32ToSeed(fee)], cyclosCore.programId)
+
     // create pool state
-    const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+    const [poolState] = await PublicKey.findProgramAddress(
       [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee)],
       cyclosCore.programId
     )
-    // console.log(`poolState -> ${poolState.toString()}`)
 
     // create init Observation state
-    const [initialObservationState, initialObservationBump] = await PublicKey.findProgramAddress(
+    const [initialObservationState] = await PublicKey.findProgramAddress(
       [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(0)],
       cyclosCore.programId
     )
 
+    // fetch observation accounts beforehand to club all txn together
+    let observationIndex = 0
+    let observationCardinalityNext = 0
+    try {
+      const data = await cyclosCore.account.poolState.fetch(poolState)
+      observationIndex = data.observationIndex
+      observationCardinalityNext = data.observationCardinalityNext
+    } catch (err) {
+      console.log('Fetching default values for oracle observation index')
+    }
+
     const nr = JSBI.BigInt(price.numerator.toString())
     const dr = JSBI.BigInt(price.denominator.toString())
     const sqrtPriceX32 = new BN(encodeSqrtRatioX32(nr, dr).toString())
-
-    console.log('sqrtpricex32 -> ', sqrtPriceX32?.toString())
-    console.log('price', price?.toSignificant())
-
-    // taken as contants in test file
-    const tickLower = ticks.LOWER ?? 0
-    const tickUpper = ticks.UPPER ?? 10
-
-    console.log(pool)
-    console.log('Creating position with tick Lower ', tickLower, 'tick Upper ', tickUpper, 'spacing', tickSpacing)
 
     const wordPosLower = (tickLower / tickSpacing) >> 8
     const wordPosUpper = (tickUpper / tickSpacing) >> 8
@@ -268,7 +277,6 @@ export default function AddLiquidity({
       poolState,
       true
     )
-    // console.log(`vault0 -> ${vault0.toString()}`)
 
     const vault1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -277,25 +285,23 @@ export default function AddLiquidity({
       poolState,
       true
     )
-    // console.log(`vault1 -> ${vault1.toString()}`)
 
     //fetch ATA of user tokens
     const userATA0 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       token0,
-      wallet?.publicKey,
+      account,
       true
     )
-    // console.log(`user ATA 0 -> ${userATA0.toString()}`)
+
     const userATA1 = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       token1,
-      wallet?.publicKey,
+      account,
       true
     )
-    // console.log(`user ATA 1 -> ${userATA1.toString()}`)
 
     const [amount0Desired, amount1Desired] = invertPrice
       ? [
@@ -307,25 +313,15 @@ export default function AddLiquidity({
           new BN(+formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)),
         ]
 
-    // const amount0Desired = new BN(
-    //   +formattedAmounts[Field.CURRENCY_A] * Math.pow(10, currencies[Field.CURRENCY_A]?.decimals ?? 0)
-    // )
-    // const amount1Desired = new BN(
-    //   +formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)
-    // )
-    // If pool not exist, create and init pool and create tick and bitmap tokens accounts
-    //  this can be checked using `noLiquidity`
-    console.log(
-      'invert price',
-      invertPrice,
-      'amount0 desired',
-      amount0Desired.toNumber(),
-      'amount1 desired',
-      amount1Desired.toNumber()
-    )
-
+    // If pool not exist, create and init pool
     // Check to see if WSOL_ATA created during pool creation
     let isSOLAccount = false
+
+    // final txn consturction
+    const groupedTxn1: SendTxRequest[] = []
+
+    // blockhash needs to be the same across a grouped Txn
+    let blockhash
 
     // Create and init pool
     if (noLiquidity) {
@@ -333,28 +329,28 @@ export default function AddLiquidity({
       try {
         const tx = new Transaction()
 
-        const account = await connection.getAccountInfo(WSOL_ATA)
+        const wsolAccount = await connection.getAccountInfo(WSOL_ATA)
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
           isSOLAccount = true
 
           const amount =
             token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
           console.log(amount)
-          if (!account) {
+          if (!wsolAccount) {
             tx.add(
               Token.createAssociatedTokenAccountInstruction(
                 ASSOCIATED_TOKEN_PROGRAM_ID,
                 TOKEN_PROGRAM_ID,
                 NATIVE_MINT,
                 WSOL_ATA,
-                wallet?.publicKey,
-                wallet?.publicKey
+                account,
+                account
               )
             )
           }
           tx.add(
             SystemProgram.transfer({
-              fromPubkey: wallet?.publicKey,
+              fromPubkey: account,
               toPubkey: WSOL_ATA,
               lamports: amount,
             }),
@@ -374,7 +370,7 @@ export default function AddLiquidity({
 
         const ix = cyclosCore.instruction.createAndInitPool(sqrtPriceX32, {
           accounts: {
-            poolCreator: wallet?.publicKey,
+            poolCreator: account,
             token0,
             token1,
             feeState,
@@ -390,24 +386,11 @@ export default function AddLiquidity({
         })
 
         tx.add(ix)
-        tx.feePayer = wallet?.publicKey
+        tx.feePayer = account
         tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        console.log(tx)
+        blockhash = tx.recentBlockhash
 
-        const str1 = tx.serializeMessage().toString('base64')
-        console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
-
-        // const txnHash1 = await providerMut?.send(tx1)
-        const createHash = await providerMut?.send(tx)
-
-        const pState = await cyclosCore.account.poolState.fetch(poolState)
-        // console.log(pState)
-        console.log('Position created with tick', pState.tick.toString())
-        console.log('Position created with price', pState.sqrtPriceX32.toString())
-        console.log(`https://explorer.solana.com/tx/${createHash?.signature}?cluster=custom`)
-        enqueueSnackbar('Pool Created', {
-          variant: 'success',
-        })
+        groupedTxn1.push({ tx, signers: [] })
       } catch (err: any) {
         setAttemptingTxn(false)
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
@@ -416,25 +399,28 @@ export default function AddLiquidity({
         return
       }
     }
+
+    console.log('Pool Created!')
+
     // Create tick and bitmap accounts
-    const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+    const [tickLowerState] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickLower)],
       cyclosCore.programId
     )
-    const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+    const [tickUpperState] = await PublicKey.findProgramAddress(
       [TICK_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u32ToSeed(tickUpper)],
       cyclosCore.programId
     )
-    const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+    const [bitmapLowerState] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosLower)],
       cyclosCore.programId
     )
-    const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+    const [bitmapUpperState] = await PublicKey.findProgramAddress(
       [BITMAP_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(wordPosUpper)],
       cyclosCore.programId
     )
-    const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
-    const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+    const [factoryState] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+    const [corePositionState] = await PublicKey.findProgramAddress(
       [
         POSITION_SEED,
         token0.toBuffer(),
@@ -447,11 +433,16 @@ export default function AddLiquidity({
       cyclosCore.programId
     )
 
-    const tickLowerStateInfo = await connection.getAccountInfo(tickLowerState)
-    const tickUpperStateInfo = await connection.getAccountInfo(tickUpperState)
-    const bitmapLowerStateInfo = await connection.getAccountInfo(bitmapLowerState)
-    const bitmapUpperStateInfo = await connection.getAccountInfo(bitmapUpperState)
-    const corePositionStateInfo = await connection.getAccountInfo(corePositionState)
+    const data = await connection.getMultipleAccountsInfo([
+      tickLowerState,
+      tickUpperState,
+      bitmapLowerState,
+      bitmapUpperState,
+      corePositionState,
+    ])
+
+    const [tickLowerStateInfo, tickUpperStateInfo, bitmapLowerStateInfo, bitmapUpperStateInfo, corePositionStateInfo] =
+      data
 
     // Build the transaction
     if (
@@ -461,16 +452,16 @@ export default function AddLiquidity({
       !bitmapLowerStateInfo ||
       !bitmapUpperStateInfo
     ) {
-      console.log('Creating accounts')
       try {
         const tx = new Transaction()
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        tx.recentBlockhash = blockhash
+
         if (!tickLowerStateInfo) {
           console.log('Creating tickLowerState')
           tx.instructions.push(
             cyclosCore.instruction.initTickAccount(tickLower, {
               accounts: {
-                signer: wallet?.publicKey,
+                signer: account,
                 poolState: poolState,
                 tickState: tickLowerState,
                 systemProgram: SystemProgram.programId,
@@ -478,12 +469,13 @@ export default function AddLiquidity({
             })
           )
         }
+
         if (!tickUpperStateInfo) {
           console.log('Creating tickUpperState')
           tx.instructions.push(
             cyclosCore.instruction.initTickAccount(tickUpper, {
               accounts: {
-                signer: wallet?.publicKey,
+                signer: account,
                 poolState: poolState,
                 tickState: tickUpperState,
                 systemProgram: SystemProgram.programId,
@@ -491,12 +483,13 @@ export default function AddLiquidity({
             })
           )
         }
+
         if (!bitmapLowerStateInfo) {
           console.log('Creating tickbitMapLowerState for word', wordPosLower)
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(wordPosLower, {
               accounts: {
-                signer: wallet?.publicKey,
+                signer: account,
                 poolState: poolState,
                 bitmapState: bitmapLowerState,
                 systemProgram: SystemProgram.programId,
@@ -504,12 +497,13 @@ export default function AddLiquidity({
             })
           )
         }
+
         if (!bitmapUpperStateInfo && bitmapLowerState.toString() !== bitmapUpperState.toString()) {
           console.log('Creating tickbitMapUpperState for word', wordPosUpper)
           tx.instructions.push(
             cyclosCore.instruction.initBitmapAccount(wordPosUpper, {
               accounts: {
-                signer: wallet?.publicKey,
+                signer: account,
                 poolState: poolState,
                 bitmapState: bitmapUpperState,
                 systemProgram: SystemProgram.programId,
@@ -517,12 +511,13 @@ export default function AddLiquidity({
             })
           )
         }
+
         if (!corePositionStateInfo) {
           console.log('Creating core Position')
           tx.instructions.push(
             cyclosCore.instruction.initPositionAccount({
               accounts: {
-                signer: wallet?.publicKey,
+                signer: account,
                 recipient: factoryState,
                 poolState: poolState,
                 tickLowerState: tickLowerState,
@@ -533,9 +528,10 @@ export default function AddLiquidity({
             })
           )
         }
-        tx.feePayer = wallet?.publicKey ?? undefined
-        const hash = await providerMut?.send(tx)
-        console.log(hash?.signature, ' -> create account hash')
+
+        tx.feePayer = account
+
+        groupedTxn1.push({ tx, signers: [] })
       } catch (err: any) {
         enqueueSnackbar(err?.message ?? 'Something went wrong', {
           variant: 'error',
@@ -544,10 +540,9 @@ export default function AddLiquidity({
       }
     }
 
-    // Then finally mint the required position
     const nftMintKeypair = new anchor.web3.Keypair()
 
-    const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+    const [tokenizedPositionState] = await PublicKey.findProgramAddress(
       [POSITION_SEED, nftMintKeypair.publicKey.toBuffer()],
       cyclosCore.programId
     )
@@ -556,7 +551,7 @@ export default function AddLiquidity({
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       nftMintKeypair.publicKey,
-      wallet.publicKey
+      account
     )
 
     // Add slippage amounts here
@@ -564,38 +559,29 @@ export default function AddLiquidity({
     const amount1Minimum = new BN(0)
     const deadline = new BN(Date.now() / 1000 + 10_000)
 
-    const metadataAccount = (
-      await PublicKey.findProgramAddress(
-        [
-          METADATA_SEED,
-          metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
-          nftMintKeypair.publicKey.toBuffer(),
-        ],
-        metaplex.programs.metadata.MetadataProgram.PUBKEY
-      )
-    )[0]
+    const [metadataAccount] = await PublicKey.findProgramAddress(
+      [
+        METADATA_SEED,
+        metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
+        nftMintKeypair.publicKey.toBuffer(),
+      ],
+      metaplex.programs.metadata.MetadataProgram.PUBKEY
+    )
 
-    // fetch observation accounts
-    const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
-
-    const lastObservationState = (
-      await PublicKey.findProgramAddress(
-        [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
-        cyclosCore.programId
-      )
-    )[0]
-    const nextObservationState = (
-      await PublicKey.findProgramAddress(
-        [
-          OBSERVATION_SEED,
-          token0.toBuffer(),
-          token1.toBuffer(),
-          u32ToSeed(fee),
-          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
-        ],
-        cyclosCore.programId
-      )
-    )[0]
+    const [lastObservationState] = await PublicKey.findProgramAddress(
+      [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+      cyclosCore.programId
+    )
+    const [nextObservationState] = await PublicKey.findProgramAddress(
+      [
+        OBSERVATION_SEED,
+        token0.toBuffer(),
+        token1.toBuffer(),
+        u32ToSeed(fee),
+        u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+      ],
+      cyclosCore.programId
+    )
 
     if (noLiquidity || !existingPosition) {
       // Create new position
@@ -606,26 +592,26 @@ export default function AddLiquidity({
 
         // If Native SOL is used
         if (!isSOLAccount) {
-          const account = await connection.getAccountInfo(WSOL_ATA)
+          const wsolAccount = await connection.getAccountInfo(WSOL_ATA)
           if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
             const amount =
               token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
             // console.log(amount)
-            if (!account) {
+            if (!wsolAccount) {
               tx1.add(
                 Token.createAssociatedTokenAccountInstruction(
                   ASSOCIATED_TOKEN_PROGRAM_ID,
                   TOKEN_PROGRAM_ID,
                   NATIVE_MINT,
                   WSOL_ATA,
-                  wallet?.publicKey,
-                  wallet?.publicKey
+                  account,
+                  account
                 )
               )
             }
             tx1.add(
               SystemProgram.transfer({
-                fromPubkey: wallet?.publicKey,
+                fromPubkey: account,
                 toPubkey: WSOL_ATA,
                 lamports: amount,
               }),
@@ -641,8 +627,8 @@ export default function AddLiquidity({
                 programId: TOKEN_PROGRAM_ID,
               })
             )
-            tx1.feePayer = wallet?.publicKey
-            tx1.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+            tx1.feePayer = account
+            tx1.recentBlockhash = blockhash
           }
         }
 
@@ -654,8 +640,8 @@ export default function AddLiquidity({
           deadline,
           {
             accounts: {
-              minter: wallet?.publicKey,
-              recipient: wallet?.publicKey,
+              minter: account,
+              recipient: account,
               factoryState,
               nftMint: nftMintKeypair.publicKey,
               nftAccount: positionNftAccount,
@@ -692,22 +678,15 @@ export default function AddLiquidity({
 
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
           // Close the WSOL_ATA
-          tx2.add(
-            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
-          )
+          tx2.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, account, account, []))
         }
 
         setAttemptingTxn(true)
 
-        tx2.feePayer = wallet?.publicKey
+        tx2.feePayer = account
         tx2.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+        blockhash = tx2.recentBlockhash
         tx2.sign(nftMintKeypair)
-        // console.log(tx1)
-        // console.log(tx2)
-        // console.log(tx.signatures.map((s) => s.publicKey.toString()))
-        // const str1 = tx.serializeMessage().toString('base64')
-        // console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
-        // const txnHash1 = await providerMut?.send(tx1)
 
         // Cannot sent empty transactions. So add creation of ATA only if required
         const sendReq = [{ tx: tx2, signers: [nftMintKeypair] }]
@@ -715,11 +694,7 @@ export default function AddLiquidity({
           sendReq.push({ tx: tx1, signers: [] })
         }
 
-        const pendingHash = await providerMut?.sendAll(sendReq)
-
-        const hash = pendingHash?.map((h) => h.signature)
-        // console.log(`https://explorer.solana.com/tx/${hash?.signature}?cluster=custom`)
-        setTxHash((hash && hash[0]) ?? '')
+        groupedTxn1.push(...sendReq)
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
@@ -732,9 +707,10 @@ export default function AddLiquidity({
       // Create NFT Metadata
       console.log('Creating NFT Metadata')
       try {
-        const txnHash = await cyclosCore.rpc.addMetaplexMetadata({
+        const tx = new Transaction()
+        const ix = cyclosCore.instruction.addMetaplexMetadata({
           accounts: {
-            payer: wallet?.publicKey,
+            payer: account,
             factoryState,
             nftMint: nftMintKeypair.publicKey,
             tokenizedPositionState,
@@ -745,8 +721,10 @@ export default function AddLiquidity({
             metadataProgram: metaplex.programs.metadata.MetadataProgram.PUBKEY,
           },
         })
-        setAttemptingTxn(true)
-        setTxHash(txnHash)
+
+        tx.add(ix)
+
+        groupedTxn1.push({ tx, signers: [] })
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
@@ -760,57 +738,49 @@ export default function AddLiquidity({
       console.log('Increasing Liquidity to existing position')
       try {
         // handle for tokenID is undefined
-        const [nftMint, _] = await PublicKey.findProgramAddress(
+        const [nftMint] = await PublicKey.findProgramAddress(
           [POSITION_SEED, new PublicKey(tokenId!).toBuffer()],
           cyclosCore.programId
         )
 
-        // refetch observation accounts
-        // for large time differences the oracle value can become stale
-        const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
+        const [lastObservationState] = await PublicKey.findProgramAddress(
+          [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
+          cyclosCore.programId
+        )
 
-        const lastObservationState = (
-          await PublicKey.findProgramAddress(
-            [OBSERVATION_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(fee), u16ToSeed(observationIndex)],
-            cyclosCore.programId
-          )
-        )[0]
-
-        const nextObservationState = (
-          await PublicKey.findProgramAddress(
-            [
-              OBSERVATION_SEED,
-              token0.toBuffer(),
-              token1.toBuffer(),
-              u32ToSeed(fee),
-              u16ToSeed((observationIndex + 1) % observationCardinalityNext),
-            ],
-            cyclosCore.programId
-          )
-        )[0]
+        const [nextObservationState] = await PublicKey.findProgramAddress(
+          [
+            OBSERVATION_SEED,
+            token0.toBuffer(),
+            token1.toBuffer(),
+            u32ToSeed(fee),
+            u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+          ],
+          cyclosCore.programId
+        )
 
         const tx = new Transaction()
 
-        const account = await connection.getAccountInfo(WSOL_ATA)
+        const wsolAccount = await connection.getAccountInfo(WSOL_ATA)
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
           const amount =
             token0?.toString() == NATIVE_MINT.toString() ? amount0Desired.toNumber() : amount1Desired.toNumber()
           // console.log(amount)
-          if (!account) {
+          if (!wsolAccount) {
             tx.add(
               Token.createAssociatedTokenAccountInstruction(
                 ASSOCIATED_TOKEN_PROGRAM_ID,
                 TOKEN_PROGRAM_ID,
                 NATIVE_MINT,
                 WSOL_ATA,
-                wallet?.publicKey,
-                wallet?.publicKey
+                account,
+                account
               )
             )
           }
           tx.add(
             SystemProgram.transfer({
-              fromPubkey: wallet?.publicKey,
+              fromPubkey: account,
               toPubkey: WSOL_ATA,
               lamports: amount,
             }),
@@ -836,7 +806,7 @@ export default function AddLiquidity({
           deadline,
           {
             accounts: {
-              payer: wallet?.publicKey,
+              payer: account,
               factoryState,
               poolState: poolState,
               corePositionState: corePositionState,
@@ -867,22 +837,13 @@ export default function AddLiquidity({
 
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
           // Close the WSOL_ATA
-          tx.add(
-            Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, wallet?.publicKey, wallet?.publicKey, [])
-          )
+          tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, account, account, []))
         }
 
-        tx.feePayer = wallet?.publicKey
-        tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        // console.log(tx)
-        setAttemptingTxn(true)
+        tx.feePayer = account
+        tx.recentBlockhash = blockhash
 
-        const str1 = tx.serializeMessage().toString('base64')
-        console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str1)}&cluster=custom`)
-
-        // const txnHash1 = await providerMut?.send(tx1)
-        const hash = await providerMut?.send(tx)
-        setTxHash(hash?.signature ?? '')
+        groupedTxn1.push({ tx, signers: [] })
       } catch (err: any) {
         setAttemptingTxn(false)
         console.log(err)
@@ -892,6 +853,23 @@ export default function AddLiquidity({
         return
       }
     }
+
+    try {
+      const d = await provider?.sendAll(groupedTxn1)
+      // console.log(d)
+      // Hacky way to display the txn that deducted the tokens
+      const lastTxnHash = d.length == 4 ? d[d.length - 2] : d[d.length - 1]
+      setTxHash(lastTxnHash ?? '')
+    } catch (err: any) {
+      setAttemptingTxn(false)
+      console.log(err)
+      enqueueSnackbar(err?.message ?? 'Something went wrong', {
+        variant: 'error',
+        autoHideDuration: 10000,
+      })
+      return
+    }
+
     setAttemptingTxn(false)
   }
 
