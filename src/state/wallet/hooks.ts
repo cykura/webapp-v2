@@ -1,5 +1,5 @@
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, Token as SplToken, NATIVE_MINT } from '@solana/spl-token'
+import { PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
 import { useSolana } from '@saberhq/use-solana'
 
 import { Currency, Token, CurrencyAmount } from '@cykura/sdk-core'
@@ -11,10 +11,10 @@ import { useAllTokens } from '../../hooks/Tokens'
 import useInterval from 'hooks/useInterval'
 
 /**
- * Returns a map of the given addresses to their eventually consistent ETH balances.
+ * Returns a map of NATIVE_MINT with the corresponding SOL balance
  */
 export function useSOLBalance(uncheckedAddress: string | undefined): {
-  [address: string]: CurrencyAmount<Currency> | undefined
+  [address: string]: CurrencyAmount<Currency>
 } {
   const { chainId, account } = useActiveWeb3ReactSol()
 
@@ -28,9 +28,15 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
   const fetchSolBalance = () => {
     if (!uncheckedAddress || uncheckedAddress == '11111111111111111111111111111111') return
     // Native Sol balance
-    connection.getBalance(new PublicKey(uncheckedAddress)).then((data) => {
-      setBalance(data)
-    })
+    connection
+      .getBalance(new PublicKey(uncheckedAddress))
+      .then((data) => {
+        setBalance(data)
+      })
+      .catch((e) => {
+        console.log('Error fetching SOL Balance', e)
+        setBalance(0)
+      })
   }
 
   useInterval(fetchSolBalance, 10000)
@@ -43,7 +49,7 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
 }
 
 /**
- * Returns a map of token addresses to their eventually consistent token balances for a single account.
+ * Returns a map of token addresses to their token balances for a given account.
  */
 export function useTokenBalancesWithLoadingIndicator(
   address?: string,
@@ -53,7 +59,6 @@ export function useTokenBalancesWithLoadingIndicator(
   const [tokenBalanceList, setTokenBalanceList] = useState<{
     [tokenAddress: string]: CurrencyAmount<Token> | undefined
   }>({})
-  const [solBalances, setSolBalances] = useState<{ [key: string]: string | undefined }>({})
   const [loading, setLoading] = useState(true)
 
   const filteredTokens: Token[] = useMemo(() => tokens?.filter((t?: Token): t is Token => true) ?? [], [tokens])
@@ -70,39 +75,26 @@ export function useTokenBalancesWithLoadingIndicator(
         programId: TOKEN_PROGRAM_ID,
       })
       .then((tokensInfo) => {
+        // Consturct a map based on actual token balances
         const tokenBalancesMap: { [key: string]: string | undefined } = {}
+
         tokensInfo?.value?.forEach((v) => {
           const add: string = v.account.data.parsed.info.mint.toString() as string
           const amt: string | undefined = v.account.data.parsed.info.tokenAmount.amount
           tokenBalancesMap[add] = amt
         })
-        filteredTokens.forEach((token: Token) => {
-          if (tokenBalancesMap[token.address.toString()]) {
-            // set balance of token
-            setSolBalances((p) => {
-              p[token.address.toString()] = tokenBalancesMap[token.address.toString()]
-              return p
-            })
-          } else {
-            // account doesn't have token then set to 0
-            setSolBalances((p) => {
-              p[token.address.toString()] = '0'
-              return p
-            })
-          }
-        })
+
         const balanceList =
           filteredTokens.length > 0
-            ? filteredTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token, i) => {
+            ? filteredTokens.reduce<{ [tokenAddress: string]: CurrencyAmount<Token> | undefined }>((memo, token) => {
                 const tkAdd: string = token.address.toString()
-                const value = solBalances[tkAdd]
-                const amount = JSBI.BigInt(value ?? 0)
-                if (amount) {
-                  memo[tkAdd] = CurrencyAmount.fromRawAmount(token, amount)
-                }
+                const value = tokenBalancesMap[tkAdd] ?? '0'
+                const amount = JSBI.BigInt(value)
+                memo[token.address.toString()] = CurrencyAmount.fromRawAmount(token, amount)
                 return memo
               }, {})
             : {}
+
         setTokenBalanceList(balanceList)
       })
       .catch((e) => {
@@ -162,9 +154,19 @@ export function useCurrencyBalance(account?: string, currency?: Currency): Curre
 
 // mimics useAllBalances
 export function useAllTokenBalances(): { [tokenAddress: string]: CurrencyAmount<Token> | undefined } {
-  const { account } = useActiveWeb3ReactSol()
+  const { account, chainId } = useActiveWeb3ReactSol()
+  const solBalance = useSOLBalance(account)
   const allTokens = useAllTokens()
+
   const allTokensArray = useMemo(() => Object.values(allTokens ?? {}), [allTokens])
   const balances = useTokenBalances(account ?? undefined, allTokensArray)
+
+  // TODO: Modify when adding support for devnet
+  const SOLTOKEN = chainId == 104 ? WSOL_LOCAL : WSOL_MAIN
+
+  // Here we add the SOL balance in with other balances for displaying of tokens properly
+  const { numerator, denominator } = solBalance[NATIVE_MINT.toString()]
+  balances[SOLTOKEN.address.toString()] = CurrencyAmount.fromFractionalAmount(SOLTOKEN, numerator, denominator)
+
   return balances ?? {}
 }

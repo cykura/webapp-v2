@@ -44,11 +44,11 @@ export function useAllTokens(): { [address: string]: Token } {
   } else if (network === 'mainnet-beta') {
     // return mainnet tokens
     const map = {
+      [WSOL_MAIN.address.toString()]: WSOL_MAIN,
       [SOLUSDC_MAIN.address.toString()]: SOLUSDC_MAIN,
       [SOLUSDT_MAIN.address.toString()]: SOLUSDT_MAIN,
       [CYS_MAIN.address.toString()]: CYS_MAIN,
       [SPACE_FALCON.address.toString()]: SPACE_FALCON,
-      [WSOL_MAIN.address.toString()]: WSOL_MAIN,
       [STEP.address.toString()]: STEP,
       [UST_MAIN.address.toString()]: UST_MAIN,
       [SOLANIUM.address.toString()]: SOLANIUM,

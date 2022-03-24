@@ -3,7 +3,6 @@ import { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useS
 import ReactGA from 'react-ga'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
-import { useActiveWeb3ReactSol } from '../../hooks/web3'
 import { useAllTokens, useToken, useIsUserAddedToken, useSearchInactiveTokenLists } from '../../hooks/Tokens'
 import { CloseIcon, TYPE } from '../../theme'
 import { isAddress } from '../../utils'
@@ -20,23 +19,12 @@ import useToggle from 'hooks/useToggle'
 import { useOnClickOutside } from 'hooks/useOnClickOutside'
 import useTheme from 'hooks/useTheme'
 import ImportRow from './ImportRow'
-import { Edit } from 'react-feather'
 import useDebounce from 'hooks/useDebounce'
 
 const ContentWrapper = styled(Column)`
   width: 100%;
   flex: 1 1;
   position: relative;
-`
-
-const Footer = styled.div`
-  width: 100%;
-  border-radius: 20px;
-  padding: 20px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  background-color: ${({ theme }) => theme.bg1};
-  border-top: 1px solid ${({ theme }) => theme.bg2};
 `
 
 interface CurrencySearchProps {
@@ -66,7 +54,6 @@ export function CurrencySearch({
   showImportView,
   setImportToken,
 }: CurrencySearchProps) {
-  const { chainId } = useActiveWeb3ReactSol()
   const theme = useTheme()
 
   // refs for fixed size lists
@@ -97,6 +84,7 @@ export function CurrencySearch({
   }, [isAddressSearch])
 
   const tokenComparator = useTokenComparator(invertSearchOrder)
+
   const filteredTokens: Token[] = useMemo(() => {
     return filterTokens(Object.values(allTokens), debouncedQuery)
   }, [allTokens, debouncedQuery])
@@ -106,10 +94,6 @@ export function CurrencySearch({
   }, [filteredTokens, tokenComparator])
 
   const filteredSortedTokens = useSortedTokensByQuery(sortedTokens, debouncedQuery)
-
-  const filteredSortedTokensWithETH: Currency[] = useMemo(() => {
-    return filteredSortedTokens
-  }, [debouncedQuery, filteredSortedTokens])
 
   const handleCurrencySelect = useCallback(
     (currency: Currency) => {
@@ -139,7 +123,7 @@ export function CurrencySearch({
         console.log('Enter Pressed')
       }
     },
-    [debouncedQuery, filteredSortedTokensWithETH, handleCurrencySelect]
+    [debouncedQuery, handleCurrencySelect]
   )
 
   // menu ui
@@ -186,7 +170,7 @@ export function CurrencySearch({
             {({ height }) => (
               <CurrencyList
                 height={height}
-                currencies={disableNonToken ? filteredSortedTokens : filteredSortedTokensWithETH}
+                currencies={filteredSortedTokens}
                 otherListTokens={filteredInactiveTokens}
                 onCurrencySelect={handleCurrencySelect}
                 otherCurrency={otherSelectedCurrency}

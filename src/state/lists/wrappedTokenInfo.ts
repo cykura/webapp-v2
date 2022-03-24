@@ -30,7 +30,7 @@ export class WrappedTokenInfo implements Token {
     if (this._checksummedAddress) return this._checksummedAddress
     const checksummedAddress = isAddress(this.tokenInfo.address)
     if (!checksummedAddress) throw new Error(`Invalid token address: ${this.tokenInfo.address}`)
-    console.log('converting to address', checksummedAddress)
+    // console.log('converting to address', checksummedAddress)
     return (this._checksummedAddress = new PublicKey(checksummedAddress))
   }
 
