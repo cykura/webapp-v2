@@ -8,6 +8,7 @@ import transactions from './transactions/reducer'
 import swap from './swap/reducer'
 import mintV3 from './mint/v3/reducer'
 import burnV3 from './burn/v3/reducer'
+import lists from './lists/reducer'
 import logs from './logs/slice'
 import multicall from './multicall/reducer'
 
@@ -21,6 +22,7 @@ const store = configureStore({
     swap,
     mintV3,
     burnV3,
+    lists,
     multicall,
     logs,
   },

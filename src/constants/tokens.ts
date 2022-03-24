@@ -45,7 +45,7 @@ export const CYS_MAIN = new Token(
   new PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg'),
   6,
   'CYS',
-  'Cyclos'
+  'Cykura'
 )
 export const WSOL_MAIN = new Token(
   101,

@@ -1,19 +1,5 @@
 import { Currency, Token } from '@cykura/sdk-core'
 import { useEffect, useMemo, useState } from 'react'
-import {
-  SOLUSDC_LOCAL,
-  SOLUSDT_LOCAL,
-  SOLCYS_LOCAL,
-  SOLUSDC_MAIN,
-  SOLUSDT_MAIN,
-  CYS_MAIN,
-  WSOL_MAIN,
-  WSOL_LOCAL,
-  UST_MAIN,
-  STEP,
-  SPACE_FALCON,
-  SOLANIUM,
-} from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
 import { createTokenFilterFunction } from '../components/SearchModal/filtering'
@@ -22,59 +8,52 @@ import { WrappedTokenInfo } from 'state/lists/wrappedTokenInfo'
 import { TokenList } from '@uniswap/token-lists'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
+import { TokenAddressMap, useCombinedActiveList } from 'state/lists/hooks'
 
-export function useAllTokens(): { [address: string]: Token } {
-  /// TODO Can switch here and fetch tokens for testing
-  ///  Check for network and return corresponding coins
-  /// 'devnet' | 'testnet' | 'mainnet-beta' | 'localnet'
-  const { network } = useSolana()
+// reduce token map into standard address <-> Token mapping, optionally include user added tokens
+function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
+  const { chainId } = useActiveWeb3ReactSol()
   const userAddedTokens = useUserAddedTokens()
 
-  if (network === 'localnet') {
-    const map = {
-      [SOLUSDC_LOCAL.address.toString()]: SOLUSDC_LOCAL,
-      [SOLUSDT_LOCAL.address.toString()]: SOLUSDT_LOCAL,
-      [WSOL_LOCAL.address.toString()]: WSOL_LOCAL,
-      [SOLCYS_LOCAL.address.toString()]: SOLCYS_LOCAL,
+  return useMemo(() => {
+    if (!chainId) return {}
+
+    // reduce to just tokens
+    const mapWithoutUrls = Object.keys(tokenMap[chainId] ?? {}).reduce<{ [address: string]: Token }>(
+      (newMap, address) => {
+        newMap[address] = tokenMap[chainId][address].token
+        return newMap
+      },
+      {}
+    )
+
+    if (includeUserAdded) {
+      return (
+        userAddedTokens
+          // reduce into all ALL_TOKENS filtered by the current chain
+          .reduce<{ [address: string]: Token }>(
+            (tokenMap, token) => {
+              tokenMap[token.address.toString()] = token
+              return tokenMap
+            },
+            // must make a copy because reduce modifies the map, and we do not
+            // want to make a copy in every iteration
+            { ...mapWithoutUrls }
+          )
+      )
     }
-    userAddedTokens.forEach((token) => {
-      map[token.address.toString()] = token
-    })
-    return map
-  } else if (network === 'mainnet-beta') {
-    // return mainnet tokens
-    const map = {
-      [WSOL_MAIN.address.toString()]: WSOL_MAIN,
-      [SOLUSDC_MAIN.address.toString()]: SOLUSDC_MAIN,
-      [SOLUSDT_MAIN.address.toString()]: SOLUSDT_MAIN,
-      [CYS_MAIN.address.toString()]: CYS_MAIN,
-      [SPACE_FALCON.address.toString()]: SPACE_FALCON,
-      [STEP.address.toString()]: STEP,
-      [UST_MAIN.address.toString()]: UST_MAIN,
-      [SOLANIUM.address.toString()]: SOLANIUM,
-    }
-    userAddedTokens.forEach((token) => {
-      map[token.address.toString()] = token
-    })
-    return map
-  } else if (network === 'devnet') {
-    // return devnet tokens
-    const map = {
-      [SOLUSDC_LOCAL.address.toString()]: SOLUSDC_LOCAL,
-      [SOLUSDT_LOCAL.address.toString()]: SOLUSDT_LOCAL,
-      // [SOLCYS_LOCAL.address]: SOLCYS_LOCAL,
-    }
-    return map
-  } else {
-    // return localnet by default
-    const map = {
-      [SOLUSDC_LOCAL.address.toString()]: SOLUSDC_LOCAL,
-      [SOLUSDT_LOCAL.address.toString()]: SOLUSDT_LOCAL,
-      [WSOL_LOCAL.address.toString()]: WSOL_LOCAL,
-      [SOLCYS_LOCAL.address.toString()]: SOLCYS_LOCAL,
-    }
-    return map
-  }
+
+    return mapWithoutUrls
+  }, [chainId, userAddedTokens, tokenMap, includeUserAdded])
+}
+
+export function useAllTokens(): { [address: string]: Token } {
+  // TODO: Refine it a litte more? Does it work?
+  // Tokens show up for mainnet
+  // TODO: for localnet works with cykura-protocol scripts (tokens are hardcoded)
+  // TODO: replicate this for devnet
+  const allTokens = useCombinedActiveList()
+  return useTokensFromMap(allTokens, true)
 }
 
 export function useIsTokenActive(token: Token | undefined | null): boolean {
