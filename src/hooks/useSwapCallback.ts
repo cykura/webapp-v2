@@ -1,13 +1,16 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import JSBI from 'jsbi'
 import {
+  buildTick,
   generateBitmapWord,
+  msb,
   nextInitializedBit,
   Pool,
   PoolVars,
   POOL_SEED,
   SwapRouter,
   TickDataProvider,
+  TickMath,
   tickPosition,
   Trade as V3Trade,
   u32ToSeed,
@@ -54,105 +57,13 @@ interface FailedCall extends SwapCallEstimate {
   error: Error
 }
 
-/**
- * Returns the swap calls that can be used to make the trade
- * @param trade trade to execute
- * @param allowedSlippage user allowed slippage
- * @param recipientAddress the address of the recipient of the swap output
- * @param signatureData the signature data of the permit of the input token amount, if available
- */
-function useSwapCallArguments(
-  trade: V3Trade<Currency, Currency, TradeType> | undefined, // trade to execute, required
-  allowedSlippage: Percent, // in bips
-  recipientAddress: string | null // the address of the recipient of the trade, or null if swap should be returned to sender
-  // signatureData: SignatureData | null | undefined
-): SwapCall[] {
-  const { account, chainId, librarySol } = useActiveWeb3ReactSol()
-  const recipient = recipientAddress ?? account
-  const deadline = useTransactionDeadline()
-
-  return []
-  // return useMemo(() => {
-  //   if (!trade || !recipient || !librarySol || !account || !chainId || !deadline) return []
-  //   const swapRouterAddress = chainId ? SWAP_ROUTER_ADDRESSES[chainId] : undefined
-  //   if (!swapRouterAddress) return []
-
-  //   const { value, calldata } = SwapRouter.swapCallParameters(trade, {
-  //     recipient,
-  //     slippageTolerance: allowedSlippage,
-  //     deadline: deadline.toString(),
-  //     ...(signatureData
-  //       ? {
-  //           inputTokenPermit:
-  //             'allowed' in signatureData
-  //               ? {
-  //                   expiry: signatureData.deadline,
-  //                   nonce: signatureData.nonce,
-  //                   s: signatureData.s,
-  //                   r: signatureData.r,
-  //                   v: signatureData.v as any,
-  //                 }
-  //               : {
-  //                   deadline: signatureData.deadline,
-  //                   amount: signatureData.amount,
-  //                   s: signatureData.s,
-  //                   r: signatureData.r,
-  //                   v: signatureData.v as any,
-  //                 },
-  //         }
-  //       : {}),
-  //   })
-  //   return [
-  //     {
-  //       address: swapRouterAddress,
-  //       calldata,
-  //       value,
-  //     },
-  //   ]
-  // }, [account, allowedSlippage, chainId, deadline, librarySol, recipient, signatureData, trade])
+interface TickBitmap {
+  word: BN[]
 }
 
-/**
- * This is hacking out the revert reason from the ethers provider thrown error however it can.
- * This object seems to be undocumented by ethers.
- * @param error an error from the ethers provider
- */
-function swapErrorToUserReadableMessage(error: any): string {
-  let reason: string | undefined
-  while (Boolean(error)) {
-    reason = error.reason ?? error.message ?? reason
-    error = error.error ?? error.data?.originalError
-  }
-
-  if (reason?.indexOf('execution reverted: ') === 0) reason = reason.substr('execution reverted: '.length)
-
-  switch (reason) {
-    case 'CyclosV2Router: EXPIRED':
-      return 'The transaction could not be sent because the deadline has passed. Please check that your transaction deadline is not too low.'
-    case 'CyclosV2Router: INSUFFICIENT_OUTPUT_AMOUNT':
-    case 'CyclosV2Router: EXCESSIVE_INPUT_AMOUNT':
-      return 'This transaction will not succeed either due to price movement or fee on transfer. Try increasing your slippage tolerance.'
-    case 'TransferHelper: TRANSFER_FROM_FAILED':
-      return 'The input token cannot be transferred. There may be an issue with the input token.'
-    case 'CyclosV2: TRANSFER_FAILED':
-      return 'The output token cannot be transferred. There may be an issue with the output token.'
-    case 'CyclosV2: K':
-      return 'The invariant x*y=k was not satisfied by the swap. This usually means one of the tokens you are swapping incorporates custom behavior on transfer.'
-    case 'Too little received':
-    case 'Too much requested':
-    case 'STF':
-      return 'This transaction will not succeed due to price movement. Try increasing your slippage tolerance. Note: fee on transfer and rebase tokens are incompatible.'
-    case 'TF':
-      return 'The output token cannot be transferred. There may be an issue with the output token. Note: fee on transfer and rebase tokens are incompatible.'
-    default:
-      if (reason?.indexOf('undefined is not an object') !== -1) {
-        console.error(error, reason)
-        return 'An error occurred when trying to execute this swap. You may need to increase your slippage tolerance. If that does not work, there may be an incompatibility with the token you are trading. Note: fee on transfer and rebase tokens are incompatible.'
-      }
-      return `Unknown error${
-        reason ? `: "${reason}"` : ''
-      }. Try increasing your slippage tolerance. Note: fee on transfer and rebase tokens are incompatible`
-  }
+interface Tick {
+  tick: number
+  liquidityNet: BN
 }
 
 // returns a function that will execute a swap, if the parameters are all valid
@@ -465,33 +376,99 @@ export function useSwapCallback(
   return { state: SwapCallbackState.VALID, callback, error: null }
 }
 
+/**
+ * Tick and bitmap data provider for a Cykura pool
+ */
 export class SolanaTickDataProvider implements TickDataProvider {
+  // @ts-ignore
   program: anchor.Program<CyclosCore>
   pool: PoolVars
 
+  bitmapCache: Map<
+    number,
+    | {
+        address: PublicKey
+        word: anchor.BN
+      }
+    | undefined
+  >
+
+  tickCache: Map<
+    number,
+    | {
+        address: PublicKey
+        liquidityNet: JSBI
+      }
+    | undefined
+  >
+
+  // @ts-ignore
   constructor(program: anchor.Program<CyclosCore>, pool: PoolVars) {
     this.program = program
     this.pool = pool
+    this.bitmapCache = new Map()
+    this.tickCache = new Map()
   }
 
-  async getTick(tick: number): Promise<{ liquidityNet: JSBI }> {
-    try {
-      const tickState = await this.getTickAddress(tick)
+  /**
+   * Caches ticks and bitmap accounts near the current price
+   * @param tickCurrent The current pool tick
+   * @param tickSpacing The pool tick spacing
+   */
+  async eagerLoadCache(tickCurrent: number, tickSpacing: number) {
+    // fetch 10 bitmaps on each side in a single fetch. Find active ticks and read them together
+    const compressed = JSBI.toNumber(JSBI.divide(JSBI.BigInt(tickCurrent), JSBI.BigInt(tickSpacing)))
+    const { wordPos } = tickPosition(compressed)
 
-      const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
-      return {
-        liquidityNet: JSBI.BigInt(liquidityNet),
+    try {
+      const bitmapsToFetch = []
+      const { wordPos: WORD_POS_MIN } = tickPosition(Math.floor(TickMath.MIN_TICK / tickSpacing))
+      const { wordPos: WORD_POS_MAX } = tickPosition(Math.floor(TickMath.MAX_TICK / tickSpacing))
+      const minWord = Math.max(wordPos - 10, WORD_POS_MIN)
+      const maxWord = Math.min(wordPos + 10, WORD_POS_MAX)
+      for (let i = minWord; i < maxWord; i++) {
+        bitmapsToFetch.push(await this.getBitmapAddress(i))
       }
-    } catch (e) {
-      console.log('Fetching tick state fails', e)
-      return Promise.resolve({
-        liquidityNet: JSBI.BigInt(0),
-      })
+
+      const fetchedBitmaps = (await this.program.account.tickBitmapState.fetchMultiple(
+        bitmapsToFetch
+      )) as (TickBitmap | null)[]
+
+      const tickAddresses = []
+      for (let i = 0; i < maxWord - minWord; i++) {
+        const currentWordPos = i + minWord
+        const wordArray = fetchedBitmaps[i]?.word
+        const word = wordArray ? generateBitmapWord(wordArray) : new BN(0)
+        this.bitmapCache.set(currentWordPos, {
+          address: bitmapsToFetch[i],
+          word,
+        })
+        if (word && !word.eqn(0)) {
+          for (let j = 0; j < 256; j++) {
+            if (word.shrn(j).and(new BN(1)).eqn(1)) {
+              const tick = ((currentWordPos << 8) + j) * tickSpacing
+              const tickAddress = await this.getTickAddress(tick)
+              tickAddresses.push(tickAddress)
+            }
+          }
+        }
+      }
+
+      const fetchedTicks = (await this.program.account.tickState.fetchMultiple(tickAddresses)) as Tick[]
+      for (const i in tickAddresses) {
+        const { tick, liquidityNet } = fetchedTicks[i]
+        this.tickCache.set(tick, {
+          address: tickAddresses[i],
+          liquidityNet: JSBI.BigInt(liquidityNet),
+        })
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
   async getTickAddress(tick: number): Promise<anchor.web3.PublicKey> {
-    const tickAddress = (
+    return (
       await PublicKey.findProgramAddress(
         [
           TICK_SEED,
@@ -503,32 +480,10 @@ export class SolanaTickDataProvider implements TickDataProvider {
         this.program.programId
       )
     )[0]
-    return tickAddress
   }
 
-  async nextInitializedTickWithinOneWord(
-    tick: number,
-    lte: boolean,
-    tickSpacing: number
-  ): Promise<[number, boolean, number, number, PublicKey]> {
-    // TODO optimize function. Currently bitmaps are repeatedly fetched, even if two ticks are on the same bitmap
-    // console.log(tick, tickSpacing)
-    let compressed = Number(JSBI.divide(JSBI.BigInt(tick), JSBI.BigInt(tickSpacing)))
-    // console.log('compresssed after division', compressed)
-    // console.log('tick', tick, 'spacing', tickSpacing, 'compressed', compressed, 'lte', lte)
-    if (tick < 0 && tick % tickSpacing !== 0) {
-      // console.log('deducting from compressed.')
-      compressed -= 1
-    }
-    if (!lte) {
-      // console.log('lte is false, +1 to compressed')
-      compressed += 1
-    }
-    // console.log('got compressed final=', compressed)
-
-    const { wordPos, bitPos } = tickPosition(compressed)
-
-    const bitmapState = (
+  async getBitmapAddress(wordPos: number): Promise<anchor.web3.PublicKey> {
+    return (
       await PublicKey.findProgramAddress(
         [
           BITMAP_SEED,
@@ -540,21 +495,77 @@ export class SolanaTickDataProvider implements TickDataProvider {
         this.program.programId
       )
     )[0]
+  }
 
-    let nextBit = lte ? 0 : 255
-    let initialized = false
-    try {
-      const { word: wordArray } = await this.program.account.tickBitmapState.fetch(bitmapState)
-      const word = generateBitmapWord(wordArray)
-      // gives 180, smart contract giving 182
-      const nextInitBit = nextInitializedBit(word, bitPos, lte)
-
-      nextBit = nextInitBit.next
-      initialized = nextInitBit.initialized
-    } catch (error) {
-      // console.log('bitmap account doesnt exist, using default nextbit', nextBit)
+  async getTick(tick: number): Promise<{ liquidityNet: JSBI }> {
+    let savedTick = this.tickCache.get(tick)
+    if (!savedTick) {
+      const tickState = await this.getTickAddress(tick)
+      const { liquidityNet } = await this.program.account.tickState.fetch(tickState)
+      savedTick = {
+        address: tickState,
+        liquidityNet: JSBI.BigInt(liquidityNet),
+      }
+      this.tickCache.set(tick, savedTick)
     }
-    const nextTick = (wordPos * 256 + nextBit) * tickSpacing
-    return [nextTick, initialized, wordPos, bitPos, bitmapState]
+
+    return {
+      liquidityNet: JSBI.BigInt(savedTick.liquidityNet),
+    }
+  }
+
+  /**
+   * Fetches bitmap for the word. Bitmaps are cached locally after each RPC call
+   * @param wordPos
+   */
+  async getBitmap(wordPos: number) {
+    if (!this.bitmapCache.has(wordPos)) {
+      const bitmapAddress = await this.getBitmapAddress(wordPos)
+
+      let word: anchor.BN
+      try {
+        const { word: wordArray } = await this.program.account.tickBitmapState.fetch(bitmapAddress)
+        word = generateBitmapWord(wordArray)
+      } catch (error) {
+        // An uninitialized bitmap will have no initialized ticks, i.e. the bitmap will be empty
+        word = new anchor.BN(0)
+      }
+
+      this.bitmapCache.set(wordPos, {
+        address: bitmapAddress,
+        word,
+      })
+    }
+
+    return this.bitmapCache.get(wordPos)!
+  }
+
+  /**
+   * Finds the next initialized tick in the given word. Fetched bitmaps are saved in a
+   * cache for quicker lookups in future.
+   * @param tick The current tick
+   * @param lte Whether to look for a tick less than or equal to the current one, or a tick greater than or equal to
+   * @param tickSpacing The tick spacing for the pool
+   * @returns
+   */
+  async nextInitializedTickWithinOneWord(
+    tick: number,
+    lte: boolean,
+    tickSpacing: number
+  ): Promise<[number, boolean, number, number, PublicKey]> {
+    let compressed = JSBI.toNumber(JSBI.divide(JSBI.BigInt(tick), JSBI.BigInt(tickSpacing)))
+    if (tick < 0 && tick % tickSpacing !== 0) {
+      compressed -= 1
+    }
+    if (!lte) {
+      compressed += 1
+    }
+
+    const { wordPos, bitPos } = tickPosition(compressed)
+    const cachedState = await this.getBitmap(wordPos)
+
+    const { next: nextBit, initialized } = nextInitializedBit(cachedState.word, bitPos, lte)
+    const nextTick = buildTick(wordPos, nextBit, tickSpacing)
+    return [nextTick, initialized, wordPos, bitPos, cachedState.address]
   }
 }

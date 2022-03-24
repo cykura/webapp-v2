@@ -15,6 +15,7 @@ import { SwapState } from './reducer'
 import { useAppDispatch, useAppSelector } from 'state/hooks'
 import { SOLCYS_LOCAL } from 'constants/tokens'
 import useDebounce from 'hooks/useDebounce'
+import { useAllV3Routes } from 'hooks/useAllV3Routes'
 
 export function useSwapState(): AppState['swap'] {
   return useAppSelector((state) => state.swap)
@@ -95,15 +96,6 @@ const BAD_RECIPIENT_ADDRESSES: { [address: string]: true } = {
 
 // from the current swap inputs, compute the best trade and return it.
 export function useDerivedSwapInfo() {
-  // : {
-  //   currencies: { [field in Field]?: Currency }
-  //   currencyBalances: { [field in Field]?: CurrencyAmount<Currency> }
-  //   parsedAmount: CurrencyAmount<Currency> | undefined
-  //   inputError?: string
-  //   // v3TradeState: { trade: V3Trade<Currency, Currency, TradeType> | null; state: V3TradeState }
-  //   // toggledTrade: V3Trade<Currency, Currency, TradeType> | undefined
-  //   allowedSlippage: Percent
-  // }
   const { account } = useActiveWeb3ReactSol()
   const {
     independentField,
@@ -125,7 +117,8 @@ export function useDerivedSwapInfo() {
   ])
 
   const parsedAmount = tryParseAmount(debouncedTypedValue, inputCurrency ?? undefined)
-  const v3Trade = useBestV3TradeExactIn(parsedAmount, outputCurrency ?? undefined)
+  const { routes } = useAllV3Routes(inputCurrency, outputCurrency)
+  const v3Trade = useBestV3TradeExactIn(routes, parsedAmount, outputCurrency ?? undefined)
 
   const currencyBalances = {
     [Field.INPUT]: relevantTokenBalances[0],

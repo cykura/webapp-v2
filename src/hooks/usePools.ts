@@ -1,4 +1,4 @@
-import { u32ToSeed } from '@cykura/sdk'
+import { TICK_SPACINGS, u32ToSeed } from '@cykura/sdk'
 import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
 import { PROGRAM_ID_STR } from '../constants/addresses'
@@ -68,23 +68,30 @@ export function usePools(
       const poolObjects: (Pool | undefined)[] = []
       for (const i in fetchedPools) {
         const pool = fetchedPools[i]
-        const { token0, token1, fee } = sortedPoolKeys[i]
-        const poolObject = pool
-          ? new Pool(
-              token0,
-              token1,
-              fee,
-              JSBI.BigInt(pool.sqrtPriceX32.toString()),
-              JSBI.BigInt(pool.liquidity.toString()),
-              Number(pool.tick),
-              new SolanaTickDataProvider(cyclosCore, {
-                token0: token0.address,
-                token1: token1.address,
+        if (pool) {
+          const { token0, token1, fee } = sortedPoolKeys[i]
+          const tickProvider = new SolanaTickDataProvider(cyclosCore, {
+            token0: token0.address,
+            token1: token1.address,
+            fee,
+          })
+          await tickProvider.eagerLoadCache(pool.tick, TICK_SPACINGS[fee])
+
+          const poolObject = pool
+            ? new Pool(
+                token0,
+                token1,
                 fee,
-              })
-            )
-          : undefined
-        poolObjects.push(poolObject)
+                JSBI.BigInt(pool.sqrtPriceX32.toString()),
+                JSBI.BigInt(pool.liquidity.toString()),
+                Number(pool.tick),
+                tickProvider
+              )
+            : undefined
+          poolObjects.push(poolObject)
+        } else {
+          poolObjects.push(undefined)
+        }
       }
       setPoolStates(poolObjects)
     }

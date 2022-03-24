@@ -14,10 +14,12 @@ export enum V3TradeState {
 
 /**
  * Returns the best v3 trade for a desired exact input swap
+ * @param route the possible token routes
  * @param amountIn the amount to swap in
  * @param currencyOut the desired output currency
  */
 export function useBestV3TradeExactIn(
+  routes: Route<Currency, Currency>[],
   amountIn?: CurrencyAmount<Currency>,
   currencyOut?: Currency
 ): {
@@ -25,7 +27,6 @@ export function useBestV3TradeExactIn(
   trade: Trade<Currency, Currency, TradeType.EXACT_INPUT> | undefined
   accounts: AccountMeta[] | undefined
 } {
-  const { routes, loading: routesLoading } = useAllV3Routes(amountIn?.currency, currencyOut)
   const [bestSwap, setBestSwap] = useState<{
     route: Route<Currency, Currency>
     amountOut: CurrencyAmount<Currency>
@@ -64,7 +65,7 @@ export function useBestV3TradeExactIn(
     }
 
     fetchPossibleSwaps()
-  }, [routes, routesLoading, amountIn?.toExact()])
+  }, [routes, amountIn?.toExact()])
 
   if (!amountIn || !currencyOut) {
     return {

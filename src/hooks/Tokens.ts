@@ -101,7 +101,7 @@ export function useIsUserAddedToken(currency: Currency | undefined | null): bool
 // undefined if invalid or does not exist
 // null if loading
 // otherwise returns the token
-export function useToken(tokenAddress?: string): Token | undefined | null {
+export function useToken(tokenAddress?: string): Token | undefined {
   const { chainId } = useActiveWeb3ReactSol()
   const tokens = useAllTokens()
   // console.log(tokenAddress)
@@ -157,7 +157,7 @@ export function useSearchInactiveTokenLists(search: string | undefined, minResul
   }, [activeTokens, chainId, minResults, search, allTokens])
 }
 
-export function useCurrency(currencyId: string | undefined): Currency | null | undefined {
+export function useCurrency(currencyId: string | undefined): Currency | undefined {
   const token = useToken(currencyId)
   return token
 }
