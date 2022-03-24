@@ -9,6 +9,7 @@ import { TokenList } from '@uniswap/token-lists'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { TokenAddressMap, useCombinedActiveList } from 'state/lists/hooks'
+import { WSOL_LOCAL } from 'constants/tokens'
 
 // reduce token map into standard address <-> Token mapping, optionally include user added tokens
 function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean): { [address: string]: Token } {
