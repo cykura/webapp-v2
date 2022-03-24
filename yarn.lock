@@ -1120,10 +1120,10 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@cykura/sdk@0.1.14":
-  version "0.1.14"
-  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.14.tgz#0459f05e96d06f421ccc7f6bde7ca31d9e188d48"
-  integrity sha512-L1yGk3IiZbqqg1XPwzOkBHQ467AQjc9rLOIs8W6GoKtkUaQB1amy1vymPcnfd1x4vo5dxGYJ1/2mCBoesavUfw==
+"@cykura/sdk@0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.16.tgz#f8af4830f3bcd7a1633028012180ba25a01cd6c2"
+  integrity sha512-ia9dHQiIy/3VhlDPZ2r/5PXokcMBaXwjgdy22+Qgg0vfbeOngK4Wcv1jRnNzjQ9CyHneLm3H+HWnCLJZFvv6RA==
   dependencies:
     "@cykura/sdk-core" "0.1.4"
     "@ethersproject/abi" "^5.0.12"
