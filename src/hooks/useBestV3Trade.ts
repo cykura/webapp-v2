@@ -1,5 +1,5 @@
 import { AccountMeta } from '@solana/web3.js'
-import { Route, Trade } from '@cykura/sdk'
+import { Pool, Route, Trade } from '@cykura/sdk'
 import { Currency, CurrencyAmount, Token, TradeType } from '@cykura/sdk-core'
 import { useEffect, useState } from 'react'
 import { useAllV3Routes } from './useAllV3Routes'
@@ -39,29 +39,46 @@ export function useBestV3TradeExactIn(
 
       if (!amountIn || !currencyOut || !routes.length) return
 
-      let best!: {
+      const best: {
         route: Route<Currency, Currency>
         amountOut: CurrencyAmount<Currency>
         accounts: AccountMeta[]
+      } = {
+        route: routes[0],
+        amountOut: CurrencyAmount.fromRawAmount(currencyOut, 0),
+        accounts: [],
       }
 
-      for (const route of routes) {
-        // currently every route has a single pool
-        for (const poolIndex in route.pools) {
-          const pool = route.pools[poolIndex]
+      // currently every route has a single pool
+      // TODO: This will be array in itself for multi hop pools
+      const pools = routes.map((r) => r.pools[0])
 
-          try {
-            const swapOutput = await pool.getOutputAmount(amountIn as CurrencyAmount<Token>)
-            if (!best || swapOutput[0] > best.amountOut) {
-              best = { route, amountOut: swapOutput[0], accounts: swapOutput[2] }
-            }
-          } catch (error) {
-            console.log('skip pool', error)
+      const data = Promise.all(
+        pools.map(async (p) => {
+          return await p.getOutputAmount(amountIn as CurrencyAmount<Token>)
+        })
+      )
+
+      const res = await data
+
+      let bestAmountOut = CurrencyAmount.fromRawAmount(currencyOut, 0)
+      let bestRoute: any
+      let accs: any
+
+      res.forEach((arr, i) => {
+        if (bestAmountOut.equalTo(0)) {
+          bestAmountOut = arr[0]
+          bestRoute = routes[i]
+          accs = arr[2]
+        } else {
+          if (arr[0].greaterThan(bestAmountOut)) {
+            bestAmountOut = arr[0]
+            bestRoute = routes[i]
+            accs = arr[2]
           }
         }
-      }
-
-      setBestSwap(best)
+      })
+      ;(best.route = bestRoute), (best.amountOut = bestAmountOut), (best.accounts = accs), setBestSwap(best)
     }
 
     fetchPossibleSwaps()
