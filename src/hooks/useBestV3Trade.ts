@@ -2,7 +2,6 @@ import { AccountMeta } from '@solana/web3.js'
 import { Route, Trade } from '@cykura/sdk'
 import { Currency, CurrencyAmount, Token, TradeType } from '@cykura/sdk-core'
 import { useEffect, useState } from 'react'
-import { useAllV3Routes } from './useAllV3Routes'
 
 export enum V3TradeState {
   LOADING,
@@ -28,9 +27,9 @@ export function useBestV3TradeExactIn(
   accounts: AccountMeta[] | undefined
 } {
   const [bestSwap, setBestSwap] = useState<{
-    route: Route<Currency, Currency>
-    amountOut: CurrencyAmount<Currency>
-    accounts: AccountMeta[]
+    route: Route<Currency, Currency> | null
+    amountOut: CurrencyAmount<Currency> | null
+    accounts: AccountMeta[] | undefined
   }>()
 
   useEffect(() => {
@@ -39,29 +38,58 @@ export function useBestV3TradeExactIn(
 
       if (!amountIn || !currencyOut || !routes.length) return
 
-      let best!: {
-        route: Route<Currency, Currency>
-        amountOut: CurrencyAmount<Currency>
-        accounts: AccountMeta[]
-      }
+      // No multihops for now, so only one pool per route
+      const pools = routes.map((route) => route.pools[0])
 
-      for (const route of routes) {
-        // currently every route has a single pool
-        for (const poolIndex in route.pools) {
-          const pool = route.pools[poolIndex]
-
+      const results = Promise.all(
+        pools.map(async (pool) => {
           try {
-            const swapOutput = await pool.getOutputAmount(amountIn as CurrencyAmount<Token>)
-            if (!best || swapOutput[0] > best.amountOut) {
-              best = { route, amountOut: swapOutput[0], accounts: swapOutput[2] }
-            }
-          } catch (error) {
-            console.log('skip pool', error)
+            return await pool.getOutputAmount(amountIn as CurrencyAmount<Token>)
+          } catch (e) {
+            console.log('failed to get quote with pool', pool.fee)
+            return null
           }
-        }
-      }
+        })
+      )
 
-      setBestSwap(best)
+      const swapOutputs = await results
+
+      const res = swapOutputs.reduce(
+        (
+          currentBest: {
+            route: Route<Currency, Currency> | null
+            amountOut: CurrencyAmount<typeof currencyOut> | null
+            accounts: AccountMeta[] | undefined
+          },
+          swapOutput,
+          i
+        ) => {
+          if (!swapOutput) return currentBest
+
+          if (currentBest.amountOut === null) {
+            return {
+              route: routes[i],
+              amountOut: swapOutput[0],
+              accounts: swapOutput[2],
+            }
+          } else if (currentBest.amountOut.lessThan(swapOutput[0])) {
+            return {
+              route: routes[i],
+              amountOut: swapOutput[0],
+              accounts: swapOutput[2],
+            }
+          }
+
+          return currentBest
+        },
+        {
+          route: null,
+          amountOut: null,
+          accounts: undefined,
+        }
+      )
+      // console.log('BEST', res, res.amountOut?.toSignificant())
+      setBestSwap(res)
     }
 
     fetchPossibleSwaps()
@@ -75,9 +103,17 @@ export function useBestV3TradeExactIn(
     }
   }
 
-  if (routes.length && !bestSwap) {
+  if (!bestSwap) {
     return {
-      state: V3TradeState.LOADING,
+      state: V3TradeState.INVALID,
+      trade: undefined,
+      accounts: undefined,
+    }
+  }
+
+  if (!bestSwap?.amountOut?.currency) {
+    return {
+      state: V3TradeState.NO_ROUTE_FOUND,
       trade: undefined,
       accounts: undefined,
     }
@@ -85,8 +121,8 @@ export function useBestV3TradeExactIn(
 
   if (
     !bestSwap ||
-    !bestSwap.route.output.equals(bestSwap.amountOut.currency) ||
-    !bestSwap.route.input.equals(amountIn.currency)
+    !bestSwap?.route?.output.equals(bestSwap?.amountOut?.currency) ||
+    !bestSwap?.route?.input.equals(amountIn.currency)
   ) {
     return {
       state: V3TradeState.NO_ROUTE_FOUND,

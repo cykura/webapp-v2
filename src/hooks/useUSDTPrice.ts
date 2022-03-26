@@ -39,7 +39,8 @@ export default function useUSDTPrice(currency?: Currency): Price<Currency, Token
 
   useEffect(() => {
     async function getPrice() {
-      if (currency && stablecoin) {
+      // Don't fetch prices for localnet as addresses are differnet for mints
+      if (currency && stablecoin && chainId != 104) {
         try {
           const res = await fetch(
             'https://public-api.solscan.io/market/token/' + (currency as Token).address.toString()
