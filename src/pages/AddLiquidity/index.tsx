@@ -684,14 +684,14 @@ export default function AddLiquidity({
         setAttemptingTxn(true)
 
         tx2.feePayer = account
-        tx2.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
-        blockhash = tx2.recentBlockhash
+        blockhash = (await connection.getRecentBlockhash()).blockhash
+        tx2.recentBlockhash = blockhash
         tx2.sign(nftMintKeypair)
 
         // Cannot sent empty transactions. So add creation of ATA only if required
         const sendReq = [{ tx: tx2, signers: [nftMintKeypair] }]
         if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
-          sendReq.push({ tx: tx1, signers: [] })
+          sendReq.unshift({ tx: tx1, signers: [] })
         }
 
         groupedTxn1.push(...sendReq)
