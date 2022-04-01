@@ -17,6 +17,7 @@ import {
   METADATA_SEED,
   WSOL_LOCAL,
   WSOL_MAIN,
+  SOLUSDC_MAIN,
 } from '../../constants/tokens'
 import { RouteComponentProps } from 'react-router-dom'
 import { Text } from 'rebass'
@@ -65,6 +66,56 @@ import { TransactionInstruction } from '@solana/web3.js'
 import JSBI from 'jsbi'
 import LiquidityChartRangeInput from 'components/LiquidityChartRangeInput'
 import { SendTxRequest } from '@saberhq/solana-contrib'
+import NumericalInput from 'components/NumericalInput'
+import styled from 'styled-components/macro'
+import { darken } from 'polished'
+import { FiatValue } from 'components/CurrencyInputPanel/FiatValue'
+import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
+import CurrencyEqui from 'components/CurrencyInputPanel/CurrencyEqui'
+
+const LabelRow = styled.div`
+  ${({ theme }) => theme.flexRowNoWrap}
+  align-items: center;
+  color: ${({ theme }) => theme.text1};
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0 1rem 1rem;
+  span:hover {
+    cursor: pointer;
+    color: ${({ theme }) => darken(0.2, theme.text2)};
+  }
+`
+const InputRow = styled.div<{ selected: boolean }>`
+  ${({ theme }) => theme.flexRowNoWrap}
+  align-items: center;
+  padding: ${({ selected }) => (selected ? ' 1rem 1rem 0.75rem 1rem' : '1rem 1rem 0.75rem 1rem')};
+`
+
+const FiatRow = styled(LabelRow)`
+  justify-content: flex-end;
+`
+
+const StyledBalanceMax = styled.button<{ disabled?: boolean }>`
+  background-color: transparent;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  color: ${({ theme }) => theme.primaryText1};
+  opacity: ${({ disabled }) => (!disabled ? 1 : 0.4)};
+  pointer-events: ${({ disabled }) => (!disabled ? 'initial' : 'none')};
+  margin-left: 0.25rem;
+
+  :focus {
+    outline: none;
+  }
+
+  ${({ theme }) => theme.mediaWidth.upToExtraSmall`
+    margin-right: 0.5rem;
+  `};
+`
 
 const DEFAULT_ADD_IN_RANGE_SLIPPAGE_TOLERANCE = new Percent(50, 10_000)
 
@@ -1288,6 +1339,20 @@ export default function AddLiquidity({
                   />
 
                   <CurrencyInputPanel
+                    value={formattedAmounts[Field.CURRENCY_B]}
+                    onUserInput={onFieldBInput}
+                    onMax={() => {
+                      onFieldBInput(maxAmounts[Field.CURRENCY_B]?.toExact() ?? '')
+                    }}
+                    showMaxButton={!atMaxAmounts[Field.CURRENCY_B]}
+                    fiatValue={usdcValues[Field.CURRENCY_B]}
+                    currency={currencies[Field.CURRENCY_B]}
+                    id="add-liquidity-input-tokenb"
+                    showCommonBases
+                    locked={depositBDisabled}
+                  />
+
+                  <CurrencyEqui
                     value={formattedAmounts[Field.CURRENCY_B]}
                     onUserInput={onFieldBInput}
                     onMax={() => {

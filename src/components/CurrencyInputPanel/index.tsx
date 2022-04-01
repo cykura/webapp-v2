@@ -147,7 +147,7 @@ interface CurrencyInputPanelProps {
   value: string
   onUserInput: (value: string) => void
   onMax?: () => void
-  showMaxButton: boolean
+  showMaxButton?: boolean
   label?: ReactNode
   onCurrencySelect?: (currency: Currency) => void
   currency?: Currency | null
