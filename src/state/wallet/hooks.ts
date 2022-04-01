@@ -23,6 +23,10 @@ export function useSOLBalance(uncheckedAddress: string | undefined): {
 
   useEffect(() => {
     fetchSolBalance()
+
+    return () => {
+      setBalance(0)
+    }
   }, [account, connected])
 
   const fetchSolBalance = () => {
@@ -66,6 +70,11 @@ export function useTokenBalancesWithLoadingIndicator(
   // Store all spl token balances here
   useEffect(() => {
     fetchTokenBalances()
+
+    return () => {
+      setLoading(false)
+      setTokenBalanceList({})
+    }
   }, [address, connected])
 
   const fetchTokenBalances = () => {
