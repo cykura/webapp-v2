@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { NonfungiblePositionManager, Pool, Position, u32ToSeed } from '@cykura/sdk'
+import { CyclosCore, IDL, NonfungiblePositionManager, Pool, Position, TICK_SPACINGS, u32ToSeed } from '@cykura/sdk'
 import { usePool } from 'hooks/usePools'
 import { useToken } from 'hooks/Tokens'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
@@ -419,29 +419,29 @@ export function PositionPage({
       const provider = new anchor.Provider(connection, wallet as Wallet, {
         skipPreflight: false,
       })
-      const cyclosCore = new anchor.Program(idl as anchor.Idl, PROGRAM_ID_STR, provider)
+      const cyclosCore = new anchor.Program<CyclosCore>(IDL, PROGRAM_ID_STR, provider)
 
-      const token0Add = new PublicKey(token0.address)
-      const token1Add = new PublicKey(token1.address)
+      const token0Add = token0.address
+      const token1Add = token1.address
 
-      const [tickLowerState, tickLowerStateBump] = await PublicKey.findProgramAddress(
+      const [tickLowerState] = await PublicKey.findProgramAddress(
         [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickLower)],
         cyclosCore.programId
       )
 
-      const [tickUpperState, tickUpperStateBump] = await PublicKey.findProgramAddress(
+      const [tickUpperState] = await PublicKey.findProgramAddress(
         [TICK_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u32ToSeed(tickUpper)],
         cyclosCore.programId
       )
 
-      const [poolState, poolStateBump] = await PublicKey.findProgramAddress(
+      const [poolState] = await PublicKey.findProgramAddress(
         [POOL_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount)],
         cyclosCore.programId
       )
 
-      const [factoryState, factoryStateBump] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+      const [factoryState] = await PublicKey.findProgramAddress([], cyclosCore.programId)
 
-      const [corePositionState, corePositionBump] = await PublicKey.findProgramAddress(
+      const [corePositionState] = await PublicKey.findProgramAddress(
         [
           POSITION_SEED,
           token0Add.toBuffer(),
@@ -454,7 +454,7 @@ export function PositionPage({
         cyclosCore.programId
       )
 
-      const [tokenizedPositionState, tokenizedPositionBump] = await PublicKey.findProgramAddress(
+      const [tokenizedPositionState] = await PublicKey.findProgramAddress(
         [POSITION_SEED, new PublicKey(parsedTokenId).toBuffer()],
         cyclosCore.programId
       )
@@ -466,35 +466,33 @@ export function PositionPage({
         wallet.publicKey!
       )
 
-      const tickSpacing = feeAmount / 50
+      const tickSpacing = feeAmount && TICK_SPACINGS[feeAmount]
 
       const wordPosLower = (tickLower / tickSpacing) >> 8
       const wordPosUpper = (tickUpper / tickSpacing) >> 8
 
-      const [bitmapLowerState, bitmapLowerBump] = await PublicKey.findProgramAddress(
+      const [bitmapLowerState] = await PublicKey.findProgramAddress(
         [BITMAP_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u16ToSeed(wordPosLower)],
         cyclosCore.programId
       )
 
-      const [bitmapUpperState, bitmapUpperBump] = await PublicKey.findProgramAddress(
+      const [bitmapUpperState] = await PublicKey.findProgramAddress(
         [BITMAP_SEED, token0Add.toBuffer(), token1Add.toBuffer(), u32ToSeed(feeAmount), u16ToSeed(wordPosUpper)],
         cyclosCore.programId
       )
 
       const { observationIndex, observationCardinalityNext } = await cyclosCore.account.poolState.fetch(poolState)
 
-      const lastObservationState = (
-        await PublicKey.findProgramAddress(
-          [
-            OBSERVATION_SEED,
-            token0Add.toBuffer(),
-            token1Add.toBuffer(),
-            u32ToSeed(feeAmount),
-            u16ToSeed(observationIndex),
-          ],
-          cyclosCore.programId
-        )
-      )[0]
+      const [lastObservationState] = await PublicKey.findProgramAddress(
+        [
+          OBSERVATION_SEED,
+          token0Add.toBuffer(),
+          token1Add.toBuffer(),
+          u32ToSeed(feeAmount),
+          u16ToSeed(observationIndex),
+        ],
+        cyclosCore.programId
+      )
 
       const vault0 = await SPLToken.getAssociatedTokenAddress(
         ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -528,18 +526,18 @@ export function PositionPage({
         true
       )
 
-      const nextObservationState = (
-        await PublicKey.findProgramAddress(
-          [
-            OBSERVATION_SEED,
-            token0Add.toBuffer(),
-            token1Add.toBuffer(),
-            u32ToSeed(feeAmount),
-            u16ToSeed((observationIndex + 1) % observationCardinalityNext),
-          ],
-          cyclosCore.programId
-        )
-      )[0]
+      const [nextObservationState] = await PublicKey.findProgramAddress(
+        [
+          OBSERVATION_SEED,
+          token0Add.toBuffer(),
+          token1Add.toBuffer(),
+          u32ToSeed(feeAmount),
+          u16ToSeed((observationIndex + 1) % observationCardinalityNext),
+        ],
+        cyclosCore.programId
+      )
+
+      const MaxU64 = new BN(2).pow(new BN(64)).subn(1)
 
       const tx = new Transaction()
 
@@ -567,32 +565,34 @@ export function PositionPage({
         }
       }
 
-      const collectIx = cyclosCore.instruction.collectFromTokenized(
-        new BN(2).pow(new BN(64)).subn(1),
-        new BN(2).pow(new BN(64)).subn(1),
-        {
-          accounts: {
-            ownerOrDelegate: wallet?.publicKey,
-            nftAccount: positionNftAccount,
-            tokenizedPositionState: tokenizedPositionState,
-            factoryState,
-            poolState: poolState,
-            corePositionState: corePositionState,
-            tickLowerState: tickLowerState,
-            tickUpperState: tickUpperState,
-            bitmapLowerState: bitmapLowerState,
-            bitmapUpperState: bitmapUpperState,
-            lastObservationState,
-            nextObservationState: nextObservationState,
-            coreProgram: cyclosCore.programId,
-            vault0: vault0,
-            vault1: vault1,
-            recipientWallet0: userATA0,
-            recipientWallet1: userATA1,
-            tokenProgram: TOKEN_PROGRAM_ID,
+      const collectIx = cyclosCore.instruction.collectFromTokenized(MaxU64, MaxU64, {
+        accounts: {
+          ownerOrDelegate: wallet?.publicKey,
+          nftAccount: positionNftAccount,
+          tokenizedPositionState: tokenizedPositionState,
+          factoryState,
+          poolState: poolState,
+          corePositionState: corePositionState,
+          tickLowerState: tickLowerState,
+          tickUpperState: tickUpperState,
+          bitmapLowerState: bitmapLowerState,
+          bitmapUpperState: bitmapUpperState,
+          lastObservationState,
+          coreProgram: cyclosCore.programId,
+          vault0: vault0,
+          vault1: vault1,
+          recipientWallet0: userATA0,
+          recipientWallet1: userATA1,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        remainingAccounts: [
+          {
+            pubkey: nextObservationState,
+            isSigner: false,
+            isWritable: true,
           },
-        }
-      )
+        ],
+      })
 
       tx.add(collectIx)
 

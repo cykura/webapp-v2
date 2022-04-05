@@ -152,8 +152,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
 
     console.log(`Removing liq ${removeLiquidityAmount.toString()}`)
 
-    const fee = position.fee ?? 500
-    const tickSpacing = TICK_SPACINGS[fee]
+    const fee = position.fee ?? 80
+    const tickSpacing = fee && TICK_SPACINGS[fee]
 
     const amount0Minimum = new BN(0)
     const amount1Minimum = new BN(0)
@@ -272,6 +272,31 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     try {
       const tx = new Transaction()
       tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+
+      const WSOL_ATA = await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        NATIVE_MINT,
+        wallet?.publicKey
+      )
+
+      if (token0.toString() == NATIVE_MINT.toString() || token1.toString() == NATIVE_MINT.toString()) {
+        // Create a ATA and receice WSOL in this
+        const account = await connection.getAccountInfo(WSOL_ATA)
+        if (!account) {
+          tx.add(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              NATIVE_MINT,
+              WSOL_ATA,
+              wallet?.publicKey,
+              wallet?.publicKey
+            )
+          )
+        }
+      }
+
       tx.add(
         cyclosCore.instruction.decreaseLiquidity(removeLiquidityAmount, amount0Minimum, amount1Minimum, deadline, {
           accounts: {
@@ -341,7 +366,9 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       }
       tx.feePayer = wallet?.publicKey ?? undefined
       // await wallet?.signTransaction(tx)
-      console.log(tx)
+      // console.log(tx)
+      const str = tx.serializeMessage().toString('base64')
+      console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
       const hash = await providerMut?.send(tx)
       console.log(hash, ' -> remove position')
       setTxnHash(hash?.signature)
