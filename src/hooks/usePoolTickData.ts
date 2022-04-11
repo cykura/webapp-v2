@@ -1,24 +1,18 @@
 import { Currency } from '@cykura/sdk-core'
-import { FeeAmount, nearestUsableTick, Pool, tickPosition, tickToPrice, TICK_SPACINGS } from '@cykura/sdk'
+import { FeeAmount, nearestUsableTick, Pool, tickPosition, TICK_SPACINGS, CyclosCore, IDL } from '@cykura/sdk'
 import JSBI from 'jsbi'
 import { usePool } from './usePools'
 import { useEffect, useMemo, useState } from 'react'
 import computeSurroundingTicks from 'utils/computeSurroundingTicks'
 // import { useAllV3TicksQuery } from 'state/data/enhanced'
 import { skipToken } from '@reduxjs/toolkit/query/react'
-import ms from 'ms.macro'
-import cloneDeep from 'lodash/cloneDeep'
 import { PublicKey } from '@solana/web3.js'
 // import { AllV3TicksQuery } from 'state/data/generated'
 import * as anchor from '@project-serum/anchor'
-import { CyclosCore, IDL } from 'types/cyclos-core'
 import { useSolana } from '@saberhq/use-solana'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { PROGRAM_ID_STR } from 'constants/addresses'
-import { ZERO_ADDRESS } from 'constants/misc'
 import { SolanaTickDataProvider } from './useSwapCallback'
-
-const PRICE_FIXED_DIGITS = 8
 
 // Tick with fields parsed to JSBIs, and active liquidity computed.
 export interface TickProcessed {

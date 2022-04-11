@@ -1120,10 +1120,10 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@cykura/sdk@0.1.16":
-  version "0.1.16"
-  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.16.tgz#f8af4830f3bcd7a1633028012180ba25a01cd6c2"
-  integrity sha512-ia9dHQiIy/3VhlDPZ2r/5PXokcMBaXwjgdy22+Qgg0vfbeOngK4Wcv1jRnNzjQ9CyHneLm3H+HWnCLJZFvv6RA==
+"@cykura/sdk@0.1.22":
+  version "0.1.22"
+  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.22.tgz#b63a176d048eda9e47e426f824db54d9653e315e"
+  integrity sha512-L6KphrBW20wdUhtbiZPC8SCgUPQY0XiRxFTCXekMpVOVKUHS1NH0ABSx7mTWMyYHp9Ouetd/s36fGXM73RJv5w==
   dependencies:
     "@cykura/sdk-core" "0.1.4"
     "@ethersproject/abi" "^5.0.12"
@@ -2531,29 +2531,9 @@
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.11.2.tgz"
   integrity sha512-92FRmppjjqz29VMJ2dn+xdyXZBrMlE42AV6Kq6BwjWV7CNUW1hs2FtxSNLQE+gJhaZ6AAmYuO9y8dshhcBl7vA==
 
-"@project-serum/anchor@^0.19.1-beta.1":
-  version "0.19.1-beta.1"
-  resolved "https://registry.npmjs.org/@project-serum/anchor/-/anchor-0.19.1-beta.1.tgz"
-  integrity sha512-TzkgS5a4WUDJotmur9/pQhqeqa5W14h++ppF+oGZVoR0EkcLbW7SKpx/z80XhsHCIhWz9/1hBAkbKElXdKUUiw==
-  dependencies:
-    "@project-serum/borsh" "^0.2.2"
-    "@solana/web3.js" "^1.17.0"
-    base64-js "^1.5.1"
-    bn.js "^5.1.2"
-    bs58 "^4.0.1"
-    buffer-layout "^1.2.2"
-    camelcase "^5.3.1"
-    crypto-hash "^1.3.0"
-    eventemitter3 "^4.0.7"
-    find "^0.3.0"
-    js-sha256 "^0.9.0"
-    pako "^2.0.3"
-    snake-case "^3.0.4"
-    toml "^3.0.0"
-
-"@project-serum/anchor@^0.22.0", "@project-serum/anchor@^0.22.1":
+"@project-serum/anchor@0.22.1", "@project-serum/anchor@^0.22.0", "@project-serum/anchor@^0.22.1":
   version "0.22.1"
-  resolved "https://registry.npmjs.org/@project-serum/anchor/-/anchor-0.22.1.tgz"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.22.1.tgz#698a9620f94691de0a12bbc650a5c8380e2f0e8a"
   integrity sha512-5pHeyvQhzLahIQ8aZymmDMZJAJFklN0joZdI+YIqFkK2uU/mlKr6rBLQjxysf/j1mLLiNG00tdyLfUtTAdQz7w==
   dependencies:
     "@project-serum/borsh" "^0.2.5"
@@ -2572,7 +2552,7 @@
     snake-case "^3.0.4"
     toml "^3.0.0"
 
-"@project-serum/borsh@^0.2.2", "@project-serum/borsh@^0.2.5":
+"@project-serum/borsh@^0.2.5":
   version "0.2.5"
   resolved "https://registry.npmjs.org/@project-serum/borsh/-/borsh-0.2.5.tgz"
   integrity sha512-UmeUkUoKdQ7rhx6Leve1SssMR/Ghv8qrEiyywyxSWg7ooV7StdpPBhciiy5eB3T0qU1BXvdRNC8TdrkxK7WC5Q==

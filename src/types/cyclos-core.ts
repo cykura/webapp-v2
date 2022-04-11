@@ -1,5 +1,5 @@
 export type CyclosCore = {
-  version: '0.0.0'
+  version: '0.1.6'
   name: 'cyclos_core'
   instructions: [
     {
@@ -113,32 +113,12 @@ export type CyclosCore = {
           isSigner: false
         },
         {
-          name: 'vault0'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'vault1'
-          isMut: true
-          isSigner: false
-        },
-        {
           name: 'systemProgram'
           isMut: false
           isSigner: false
         },
         {
           name: 'rent'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'tokenProgram'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'associatedTokenProgram'
           isMut: false
           isSigner: false
         }
@@ -466,7 +446,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'minter'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -921,7 +901,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'payer'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -1028,7 +1008,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'ownerOrDelegate'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -1111,7 +1091,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'ownerOrDelegate'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -1211,7 +1191,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'signer'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -1284,7 +1264,7 @@ export type CyclosCore = {
       accounts: [
         {
           name: 'signer'
-          isMut: true
+          isMut: false
           isSigner: true
         },
         {
@@ -1474,6 +1454,18 @@ export type CyclosCore = {
       }
     },
     {
+      name: 'positionManagerState'
+      type: {
+        kind: 'struct'
+        fields: [
+          {
+            name: 'bump'
+            type: 'u8'
+          }
+        ]
+      }
+    },
+    {
       name: 'positionState'
       type: {
         kind: 'struct'
@@ -1506,18 +1498,6 @@ export type CyclosCore = {
       }
     },
     {
-      name: 'positionManagerState'
-      type: {
-        kind: 'struct'
-        fields: [
-          {
-            name: 'bump'
-            type: 'u8'
-          }
-        ]
-      }
-    },
-    {
       name: 'swapRouterState'
       type: {
         kind: 'struct'
@@ -1533,6 +1513,28 @@ export type CyclosCore = {
           {
             name: 'amountInCached'
             type: 'u64'
+          }
+        ]
+      }
+    },
+    {
+      name: 'tickBitmapState'
+      type: {
+        kind: 'struct'
+        fields: [
+          {
+            name: 'bump'
+            type: 'u8'
+          },
+          {
+            name: 'wordPos'
+            type: 'i16'
+          },
+          {
+            name: 'word'
+            type: {
+              array: ['u64', 4]
+            }
           }
         ]
       }
@@ -1582,28 +1584,6 @@ export type CyclosCore = {
       }
     },
     {
-      name: 'tickBitmapState'
-      type: {
-        kind: 'struct'
-        fields: [
-          {
-            name: 'bump'
-            type: 'u8'
-          },
-          {
-            name: 'wordPos'
-            type: 'i16'
-          },
-          {
-            name: 'word'
-            type: {
-              array: ['u64', 4]
-            }
-          }
-        ]
-      }
-    },
-    {
       name: 'tokenizedPositionState'
       type: {
         kind: 'struct'
@@ -1647,82 +1627,6 @@ export type CyclosCore = {
           {
             name: 'tokensOwed1'
             type: 'u64'
-          }
-        ]
-      }
-    }
-  ]
-  types: [
-    {
-      name: 'ErrorCode'
-      type: {
-        kind: 'enum'
-        variants: [
-          {
-            name: 'LOK'
-          },
-          {
-            name: 'ZeroMintAmount'
-          },
-          {
-            name: 'TLU'
-          },
-          {
-            name: 'TMS'
-          },
-          {
-            name: 'TLM'
-          },
-          {
-            name: 'TUM'
-          },
-          {
-            name: 'M0'
-          },
-          {
-            name: 'M1'
-          },
-          {
-            name: 'OS'
-          },
-          {
-            name: 'AS'
-          },
-          {
-            name: 'SPL'
-          },
-          {
-            name: 'IIA'
-          },
-          {
-            name: 'NP'
-          },
-          {
-            name: 'LO'
-          },
-          {
-            name: 'R'
-          },
-          {
-            name: 'T'
-          },
-          {
-            name: 'LS'
-          },
-          {
-            name: 'LA'
-          },
-          {
-            name: 'TransactionTooOld'
-          },
-          {
-            name: 'PriceSlippageCheck'
-          },
-          {
-            name: 'NotApproved'
-          },
-          {
-            name: 'TooLittleReceived'
           }
         ]
       }
@@ -2115,10 +2019,122 @@ export type CyclosCore = {
       ]
     }
   ]
+  errors: [
+    {
+      code: 6000
+      name: 'LOK'
+      msg: 'LOK'
+    },
+    {
+      code: 6001
+      name: 'ZeroMintAmount'
+      msg: 'Minting amount should be greater than 0'
+    },
+    {
+      code: 6002
+      name: 'TLU'
+      msg: 'TLU'
+    },
+    {
+      code: 6003
+      name: 'TMS'
+      msg: 'TMS'
+    },
+    {
+      code: 6004
+      name: 'TLM'
+      msg: 'TLM'
+    },
+    {
+      code: 6005
+      name: 'TUM'
+      msg: 'TUM'
+    },
+    {
+      code: 6006
+      name: 'M0'
+      msg: 'M0'
+    },
+    {
+      code: 6007
+      name: 'M1'
+      msg: 'M1'
+    },
+    {
+      code: 6008
+      name: 'OS'
+      msg: 'OS'
+    },
+    {
+      code: 6009
+      name: 'AS'
+      msg: 'AS'
+    },
+    {
+      code: 6010
+      name: 'SPL'
+      msg: 'SPL'
+    },
+    {
+      code: 6011
+      name: 'IIA'
+      msg: 'IIA'
+    },
+    {
+      code: 6012
+      name: 'NP'
+      msg: 'NP'
+    },
+    {
+      code: 6013
+      name: 'LO'
+      msg: 'LO'
+    },
+    {
+      code: 6014
+      name: 'R'
+      msg: 'R'
+    },
+    {
+      code: 6015
+      name: 'T'
+      msg: 'T'
+    },
+    {
+      code: 6016
+      name: 'LS'
+      msg: 'LS'
+    },
+    {
+      code: 6017
+      name: 'LA'
+      msg: 'LA'
+    },
+    {
+      code: 6018
+      name: 'TransactionTooOld'
+      msg: 'Transaction too old'
+    },
+    {
+      code: 6019
+      name: 'PriceSlippageCheck'
+      msg: 'Price slippage check'
+    },
+    {
+      code: 6020
+      name: 'NotApproved'
+      msg: 'Not approved'
+    },
+    {
+      code: 6021
+      name: 'TooLittleReceived'
+      msg: 'Too little received'
+    }
+  ]
 }
 
 export const IDL: CyclosCore = {
-  version: '0.0.0',
+  version: '0.1.6',
   name: 'cyclos_core',
   instructions: [
     {
@@ -2232,32 +2248,12 @@ export const IDL: CyclosCore = {
           isSigner: false,
         },
         {
-          name: 'vault0',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'vault1',
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: 'systemProgram',
           isMut: false,
           isSigner: false,
         },
         {
           name: 'rent',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'tokenProgram',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'associatedTokenProgram',
           isMut: false,
           isSigner: false,
         },
@@ -2585,7 +2581,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'minter',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3040,7 +3036,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'payer',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3147,7 +3143,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'ownerOrDelegate',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3230,7 +3226,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'ownerOrDelegate',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3330,7 +3326,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'signer',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3403,7 +3399,7 @@ export const IDL: CyclosCore = {
       accounts: [
         {
           name: 'signer',
-          isMut: true,
+          isMut: false,
           isSigner: true,
         },
         {
@@ -3593,6 +3589,18 @@ export const IDL: CyclosCore = {
       },
     },
     {
+      name: 'positionManagerState',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'bump',
+            type: 'u8',
+          },
+        ],
+      },
+    },
+    {
       name: 'positionState',
       type: {
         kind: 'struct',
@@ -3625,18 +3633,6 @@ export const IDL: CyclosCore = {
       },
     },
     {
-      name: 'positionManagerState',
-      type: {
-        kind: 'struct',
-        fields: [
-          {
-            name: 'bump',
-            type: 'u8',
-          },
-        ],
-      },
-    },
-    {
       name: 'swapRouterState',
       type: {
         kind: 'struct',
@@ -3652,6 +3648,28 @@ export const IDL: CyclosCore = {
           {
             name: 'amountInCached',
             type: 'u64',
+          },
+        ],
+      },
+    },
+    {
+      name: 'tickBitmapState',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'bump',
+            type: 'u8',
+          },
+          {
+            name: 'wordPos',
+            type: 'i16',
+          },
+          {
+            name: 'word',
+            type: {
+              array: ['u64', 4],
+            },
           },
         ],
       },
@@ -3701,28 +3719,6 @@ export const IDL: CyclosCore = {
       },
     },
     {
-      name: 'tickBitmapState',
-      type: {
-        kind: 'struct',
-        fields: [
-          {
-            name: 'bump',
-            type: 'u8',
-          },
-          {
-            name: 'wordPos',
-            type: 'i16',
-          },
-          {
-            name: 'word',
-            type: {
-              array: ['u64', 4],
-            },
-          },
-        ],
-      },
-    },
-    {
       name: 'tokenizedPositionState',
       type: {
         kind: 'struct',
@@ -3766,82 +3762,6 @@ export const IDL: CyclosCore = {
           {
             name: 'tokensOwed1',
             type: 'u64',
-          },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: 'ErrorCode',
-      type: {
-        kind: 'enum',
-        variants: [
-          {
-            name: 'LOK',
-          },
-          {
-            name: 'ZeroMintAmount',
-          },
-          {
-            name: 'TLU',
-          },
-          {
-            name: 'TMS',
-          },
-          {
-            name: 'TLM',
-          },
-          {
-            name: 'TUM',
-          },
-          {
-            name: 'M0',
-          },
-          {
-            name: 'M1',
-          },
-          {
-            name: 'OS',
-          },
-          {
-            name: 'AS',
-          },
-          {
-            name: 'SPL',
-          },
-          {
-            name: 'IIA',
-          },
-          {
-            name: 'NP',
-          },
-          {
-            name: 'LO',
-          },
-          {
-            name: 'R',
-          },
-          {
-            name: 'T',
-          },
-          {
-            name: 'LS',
-          },
-          {
-            name: 'LA',
-          },
-          {
-            name: 'TransactionTooOld',
-          },
-          {
-            name: 'PriceSlippageCheck',
-          },
-          {
-            name: 'NotApproved',
-          },
-          {
-            name: 'TooLittleReceived',
           },
         ],
       },
@@ -4232,6 +4152,118 @@ export const IDL: CyclosCore = {
           index: false,
         },
       ],
+    },
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: 'LOK',
+      msg: 'LOK',
+    },
+    {
+      code: 6001,
+      name: 'ZeroMintAmount',
+      msg: 'Minting amount should be greater than 0',
+    },
+    {
+      code: 6002,
+      name: 'TLU',
+      msg: 'TLU',
+    },
+    {
+      code: 6003,
+      name: 'TMS',
+      msg: 'TMS',
+    },
+    {
+      code: 6004,
+      name: 'TLM',
+      msg: 'TLM',
+    },
+    {
+      code: 6005,
+      name: 'TUM',
+      msg: 'TUM',
+    },
+    {
+      code: 6006,
+      name: 'M0',
+      msg: 'M0',
+    },
+    {
+      code: 6007,
+      name: 'M1',
+      msg: 'M1',
+    },
+    {
+      code: 6008,
+      name: 'OS',
+      msg: 'OS',
+    },
+    {
+      code: 6009,
+      name: 'AS',
+      msg: 'AS',
+    },
+    {
+      code: 6010,
+      name: 'SPL',
+      msg: 'SPL',
+    },
+    {
+      code: 6011,
+      name: 'IIA',
+      msg: 'IIA',
+    },
+    {
+      code: 6012,
+      name: 'NP',
+      msg: 'NP',
+    },
+    {
+      code: 6013,
+      name: 'LO',
+      msg: 'LO',
+    },
+    {
+      code: 6014,
+      name: 'R',
+      msg: 'R',
+    },
+    {
+      code: 6015,
+      name: 'T',
+      msg: 'T',
+    },
+    {
+      code: 6016,
+      name: 'LS',
+      msg: 'LS',
+    },
+    {
+      code: 6017,
+      name: 'LA',
+      msg: 'LA',
+    },
+    {
+      code: 6018,
+      name: 'TransactionTooOld',
+      msg: 'Transaction too old',
+    },
+    {
+      code: 6019,
+      name: 'PriceSlippageCheck',
+      msg: 'Price slippage check',
+    },
+    {
+      code: 6020,
+      name: 'NotApproved',
+      msg: 'Not approved',
+    },
+    {
+      code: 6021,
+      name: 'TooLittleReceived',
+      msg: 'Too little received',
     },
   ],
 }

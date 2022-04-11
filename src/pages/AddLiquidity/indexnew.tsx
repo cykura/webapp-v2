@@ -55,7 +55,7 @@ import {
   useRangeHopCallbacks,
   useV3DerivedMintInfo,
 } from 'state/mint/v3/hooks'
-import { encodeSqrtRatioX32, FeeAmount, u32ToSeed } from '@cykura/sdk'
+import { encodeSqrtRatioX32, FeeAmount, u32ToSeed, CyclosCore, IDL } from '@cykura/sdk'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { useDerivedPositionInfo } from 'hooks/useDerivedPositionInfo'
 import { PositionPreview } from 'components/PositionPreview'
@@ -67,7 +67,6 @@ import HoverInlineText from 'components/HoverInlineText'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import * as anchor from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
-import { CyclosCore, IDL } from 'types/cyclos-core'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { u16ToSeed } from 'state/mint/v3/utils'
 import { useSnackbar } from 'notistack'

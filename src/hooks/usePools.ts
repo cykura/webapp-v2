@@ -1,4 +1,4 @@
-import { TICK_SPACINGS, u32ToSeed } from '@cykura/sdk'
+import { TICK_SPACINGS, u32ToSeed, CyclosCore, IDL } from '@cykura/sdk'
 import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
 import { PROGRAM_ID_STR } from '../constants/addresses'
@@ -10,7 +10,6 @@ import { POOL_SEED } from 'constants/tokens'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import JSBI from 'jsbi'
 import { SolanaTickDataProvider } from './useSwapCallback'
-import { CyclosCore, IDL } from 'types/cyclos-core'
 import { PublicKey } from '@solana/web3.js'
 
 export enum PoolState {
