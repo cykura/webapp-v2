@@ -110,7 +110,7 @@ export function useSwapCallback(
     // Throw eerror for this late
     const { token0: t0, token1: t1, fee: f } = trade.route.pools[0]
 
-    const [pool, _] = await anchor.web3.PublicKey.findProgramAddress(
+    const [pool] = await anchor.web3.PublicKey.findProgramAddress(
       [POOL_SEED, new PublicKey(t0.address).toBuffer(), new PublicKey(t1.address).toBuffer(), u32ToSeed(f)],
       cyclosCore.programId
     )
@@ -274,7 +274,7 @@ export function useSwapCallback(
       }
 
       // If swapping from SOL
-      if (inputCurrency.symbol == 'SOL' || outputCurrency.symbol == 'SOL') {
+      if (inputCurrency.symbol == 'SOL') {
         tx.add(
           SystemProgram.transfer({
             fromPubkey: signer,
