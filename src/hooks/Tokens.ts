@@ -13,6 +13,8 @@ import {
   STEP,
   SPACE_FALCON,
   SOLANIUM,
+  SOLVENT,
+  FXS,
 } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -52,6 +54,8 @@ export function useAllTokens(): { [address: string]: Token } {
       [STEP.address.toString()]: STEP,
       [UST_MAIN.address.toString()]: UST_MAIN,
       [SOLANIUM.address.toString()]: SOLANIUM,
+      [SOLVENT.address.toString()]: SOLVENT,
+      [FXS.address.toString()]: FXS,
     }
     userAddedTokens.forEach((token) => {
       map[token.address.toString()] = token

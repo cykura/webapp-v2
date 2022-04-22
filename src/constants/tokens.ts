@@ -54,6 +54,14 @@ export const WSOL_MAIN = new Token(
   'SOL',
   'Wrapped SOL'
 )
+export const SOLVENT = new Token(101, new PublicKey('svtMpL5eQzdmB3uqK9NXaQkq8prGZoKQFNVJghdWCkV'), 6, 'SVT', 'Solvent')
+export const FXS = new Token(
+  101,
+  new PublicKey('6LX8BhMQ4Sy2otmAWj7Y5sKd9YTVVUgfMsBzT6B9W7ct'),
+  8,
+  'FXS',
+  'Frax Share(Portal)'
+)
 
 // Devnet TOKENS
 
