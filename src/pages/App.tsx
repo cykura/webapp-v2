@@ -1,3 +1,4 @@
+import { FarmingProvider } from 'contexts/Farms'
 import { StakingProvider } from 'contexts/Staking'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
 import { Route, Switch } from 'react-router-dom'
@@ -14,6 +15,7 @@ import Pool from './Pool'
 import { PositionPage } from './Pool/PositionPage'
 import RemoveLiquidityV3 from './RemoveLiquidity/V3'
 import Staking from './Staking'
+import Farms from './Farms'
 import Swap from './Swap'
 import { RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
 
@@ -71,7 +73,11 @@ export default function App() {
                 <Staking />
               </StakingProvider>
             </Route>
-
+            <Route exact strict path="/farms">
+              <FarmingProvider>
+                <Farms />
+              </FarmingProvider>
+            </Route>
             <Route exact strict path="/pool" component={Pool} />
             <Route exact strict path="/pool/:tokenId" component={PositionPage} />
 

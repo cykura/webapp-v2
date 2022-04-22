@@ -283,6 +283,9 @@ export default function Header() {
         >
           <span>Pool</span>
         </StyledNavLink>
+        <StyledNavLink id={`farms-nav-link`} to={'/farms'}>
+          <span>Farms</span>
+        </StyledNavLink>
         <StyledNavLink id={`stake-nav-link`} to={'/staking'}>
           <span>Staking</span>
         </StyledNavLink>

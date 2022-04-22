@@ -312,6 +312,7 @@ export default function AddLiquidity({
           new BN(+formattedAmounts[Field.CURRENCY_B] * Math.pow(10, currencies[Field.CURRENCY_B]?.decimals ?? 0)),
         ]
 
+    console.log(amount0Desired.toString(), amount1Desired.toString())
     // If pool not exist, create and init pool
     // Check to see if WSOL_ATA created during pool creation
     let isSOLAccount = false
