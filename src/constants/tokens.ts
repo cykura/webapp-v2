@@ -62,6 +62,13 @@ export const FXS = new Token(
   'FXS',
   'Frax Share(Portal)'
 )
+export const FCSTEP_VOLT = new Token(
+  101,
+  new PublicKey('AQFLXqLLofcbUCoi5HPfuuvX6vMPafubZfBNBMumnKq2'),
+  9,
+  'fcSTEP',
+  'fcSTEP Volt'
+)
 
 // Devnet TOKENS
 

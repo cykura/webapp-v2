@@ -15,6 +15,7 @@ import {
   SOLANIUM,
   SOLVENT,
   FXS,
+  FCSTEP_VOLT,
 } from '../constants/tokens'
 import { useUserAddedTokens } from '../state/user/hooks'
 import { useActiveWeb3ReactSol } from './web3'
@@ -55,6 +56,7 @@ export function useAllTokens(): { [address: string]: Token } {
       [UST_MAIN.address.toString()]: UST_MAIN,
       [SOLANIUM.address.toString()]: SOLANIUM,
       [SOLVENT.address.toString()]: SOLVENT,
+      [FCSTEP_VOLT.address.toString()]: FCSTEP_VOLT,
       [FXS.address.toString()]: FXS,
     }
     userAddedTokens.forEach((token) => {
