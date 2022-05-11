@@ -121,10 +121,7 @@ export function useToken(tokenAddress?: string): Token | undefined {
     const symbol = token.symbol
     const decimals = token.decimals
 
-    if (decimals) {
-      return new Token(chainId, new PublicKey(tokenAddress), decimals, symbol ?? 'XXX', tokenName ?? 'UNKNOW TOKEN')
-    }
-    return undefined
+    return new Token(chainId, new PublicKey(tokenAddress), decimals, symbol ?? 'XXX', tokenName ?? 'UNKNOW TOKEN')
   }, [chainId, tokenAddress])
 }
 
