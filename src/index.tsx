@@ -16,6 +16,8 @@ import UserUpdater from './state/user/updater'
 import ThemeProvider, { ThemedGlobalStyle } from './theme'
 import { SnackbarProvider } from 'notistack'
 import GradientUpdater from './theme/BgGradient'
+import { useSolana } from '@saberhq/use-solana'
+import { JupiterProvider } from "@jup-ag/react-hook"
 
 if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
@@ -31,6 +33,20 @@ function Updaters() {
       <LogsUpdater />
       <GradientUpdater />
     </>
+  )
+}
+
+const JupiterWrapper: React.FC = ({ children }) => {
+  const { connection, wallet } = useSolana()
+  return (
+    <JupiterProvider
+      cluster="mainnet-beta"
+      connection={connection}
+      userPublicKey={wallet?.publicKey || undefined}
+      routeCacheDuration={0}
+    >
+      {children}
+    </JupiterProvider>
   )
 }
 
@@ -61,15 +77,17 @@ ReactDOM.render(
           console.log('Error')
         }}
       >
-        <HashRouter>
-          <Updaters />
-          <ThemeProvider>
-            <SnackbarProvider autoHideDuration={1500}>
-              <ThemedGlobalStyle />
-              <App />
-            </SnackbarProvider>
-          </ThemeProvider>
-        </HashRouter>
+        <JupiterWrapper>
+          <HashRouter>
+            <Updaters />
+            <ThemeProvider>
+              <SnackbarProvider autoHideDuration={1500}>
+                <ThemedGlobalStyle />
+                <App />
+              </SnackbarProvider>
+            </ThemeProvider>
+          </HashRouter>
+        </JupiterWrapper>
       </WalletKitProvider>
     </Provider>
   </StrictMode>,
