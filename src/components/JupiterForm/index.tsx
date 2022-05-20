@@ -1,7 +1,7 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
-import { useSolana } from '@saberhq/use-solana'
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react'
+import { useSolana, WalletAdapter } from '@saberhq/use-solana'
 import { TOKEN_LIST_URL, useJupiter } from '@jup-ag/react-hook'
-import { PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey, Transaction, SendOptions, Signer, TransactionSignature } from '@solana/web3.js'
 import { TokenInfo } from '@solana/spl-token-registry'
 import { INPUT_MINT_ADDRESS, OUTPUT_MINT_ADDRESS } from 'constants/jup'
 
@@ -9,6 +9,10 @@ interface IJupiterFormProps {}
 type UseJupiterProps = Parameters<typeof useJupiter>[0]
 
 const SECOND_TO_REFRESH = 30
+
+interface SendTransactionOptions extends SendOptions {
+  signers?: Signer[]
+}
 
 const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
   const { connection, wallet } = useSolana()
@@ -81,13 +85,32 @@ const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
     return () => clearInterval(intervalId)
   }, [loading])
 
+  const sendTxn = useCallback(
+    (
+      transaction: Transaction,
+      connection: Connection,
+      options?: SendTransactionOptions
+    ): Promise<TransactionSignature> => {
+      return connection.sendTransaction(transaction, options?.signers!)
+    },
+    []
+  )
+
+  const signTxn = useCallback((wallet: WalletAdapter, tx: Transaction) => {
+    console.log(tx, wallet.signTransaction)
+    return wallet.signTransaction(tx)
+  }, [])
+
+  const signAllTxns = useCallback((wallet: WalletAdapter, tx: Transaction[]) => {
+    console.log(tx, wallet.signAllTransactions)
+    return wallet.signAllTransactions(tx)
+  }, [])
+
   return (
     <>
       <div>
         <div>
-          <label htmlFor="inputMint">
-            Input token
-          </label>
+          <label htmlFor="inputMint">Input token</label>
           <select
             id="inputMint"
             name="inputMint"
@@ -117,9 +140,7 @@ const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
         </div>
 
         <div>
-          <label htmlFor="outputMint">
-            Output token
-          </label>
+          <label htmlFor="outputMint">Output token</label>
           <select
             id="outputMint"
             name="outputMint"
@@ -147,9 +168,7 @@ const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
         </div>
 
         <div>
-          <label htmlFor="amount">
-            Input Amount ({inputTokenInfo?.symbol})
-          </label>
+          <label htmlFor="amount">Input Amount ({inputTokenInfo?.symbol})</label>
           <div className="mt-1">
             <input
               name="amount"
@@ -170,11 +189,7 @@ const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
         </div>
 
         <div>
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={loading}
-          >
+          <button type="button" onClick={refresh} disabled={loading}>
             {/* <SpinnerProgress percentage={timeDiff} sqSize={18} strokeWidth={2} /> */}
             <span>{loading ? 'Loading' : 'Refresh'}</span>
           </button>
@@ -205,18 +220,18 @@ const JupiterForm: FunctionComponent<IJupiterFormProps> = (props) => {
             onClick={async () => {
               if (
                 !loading &&
-                routes?.[0] && wallet &&
+                routes?.[0] &&
+                wallet &&
                 wallet.signAllTransactions &&
                 wallet.signTransaction &&
-                // wallet.sendTransaction &&
                 wallet.publicKey
               ) {
                 const swapResult = await exchange({
                   wallet: {
-                    sendTransaction: (wallet as any).sendTransaction,
+                    sendTransaction: sendTxn,
                     publicKey: wallet.publicKey,
-                    signAllTransactions: wallet.signAllTransactions,
-                    signTransaction: wallet.signTransaction,
+                    signAllTransactions: (tx: Transaction[]) => signAllTxns(wallet, tx),
+                    signTransaction: (tx: Transaction) => signTxn(wallet, tx),
                   },
                   routeInfo: routes[0],
                   onTransaction: async (txid) => {
