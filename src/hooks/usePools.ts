@@ -96,6 +96,10 @@ export function usePools(
     }
 
     fetchPools()
+
+    return () => {
+      setPoolStates(undefined)
+    }
   }, [poolKeys])
   return poolStates
 }
@@ -158,6 +162,10 @@ export function usePool(
       }
     }
     fetchPool()
+
+    return () => {
+      setPoolState(null)
+    }
   }, [chainId, account, currencyA, currencyB, feeAmount])
 
   return poolState

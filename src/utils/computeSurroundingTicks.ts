@@ -2,7 +2,6 @@ import { Token } from '@cykura/sdk-core'
 import { tickToPrice } from '@cykura/sdk'
 import { TickProcessed } from 'hooks/usePoolTickData'
 import JSBI from 'jsbi'
-// import { AllV3TicksQuery } from 'state/data/generated'
 
 const PRICE_FIXED_DIGITS = 8
 
@@ -22,7 +21,7 @@ export default function computeSurroundingTicks(
   // building active liquidity for every tick.
   let processedTicks: TickProcessed[] = []
   for (let i = pivot + (ascending ? 1 : -1); ascending ? i < sortedTickData.length : i >= 0; ascending ? i++ : i--) {
-    const tickIdx = Number(sortedTickData[i].tickIdx)
+    const tickIdx = Number(sortedTickData[i].tick)
     const currentTickProcessed: TickProcessed = {
       liquidityActive: previousTickProcessed.liquidityActive,
       tickIdx,

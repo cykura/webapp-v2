@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, ReactNode } from 'react'
-import { LightCard } from 'components/Card'
+import { OutlineCard } from 'components/Card'
 import { RowBetween } from 'components/Row'
 import { Input as NumericalInput } from '../NumericalInput'
 import styled, { keyframes } from 'styled-components/macro'
 import { TYPE } from 'theme'
 import { AutoColumn } from 'components/Column'
-import { ButtonPrimary } from 'components/Button'
+import { ButtonGray } from 'components/Button'
 import { FeeAmount } from '@cykura/sdk'
+import { Minus, Plus } from 'react-feather'
 import { formattedFeeAmount } from 'utils'
 
 const pulse = (color: string) => keyframes`
@@ -23,26 +24,36 @@ const pulse = (color: string) => keyframes`
   }
 `
 
-const SmallButton = styled(ButtonPrimary)`
-  /* background-color: ${({ theme }) => theme.bg2}; */
-  color: ${({ theme }) => theme.text5};
+const SmallButton = styled(ButtonGray)`
   border-radius: 8px;
-  padding: 4px 6px;
-  width: 48%;
+  padding: 4px;
 `
 
-const FocusedOutlineCard = styled(LightCard)<{ active?: boolean; pulsing?: boolean }>`
+const FocusedOutlineCard = styled(OutlineCard)<{ active?: boolean; pulsing?: boolean }>`
   border-color: ${({ active, theme }) => active && theme.blue1};
   padding: 12px;
   animation: ${({ pulsing, theme }) => pulsing && pulse(theme.blue1)} 0.8s linear;
 `
 
 const StyledInput = styled(NumericalInput)<{ usePercent?: boolean }>`
-  /* background-color: ${({ theme }) => theme.bg0}; */
+  background-color: transparent;
   text-align: center;
-  margin-right: 12px;
   width: 100%;
   font-weight: 500;
+  padding: 0 10px;
+
+  ${({ theme }) => theme.mediaWidth.upToSmall`
+    font-size: 16px;
+  `};
+
+  ${({ theme }) => theme.mediaWidth.upToExtraSmall`
+    font-size: 12px;
+  `};
+`
+const InputRow = styled.div`
+  display: grid;
+
+  grid-template-columns: 30px 1fr 30px;
 `
 
 const InputTitle = styled(TYPE.small)`
@@ -51,11 +62,17 @@ const InputTitle = styled(TYPE.small)`
   font-weight: 500;
 `
 
+const ButtonLabel = styled(TYPE.white)<{ disabled: boolean }>`
+  color: ${({ theme, disabled }) => (disabled ? theme.text2 : theme.text1)} !important;
+`
+
 interface StepCounterProps {
   value: string
   onUserInput: (value: string) => void
   decrement: () => string
   increment: () => string
+  decrementDisabled?: boolean
+  incrementDisabled?: boolean
   feeAmount?: FeeAmount
   label?: string
   width?: string
@@ -69,7 +86,8 @@ const StepCounter = ({
   value,
   decrement,
   increment,
-  feeAmount,
+  decrementDisabled = false,
+  incrementDisabled = false,
   width,
   locked,
   onUserInput,
@@ -86,9 +104,6 @@ const StepCounter = ({
 
   // animation if parent value updates local value
   const [pulsing, setPulsing] = useState<boolean>(false)
-
-  // format fee amount
-  const feeAmountFormatted = feeAmount ? formattedFeeAmount(feeAmount * 2) : ''
 
   const handleOnFocus = () => {
     setUseLocalValue(true)
@@ -126,35 +141,45 @@ const StepCounter = ({
 
   return (
     <FocusedOutlineCard pulsing={pulsing} active={active} onFocus={handleOnFocus} onBlur={handleOnBlur} width={width}>
-      <AutoColumn gap="6px" style={{ marginBottom: '12px' }}>
+      <AutoColumn gap="6px">
         <InputTitle fontSize={12} textAlign="center">
           {title}
         </InputTitle>
-        <StyledInput
-          className="rate-input-0"
-          value={localValue}
-          fontSize="20px"
-          disabled={locked}
-          onUserInput={(val) => {
-            setLocalValue(val)
-          }}
-        />
+
+        <InputRow>
+          {!locked && (
+            <SmallButton onClick={handleDecrement} disabled={decrementDisabled}>
+              <ButtonLabel disabled={decrementDisabled} fontSize="12px">
+                <Minus size={12} />
+              </ButtonLabel>
+            </SmallButton>
+          )}
+
+          <StyledInput
+            className="rate-input-0"
+            value={localValue}
+            fontSize="20px"
+            disabled={locked}
+            onUserInput={(val) => {
+              setLocalValue(val)
+            }}
+          />
+
+          {!locked && (
+            <SmallButton onClick={handleIncrement} disabled={incrementDisabled}>
+              <ButtonLabel disabled={incrementDisabled} fontSize="12px">
+                <Plus size={12} />
+              </ButtonLabel>
+            </SmallButton>
+          )}
+        </InputRow>
+
         <InputTitle fontSize={12} textAlign="center">
           <span>
             {tokenB} per {tokenA}
           </span>
         </InputTitle>
       </AutoColumn>
-      {!locked ? (
-        <RowBetween>
-          <SmallButton fontSize="12px" onClick={handleDecrement}>
-            <span>-{feeAmountFormatted}%</span>
-          </SmallButton>
-          <SmallButton fontSize="12px" onClick={handleIncrement}>
-            <span>+{feeAmountFormatted}%</span>
-          </SmallButton>
-        </RowBetween>
-      ) : null}
     </FocusedOutlineCard>
   )
 }

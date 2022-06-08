@@ -102,14 +102,12 @@ export default function LiquidityChartRangeInput({
 }) {
   const theme = useTheme()
 
-  console.log('CHART RENDERED')
-
   const tokenAColor = useColor(currencyA?.wrapped)
   const tokenBColor = useColor(currencyB?.wrapped)
 
   const isSorted = currencyA && currencyB && currencyA?.wrapped.sortsBefore(currencyB?.wrapped)
 
-  const { isLoading, isUninitialized, isError, error, formattedData } = useDensityChartData({
+  const { isLoading, isError, error, formattedData } = useDensityChartData({
     currencyA,
     currencyB,
     feeAmount,
@@ -180,49 +178,52 @@ export default function LiquidityChartRangeInput({
 
   return (
     <AutoColumn gap="md" style={{ minHeight: '200px' }}>
-      {isUninitialized ? (
-        <InfoBox
-          message={<span>Your position will appear here.</span>}
-          icon={<Inbox size={56} stroke={theme.text1} />}
-        />
-      ) : isLoading ? (
-        <InfoBox icon={<Loader size="40px" stroke={theme.text4} />} />
-      ) : isError ? (
-        <InfoBox
-          message={<span>Liquidity data not available.</span>}
-          icon={<CloudOff size={56} stroke={theme.text4} />}
-        />
-      ) : !formattedData || formattedData === [] || !price ? (
-        <InfoBox
-          message={<span>There is no liquidity data.</span>}
-          icon={<BarChart2 size={56} stroke={theme.text4} />}
-        />
-      ) : (
-        <ChartWrapper>
-          <Chart
-            data={{ series: formattedData, current: price }}
-            dimensions={{ width: 400, height: 200 }}
-            margins={{ top: 10, right: 2, bottom: 20, left: 0 }}
-            styles={{
-              area: {
-                selection: theme.blue1,
-              },
-              brush: {
-                handle: {
-                  west: saturate(0.1, tokenAColor) ?? theme.red1,
-                  east: saturate(0.1, tokenBColor) ?? theme.blue1,
-                },
-              },
-            }}
-            interactive={interactive}
-            brushLabels={brushLabelValue}
-            brushDomain={brushDomain}
-            onBrushDomainChange={onBrushDomainChangeEnded}
-            zoomLevels={ZOOM_LEVELS[feeAmount ?? FeeAmount.MEDIUM]}
-            ticksAtLimit={ticksAtLimit}
+      {
+        // isUninitialized ? (
+        //   <InfoBox
+        //     message={<span>Your position will appear here.</span>}
+        //     icon={<Inbox size={56} stroke={theme.text1} />}
+        //   />
+        // ) :
+        isLoading ? (
+          <InfoBox icon={<Loader size="40px" stroke={theme.text4} />} />
+        ) : isError ? (
+          <InfoBox
+            message={<span>Liquidity data not available.</span>}
+            icon={<CloudOff size={56} stroke={theme.text4} />}
           />
-        </ChartWrapper>
-      )}
+        ) : !formattedData || formattedData === [] || !price ? (
+          <InfoBox
+            message={<span>There is no liquidity data.</span>}
+            icon={<BarChart2 size={56} stroke={theme.text4} />}
+          />
+        ) : (
+          <ChartWrapper>
+            <Chart
+              data={{ series: formattedData, current: price }}
+              dimensions={{ width: 400, height: 200 }}
+              margins={{ top: 10, right: 2, bottom: 20, left: 0 }}
+              styles={{
+                area: {
+                  selection: theme.blue1,
+                },
+                brush: {
+                  handle: {
+                    west: saturate(0.1, tokenAColor) ?? theme.red1,
+                    east: saturate(0.1, tokenBColor) ?? theme.blue1,
+                  },
+                },
+              }}
+              interactive={interactive}
+              brushLabels={brushLabelValue}
+              brushDomain={brushDomain}
+              onBrushDomainChange={onBrushDomainChangeEnded}
+              zoomLevels={ZOOM_LEVELS[feeAmount ?? FeeAmount.TURBO_SPL]}
+              ticksAtLimit={ticksAtLimit}
+            />
+          </ChartWrapper>
+        )
+      }
     </AutoColumn>
   )
 }

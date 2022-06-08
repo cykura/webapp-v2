@@ -1,8 +1,7 @@
 import { useActiveWeb3ReactSol } from 'hooks/web3'
 import { Redirect, RouteComponentProps } from 'react-router-dom'
 import { SOLCYS_LOCAL } from '../../constants/tokens'
-import AddLiquidity from './index'
-// import AddLiquidity2 from './indexnew'
+import AddLiquidity from './indexnew'
 
 export function RedirectDuplicateTokenIds(
   props: RouteComponentProps<{ currencyIdA: string; currencyIdB: string; feeAmount?: string }>

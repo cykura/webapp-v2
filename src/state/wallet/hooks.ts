@@ -72,8 +72,8 @@ export function useTokenBalancesWithLoadingIndicator(
     fetchTokenBalances()
 
     return () => {
-      setLoading(false)
       setTokenBalanceList({})
+      setLoading(false)
     }
   }, [address, connected])
 
