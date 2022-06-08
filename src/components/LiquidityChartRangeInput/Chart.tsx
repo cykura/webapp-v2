@@ -55,6 +55,10 @@ export function Chart({
   useEffect(() => {
     // reset zoom as necessary
     setZoom(null)
+
+    return () => {
+      setZoom(null)
+    }
   }, [zoomLevels])
 
   useEffect(() => {

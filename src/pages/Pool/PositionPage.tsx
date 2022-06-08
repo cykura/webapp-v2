@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CyclosCore, IDL, NonfungiblePositionManager, Pool, Position, TICK_SPACINGS, u32ToSeed } from '@cykura/sdk'
+import {
+  NonfungiblePositionManager,
+  Pool,
+  Position,
+  u32ToSeed,
+  u16ToSeed,
+  CyclosCore,
+  IDL,
+  TICK_SPACINGS,
+} from '@cykura/sdk'
 import { usePool } from 'hooks/usePools'
 import { useToken } from 'hooks/Tokens'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
@@ -38,7 +47,6 @@ import JSBI from 'jsbi'
 import { PROGRAM_ID_STR } from 'constants/addresses'
 import * as anchor from '@project-serum/anchor'
 import { useSolana } from '@saberhq/use-solana'
-import idl from '../../constants/cyclos-core.json'
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token as SPLToken, NATIVE_MINT } from '@solana/spl-token'
 import {
@@ -50,7 +58,6 @@ import {
   SOL_LOCAL,
   WSOL_LOCAL,
 } from 'constants/tokens'
-import { u16ToSeed } from 'state/mint/v3/utils'
 import { Transaction } from '@solana/web3.js'
 
 const { BN, web3 } = anchor

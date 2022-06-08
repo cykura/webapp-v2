@@ -6,27 +6,29 @@ import { Token } from '@cykura/sdk-core'
 import uriToHttp from 'utils/uriToHttp'
 
 async function getColorFromToken(token: Token): Promise<string | null> {
-  if (token.chainId !== 1) {
-    return Promise.resolve('#FAAB14')
-  }
+  return Promise.resolve('#FAAB14')
 
-  const path = `https://raw.githubusercontent.com/uniswap/assets/master/blockchains/ethereum/assets/${token.address}/logo.png`
+  // if (token.chainId !== 1) {
+  //   return Promise.resolve('#FAAB14')
+  // }
 
-  return Vibrant.from(path)
-    .getPalette()
-    .then((palette) => {
-      if (palette?.Vibrant) {
-        let detectedHex = palette.Vibrant.hex
-        let AAscore = hex(detectedHex, '#FFF')
-        while (AAscore < 3) {
-          detectedHex = shade(0.005, detectedHex)
-          AAscore = hex(detectedHex, '#FFF')
-        }
-        return detectedHex
-      }
-      return null
-    })
-    .catch(() => null)
+  // const path = `https://raw.githubusercontent.com/uniswap/assets/master/blockchains/ethereum/assets/${token.address}/logo.png`
+
+  // return Vibrant.from(path)
+  //   .getPalette()
+  //   .then((palette) => {
+  //     if (palette?.Vibrant) {
+  //       let detectedHex = palette.Vibrant.hex
+  //       let AAscore = hex(detectedHex, '#FFF')
+  //       while (AAscore < 3) {
+  //         detectedHex = shade(0.005, detectedHex)
+  //         AAscore = hex(detectedHex, '#FFF')
+  //       }
+  //       return detectedHex
+  //     }
+  //     return null
+  //   })
+  //   .catch(() => null)
 }
 
 async function getColorFromUriPath(uri: string): Promise<string | null> {

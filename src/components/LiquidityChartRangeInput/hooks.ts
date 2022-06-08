@@ -31,7 +31,10 @@ export function useDensityChartData({
         price0: parseFloat(t.price0),
       }
 
+      // console.log(chartEntry)
+
       if (chartEntry.activeLiquidity > 0) {
+        // console.log('pushed')
         newData.push(chartEntry)
       }
     }
@@ -45,7 +48,7 @@ export function useDensityChartData({
       isUninitialized,
       isError,
       error,
-      formattedData: !isLoading && !isUninitialized ? formatData() : undefined,
+      formattedData: !isLoading ? formatData() : undefined,
     }
-  }, [isLoading, isUninitialized, isError, error, formatData])
+  }, [isLoading, isUninitialized, data, isError, error, formatData])
 }

@@ -12,6 +12,7 @@ import {
   TICK_SPACINGS,
   encodeSqrtRatioX32,
   u32ToSeed,
+  nearestUsableTick,
 } from '@cykura/sdk'
 import { Currency, Token, CurrencyAmount, Price, Rounding, sqrt } from '@cykura/sdk-core'
 import { useSolana } from '@saberhq/use-solana'
@@ -116,6 +117,7 @@ export function useV3DerivedMintInfo(
   depositADisabled: boolean
   depositBDisabled: boolean
   invertPrice: boolean
+  ticksAtLimit: { [bound in Bound]?: boolean | undefined }
 } {
   const { account } = useActiveWeb3ReactSol()
   const [noLiquidity, setNoLiquidity] = useState(false)
@@ -241,6 +243,17 @@ export function useV3DerivedMintInfo(
   // if pool exists use it, if not use the mock pool
   const poolForPosition: Pool | undefined = pool ?? mockPool
 
+  // lower and upper limits in the tick space for `feeAmoun<Trans>
+  const tickSpaceLimits: {
+    [bound in Bound]: number | undefined
+  } = useMemo(
+    () => ({
+      [Bound.LOWER]: feeAmount ? nearestUsableTick(TickMath.MIN_TICK, TICK_SPACINGS[feeAmount]) : undefined,
+      [Bound.UPPER]: feeAmount ? nearestUsableTick(TickMath.MAX_TICK, TICK_SPACINGS[feeAmount]) : undefined,
+    }),
+    [feeAmount]
+  )
+
   const ticks: {
     [key: string]: number | undefined
   } = useMemo(() => {
@@ -248,23 +261,48 @@ export function useV3DerivedMintInfo(
       [Bound.LOWER]:
         typeof existingPosition?.tickLower === 'number'
           ? existingPosition.tickLower
+          : (invertPrice && typeof rightRangeTypedValue === 'boolean') ||
+            (!invertPrice && typeof leftRangeTypedValue === 'boolean')
+          ? tickSpaceLimits[Bound.LOWER]
           : invertPrice
-          ? tryParseTick(token1, token0, feeAmount, rightRangeTypedValue)
-          : tryParseTick(token0, token1, feeAmount, leftRangeTypedValue),
+          ? tryParseTick(token1, token0, feeAmount, rightRangeTypedValue.toString())
+          : tryParseTick(token0, token1, feeAmount, leftRangeTypedValue.toString()),
       [Bound.UPPER]:
         typeof existingPosition?.tickUpper === 'number'
           ? existingPosition.tickUpper
+          : (!invertPrice && typeof rightRangeTypedValue === 'boolean') ||
+            (invertPrice && typeof leftRangeTypedValue === 'boolean')
+          ? tickSpaceLimits[Bound.UPPER]
           : invertPrice
-          ? tryParseTick(token1, token0, feeAmount, leftRangeTypedValue)
-          : tryParseTick(token0, token1, feeAmount, rightRangeTypedValue),
+          ? tryParseTick(token1, token0, feeAmount, leftRangeTypedValue.toString())
+          : tryParseTick(token0, token1, feeAmount, rightRangeTypedValue.toString()),
     }
-  }, [existingPosition, feeAmount, invertPrice, leftRangeTypedValue, rightRangeTypedValue, token0, token1])
+  }, [
+    existingPosition,
+    feeAmount,
+    invertPrice,
+    leftRangeTypedValue,
+    rightRangeTypedValue,
+    token0,
+    token1,
+    tickSpaceLimits,
+  ])
 
   const { [Bound.LOWER]: tickLower, [Bound.UPPER]: tickUpper } = ticks || {}
+  // console.log(tickLower, tickUpper)
 
   // console.log(
   //   `Current Tick is ${poolForPosition?.tickCurrent.toString()}\tTick lower is ${tickLower?.toString()}\tTick upper is ${tickUpper?.toString()}`
   // )
+
+  // specifies whether the lower and upper ticks is at the exteme bounds
+  const ticksAtLimit = useMemo(
+    () => ({
+      [Bound.LOWER]: feeAmount && tickLower === tickSpaceLimits.LOWER,
+      [Bound.UPPER]: feeAmount && tickUpper === tickSpaceLimits.UPPER,
+    }),
+    [tickSpaceLimits, tickLower, tickUpper, feeAmount]
+  )
 
   // mark invalid range
   const invalidRange = Boolean(typeof tickLower === 'number' && typeof tickUpper === 'number' && tickLower >= tickUpper)
@@ -472,6 +510,7 @@ export function useV3DerivedMintInfo(
     depositADisabled,
     depositBDisabled,
     invertPrice,
+    ticksAtLimit,
   }
 }
 
