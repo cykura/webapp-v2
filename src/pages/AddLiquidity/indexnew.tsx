@@ -54,7 +54,7 @@ import {
   useRangeHopCallbacks,
   useV3DerivedMintInfo,
 } from 'state/mint/v3/hooks'
-import { encodeSqrtRatioX32, FeeAmount, TICK_SPACINGS, u32ToSeed, u16ToSeed } from '@cykura/sdk'
+import { encodeSqrtRatioX32, FeeAmount, TICK_SPACINGS, u32ToSeed, u16ToSeed, CyclosCore, IDL } from '@cykura/sdk'
 import { useV3PositionFromTokenId } from 'hooks/useV3Positions'
 import { useDerivedPositionInfo } from 'hooks/useDerivedPositionInfo'
 import { PositionPreview } from 'components/PositionPreview'
@@ -66,7 +66,6 @@ import HoverInlineText from 'components/HoverInlineText'
 import { SwitchLocaleLink } from 'components/SwitchLocaleLink'
 import * as anchor from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token'
-import { CyclosCore, IDL } from 'types/cyclos-core'
 import { SendTxRequest, Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { useSnackbar } from 'notistack'
 import * as metaplex from '@metaplex/js'
@@ -635,6 +634,34 @@ export default function AddLiquidity({
           }
         }
 
+        // Check if vaults are created
+        const vault0Info = await connection.getAccountInfo(vault0)
+        if (!vault0Info) {
+          tx2.add(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              token0,
+              vault0,
+              poolState,
+              account
+            )
+          )
+        }
+        const vault1Info = await connection.getAccountInfo(vault1)
+        if (!vault1Info) {
+          tx2.add(
+            Token.createAssociatedTokenAccountInstruction(
+              ASSOCIATED_TOKEN_PROGRAM_ID,
+              TOKEN_PROGRAM_ID,
+              token1,
+              vault1,
+              poolState,
+              account
+            )
+          )
+        }
+
         const mintIx = cyclosCore.instruction.mintTokenizedPosition(
           amount0Desired,
           amount1Desired,
@@ -648,18 +675,18 @@ export default function AddLiquidity({
               factoryState,
               nftMint: nftMintKeypair.publicKey,
               nftAccount: positionNftAccount,
-              poolState: poolState,
-              corePositionState: corePositionState,
-              tickLowerState: tickLowerState,
-              tickUpperState: tickUpperState,
-              bitmapLowerState: bitmapLowerState,
-              bitmapUpperState: bitmapUpperState,
+              poolState,
+              corePositionState,
+              tickLowerState,
+              tickUpperState,
+              bitmapLowerState,
+              bitmapUpperState,
               tokenAccount0: userATA0,
               tokenAccount1: userATA1,
-              vault0: vault0,
-              vault1: vault1,
+              vault0,
+              vault1,
               lastObservationState,
-              tokenizedPositionState: tokenizedPositionState,
+              tokenizedPositionState,
               coreProgram: cyclosCore.programId,
               systemProgram: SystemProgram.programId,
               rent: SYSVAR_RENT_PUBKEY,
