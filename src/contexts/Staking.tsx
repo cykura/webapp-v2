@@ -67,7 +67,7 @@ export function StakingProvider(props: IProps) {
   const [reload2M, setReload2M] = useState(false)
 
   const provider = new anchor.Provider(connection, wallet, {
-    skipPreflight: false,
+    skipPreflight: true,
   })
   const stakingProgram = new anchor.Program(idl as anchor.Idl, STAKING_PROGRAM, provider)
 
