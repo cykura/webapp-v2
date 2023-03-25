@@ -43,7 +43,7 @@ ReactDOM.render(
         networkConfigs={{
           'mainnet-beta': {
             name: 'Custom RPC',
-            endpoint: 'https://solana-mainnet.g.alchemy.com/v2/gNhHggGDXY8ayhKXzCSc4SvsOPSitf1E',
+            endpoint: 'https://nd-242-884-857.p2pify.com/0a69229e5a50468e2d6c21583f0525f4',
           },
           devnet: {
             name: 'devnet',
