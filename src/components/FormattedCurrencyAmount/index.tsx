@@ -1,7 +1,7 @@
 import JSBI from 'jsbi'
 import { Currency, CurrencyAmount, Fraction } from '@cykura/sdk-core'
 
-const CURRENCY_AMOUNT_MIN = new Fraction(JSBI.BigInt(1), JSBI.BigInt(1000000))
+const CURRENCY_AMOUNT_MIN = new Fraction(1, 1000000)
 
 export default function FormattedCurrencyAmount({
   currencyAmount,

@@ -82,10 +82,12 @@ export default function AddressInputPanel({
   onChange: (value: string) => void
 }) {
   const { network } = useSolana()
+
+  // @ts-ignore
   const theme = useContext(ThemeContext)
 
   const handleInput = useCallback(
-    (event) => {
+    (event: any) => {
       const input = event.target.value
       const withoutSpaces = input.replace(/\s+/g, '')
       onChange(withoutSpaces)
@@ -100,7 +102,7 @@ export default function AddressInputPanel({
           <AutoColumn gap="md">
             <RowBetween>
               <TYPE.black color={theme.text2} fontWeight={500} fontSize={14}>
-                {label ?? <span>Recipient</span>}
+                {label ? <span>Recipient</span> : null}
               </TYPE.black>
               {value && network && (
                 <ExternalLink

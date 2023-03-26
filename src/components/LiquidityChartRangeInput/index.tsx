@@ -192,7 +192,7 @@ export default function LiquidityChartRangeInput({
             message={<span>Liquidity data not available.</span>}
             icon={<CloudOff size={56} stroke={theme.text4} />}
           />
-        ) : !formattedData || formattedData === [] || !price ? (
+        ) : !formattedData || formattedData.length === 0 || !price ? (
           <InfoBox
             message={<span>There is no liquidity data.</span>}
             icon={<BarChart2 size={56} stroke={theme.text4} />}
