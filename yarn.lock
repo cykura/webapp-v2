@@ -2135,7 +2135,7 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@ledgerhq/devices@6.24.1", "@ledgerhq/devices@^6.7.0", "@ledgerhq/devices@^8.0.0":
+"@ledgerhq/devices@6.24.1", "@ledgerhq/devices@^6.11.2", "@ledgerhq/devices@^6.7.0", "@ledgerhq/devices@^8.0.0":
   version "6.24.1"
   resolved "https://registry.yarnpkg.com/@ledgerhq/devices/-/devices-6.24.1.tgz#9696d7831aa1a1a8204cdfa55df13f892b7da162"
   integrity sha512-6SNXWXxojUF6WKXMVIbRs15Mveg+9k0RKJK/PKlwZh929Lnr/NcbONWdwPjWKZAp1g82eEPT4jIkG6qc4QXlcA==
@@ -2150,7 +2150,7 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-6.12.3.tgz#a610caae1eeeb7cb038525e5212fe03217dda683"
   integrity sha512-djiMSgB/7hnK3aLR/c5ZMMivxjcI7o2+y3VKcsZZpydPoVf9+FXqeJPRfOwmJ0JxbQ//LinUfWpIfHew8LkaVw==
 
-"@ledgerhq/hw-transport-webusb@6.7.0", "@ledgerhq/hw-transport-webusb@^6.7.0":
+"@ledgerhq/hw-transport-webusb@6.11.2", "@ledgerhq/hw-transport-webusb@6.7.0":
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport-webusb/-/hw-transport-webusb-6.7.0.tgz#2d7fab52280c703ac66b0970ca636e8ba358d0af"
   integrity sha512-IyUOAkXd2g5YG/DaRUer/7hZQnecxJDZK2MKFwpafpUbyJQNdkW09CcodinB3e/Y+pjk6O0XuGzUKLgk3dc2vQ==
@@ -2159,6 +2159,15 @@
     "@ledgerhq/errors" "^6.2.0"
     "@ledgerhq/hw-transport" "^6.7.0"
     "@ledgerhq/logs" "^6.2.0"
+
+"@ledgerhq/hw-transport@6.11.2":
+  version "6.11.2"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-6.11.2.tgz#247d0297f96db9d255672a453a1e621ade92096f"
+  integrity sha512-VZbGfyQ8iFl2W6TUkVmQ3rz8kyOXMbOdFiht3VNlglMe3KBGJWOjW9s/5LhOR348NJs797B1gl4V0Zqmn11kUg==
+  dependencies:
+    "@ledgerhq/devices" "^6.11.2"
+    "@ledgerhq/errors" "^6.10.0"
+    events "^3.3.0"
 
 "@ledgerhq/hw-transport@^6.7.0":
   version "6.28.1"
@@ -2435,7 +2444,7 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
-"@project-serum/sol-wallet-adapter@^0.2.5":
+"@project-serum/sol-wallet-adapter@^0.2.6":
   version "0.2.6"
   resolved "https://registry.yarnpkg.com/@project-serum/sol-wallet-adapter/-/sol-wallet-adapter-0.2.6.tgz#b4cd25a566294354427c97c26d716112b91a0107"
   integrity sha512-cpIb13aWPW8y4KzkZAPDgw+Kb+DXjCC6rZoH74MGm3I/6e/zKyGnfAuW5olb2zxonFqsYgnv7ev8MQnvSgJ3/g==
@@ -2669,7 +2678,7 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@saberhq/solana-contrib@^1.3.16":
+"@saberhq/solana-contrib@^1.7.4":
   version "1.14.11"
   resolved "https://registry.yarnpkg.com/@saberhq/solana-contrib/-/solana-contrib-1.14.11.tgz#d4a6a09f426afb353fc5727b06365446d4642bb7"
   integrity sha512-HOEJpTZnSGmrfJG2gV18vQbtI14ET9l4/Q1yyPk4R2dkydxZIfBIPCI9SRWZ9g01/nuob3Fryd79Ca6QDk7qjw==
@@ -2683,20 +2692,18 @@
     tiny-invariant "^1.3.1"
     tslib "^2.4.0"
 
-"@saberhq/use-solana@1.3.16":
-  version "1.3.16"
-  resolved "https://registry.yarnpkg.com/@saberhq/use-solana/-/use-solana-1.3.16.tgz#1361f717e8aa590b22e4dc91a53ecdefcf5e6a74"
-  integrity sha512-vi+g4PrNqw4cp5a8y//lGzok9fxpBJgOwDAvIur9HARpxTv0/02KnSgM5gv1ejUlFprp0UuxLrjSPKhEWTQQIA==
+"@saberhq/use-solana@file:./lib-dist/use-solana.tgz":
+  version "1.7.4"
+  resolved "file:./lib-dist/use-solana.tgz#546021a412ddff98bd743ea2cab5a18c23b51efb"
   dependencies:
-    "@ledgerhq/hw-transport" "^6.7.0"
-    "@ledgerhq/hw-transport-webusb" "^6.7.0"
-    "@project-serum/sol-wallet-adapter" "^0.2.5"
-    "@saberhq/solana-contrib" "^1.3.16"
-    "@types/bs58" "^4.0.1"
+    "@ledgerhq/hw-transport" "6.11.2"
+    "@ledgerhq/hw-transport-webusb" "6.11.2"
+    "@project-serum/sol-wallet-adapter" "^0.2.6"
+    "@saberhq/solana-contrib" "^1.7.4"
     bs58 "^4.0.1"
     eventemitter3 "^4.0.7"
     fast-json-stable-stringify "^2.1.0"
-    tiny-invariant "^1.1.0"
+    tiny-invariant "^1.2.0"
     tslib "^2.3.1"
     unstated-next "^1.1.0"
 
@@ -3508,10 +3515,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-virtualized-auto-sizer@^1.0.0":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@types/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.1.tgz#b3187dae1dfc4c15880c9cfc5b45f2719ea6ebd4"
-  integrity sha512-GH8sAnBEM5GV9LTeiz56r4ZhMOUSrP43tAQNSRVxNexDjcNKLCEtnxusAItg1owFUFE6k0NslV26gqVClVvong==
+"@types/react-virtualized-auto-sizer@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.0.tgz#fc32f30a8dab527b5816f3a757e1e1d040c8f272"
+  integrity sha512-NMErdIdSnm2j/7IqMteRiRvRulpjoELnXWUwdbucYCz84xG9PHcoOrr7QfXwB/ku7wd6egiKFrzt/+QK4Imeeg==
   dependencies:
     "@types/react" "*"
 
@@ -12702,10 +12709,10 @@ react-use-gesture@^9.1.3:
   resolved "https://registry.yarnpkg.com/react-use-gesture/-/react-use-gesture-9.1.3.tgz#92bd143e4f58e69bd424514a5bfccba2a1d62ec0"
   integrity sha512-CdqA2SmS/fj3kkS2W8ZU8wjTbVBAIwDWaRprX7OKaj7HlGwBasGEFggmk5qNklknqk9zK/h8D355bEJFTpqEMg==
 
-react-virtualized-auto-sizer@^1.0.2:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.7.tgz#bfb8414698ad1597912473de3e2e5f82180c1195"
-  integrity sha512-Mxi6lwOmjwIjC1X4gABXMJcKHsOo0xWl3E3ugOgufB8GJU+MqrtY35aBuvCYv/razQ1Vbp7h1gWJjGjoNN5pmA==
+react-virtualized-auto-sizer@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.2.tgz#a61dd4f756458bbf63bd895a92379f9b70f803bd"
+  integrity sha512-MYXhTY1BZpdJFjUovvYHVBmkq79szK/k7V3MO+36gJkWGkrXKtyr4vCPtpphaTLRAdDNoYEYFZWE8LjN+PIHNg==
 
 react-window@^1.8.5:
   version "1.8.8"

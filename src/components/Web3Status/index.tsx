@@ -140,6 +140,20 @@ function Web3StatusInner() {
   const wallet = useConnectedWallet()
   const ICON = walletProviderInfo?.icon
 
+  // @ts-ignore
+  const oldProvider = window.solana
+  // @ts-ignore
+  const newProvider = window.phantom?.solana
+
+  // Both return true for isConnected
+  // console.log('old connected', oldProvider?.isConnected)
+  console.log('new connected', newProvider?.isConnected)
+
+  console.log('connect listeners', newProvider?.listeners('connect'))
+  console.log('disconnect listeners', newProvider?.listeners('disconnect'))
+  // newProvider?.on('connect', () => {
+  //   console.log('connect callback')
+  // })
   const node = useRef<HTMLDivElement>()
   const open = useModalOpen(ApplicationModal.MENU)
   const toggle = useToggleModal(ApplicationModal.MENU)
