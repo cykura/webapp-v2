@@ -34,8 +34,8 @@ export default function useStaking() {
 }
 
 export function StakingProvider(props: IProps) {
-  const { connected: isConnected, connection } = useSolana()
-  const wallet = useConnectedWallet() as ConnectedWallet
+  const { connected: isConnected, connection, providerMut } = useSolana()
+  const wallet = useConnectedWallet()
   const [ownerTokenAcc, setOwnerTokenAcc] = useState<any>()
   const [stakeAccountNoLock, setStakeAccountNoLock] = useState<any>()
   const [stakeAccount2mLock, setStakeAccount2mLock] = useState<any>()
@@ -66,14 +66,18 @@ export function StakingProvider(props: IProps) {
   const [reloadNL, setReloadNL] = useState(false)
   const [reload2M, setReload2M] = useState(false)
 
-  const provider = new anchor.Provider(connection, wallet, {
-    skipPreflight: true,
-  })
-  const stakingProgram = new anchor.Program(idl as anchor.Idl, STAKING_PROGRAM, provider)
+  const provider = providerMut
+  // const provider = new anchor.Provider(connection, wallet, {
+  //   skipPreflight: true,
+  // })
+  const stakingProgram = provider !== null
+    // @ts-ignore
+    ? new anchor.Program(idl as anchor.Idl, STAKING_PROGRAM, provider)
+    : undefined
 
   // fetch token Account
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && wallet !== null) {
       Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, CYS_MINT, wallet.publicKey)
         .then((acc) => {
           setOwnerTokenAcc(acc)
@@ -89,50 +93,56 @@ export function StakingProvider(props: IProps) {
 
   // Fetch data for No lock pool
   useEffect(() => {
-    ;(async () => {
-      try {
-        const poolAccountNoLock = (await stakingProgram.account.pool.fetch(NO_LOCK_POOL)) as any
-        const tvlNoLock = await connection.getTokenAccountBalance(poolAccountNoLock?.stakingVault)
-        const nr1 = parseInt(poolAccountNoLock?.rewardRate.toString()) * 365 * 86400
-        const dr1 = parseInt(tvlNoLock.value.amount) === 0 ? 0 : parseInt(tvlNoLock.value.amount)
-        const a = (nr1 / dr1) * 100
-        setPoolNoLockDetails({
-          poolAccount: poolAccountNoLock,
-          tvl: tvlNoLock.value.uiAmount,
-          apr: a.toFixed(2),
-          paused: poolAccountNoLock.paused,
-        })
-      } catch (err) {
-        console.error(err)
+    ; (async () => {
+      if (stakingProgram) {
+        try {
+          const poolAccountNoLock = (await stakingProgram.account.pool.fetch(NO_LOCK_POOL)) as any
+          const tvlNoLock = await connection.getTokenAccountBalance(poolAccountNoLock?.stakingVault)
+          const nr1 = parseInt(poolAccountNoLock?.rewardRate.toString()) * 365 * 86400
+          const dr1 = parseInt(tvlNoLock.value.amount) === 0 ? 0 : parseInt(tvlNoLock.value.amount)
+          const a = (nr1 / dr1) * 100
+          setPoolNoLockDetails({
+            poolAccount: poolAccountNoLock,
+            tvl: tvlNoLock.value.uiAmount,
+            apr: a.toFixed(2),
+            paused: poolAccountNoLock.paused,
+          })
+        } catch (err) {
+          console.error(err)
+        }
       }
+
     })()
   }, [stakeAccountNoLock, reloadNL])
 
   // Fetch data for 2 2months lock pool
   useEffect(() => {
-    ;(async () => {
-      try {
-        const poolAccount2mLock = (await stakingProgram.account.pool.fetch(TM_LOCK_POOL)) as any
-        const tvl2mLock = await connection.getTokenAccountBalance(poolAccount2mLock?.stakingVault)
-        const nr2 = parseInt(poolAccount2mLock?.rewardRate.toString()) * 365 * 86400
-        const dr2 = parseInt(tvl2mLock.value.amount) === 0 ? 0 : parseInt(tvl2mLock.value.amount)
-        const b = (nr2 / dr2) * 100
-        setPool2mLockDetails({
-          poolAccount: poolAccount2mLock,
-          tvl: tvl2mLock.value.uiAmount,
-          apr: b.toFixed(2),
-          paused: poolAccount2mLock.paused,
-        })
-      } catch (err) {
-        console.error(err)
+    ; (async () => {
+      if (stakingProgram) {
+        try {
+          const poolAccount2mLock = (await stakingProgram.account.pool.fetch(TM_LOCK_POOL)) as any
+          const tvl2mLock = await connection.getTokenAccountBalance(poolAccount2mLock?.stakingVault)
+          const nr2 = parseInt(poolAccount2mLock?.rewardRate.toString()) * 365 * 86400
+          const dr2 = parseInt(tvl2mLock.value.amount) === 0 ? 0 : parseInt(tvl2mLock.value.amount)
+          const b = (nr2 / dr2) * 100
+          setPool2mLockDetails({
+            poolAccount: poolAccount2mLock,
+            tvl: tvl2mLock.value.uiAmount,
+            apr: b.toFixed(2),
+            paused: poolAccount2mLock.paused,
+          })
+        } catch (err) {
+          console.error(err)
+        }
       }
+
     })()
   }, [stakeAccount2mLock, reload2M])
 
   // Fetch user account for No lock pool
   useEffect(() => {
-    if (isConnected) {
-      ;(async () => {
+    if (isConnected && wallet && stakingProgram) {
+      ; (async () => {
         try {
           const [userAccount, userAccountBump] = await anchor.web3.PublicKey.findProgramAddress(
             [wallet.publicKey.toBuffer(), NO_LOCK_POOL.toBuffer()],
@@ -170,8 +180,8 @@ export function StakingProvider(props: IProps) {
 
   // Fetch user account for 2 months lock pool
   useEffect(() => {
-    if (isConnected) {
-      ;(async () => {
+    if (isConnected && wallet && stakingProgram) {
+      ; (async () => {
         try {
           const [userAccount, userAccountBump] = await anchor.web3.PublicKey.findProgramAddress(
             [wallet.publicKey.toBuffer(), TM_LOCK_POOL.toBuffer()],
@@ -223,62 +233,66 @@ export function StakingProvider(props: IProps) {
 
     const amount = new anchor.BN(input * 1e6)
     let tx
-    if (!exist) {
-      // Stake account does not exist
-      const ix = stakingProgram.instruction.createUser(userAccount.bump, {
-        accounts: {
-          pool: POOL_ID,
-          user: userAccount.account,
-          owner: wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-      })
 
-      tx = await stakingProgram.rpc.stake(amount, {
-        accounts: {
-          pool: POOL_ID,
-          stakingVault: STAKING_VAULT,
-          user: userAccount.account,
-          owner: wallet.publicKey,
-          stakeFromAccount: ownerTokenAcc,
-          poolSigner: POOL_SIGNER,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-        instructions: [ix],
-      })
-    } else {
-      tx = await stakingProgram.rpc.stake(amount, {
-        accounts: {
-          pool: POOL_ID,
-          stakingVault: STAKING_VAULT,
-          user: userAccount.account,
-          owner: wallet.publicKey,
-          stakeFromAccount: ownerTokenAcc,
-          poolSigner: POOL_SIGNER,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        },
-      })
+    if (wallet && stakingProgram) {
+      if (!exist) {
+        // Stake account does not exist
+        const ix = stakingProgram.instruction.createUser(userAccount.bump, {
+          accounts: {
+            pool: POOL_ID,
+            user: userAccount.account,
+            owner: wallet.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        })
+
+        tx = await stakingProgram.rpc.stake(amount, {
+          accounts: {
+            pool: POOL_ID,
+            stakingVault: STAKING_VAULT,
+            user: userAccount.account,
+            owner: wallet.publicKey,
+            stakeFromAccount: ownerTokenAcc,
+            poolSigner: POOL_SIGNER,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+          instructions: [ix],
+        })
+      } else {
+        tx = await stakingProgram.rpc.stake(amount, {
+          accounts: {
+            pool: POOL_ID,
+            stakingVault: STAKING_VAULT,
+            user: userAccount.account,
+            owner: wallet.publicKey,
+            stakeFromAccount: ownerTokenAcc,
+            poolSigner: POOL_SIGNER,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          },
+        })
+      }
+
+      if (poolType === PoolType.NOLOCK) {
+        stakingProgram.account.user
+          .fetch(userAccount.account)
+          .then((acc) => {
+            setStakeAccountNoLock(acc)
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      } else {
+        stakingProgram.account.user
+          .fetch(userAccount.account)
+          .then((acc) => {
+            setStakeAccount2mLock(acc)
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      }
     }
 
-    if (poolType === PoolType.NOLOCK) {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccountNoLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    } else {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccount2mLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    }
     return tx
   }
 
@@ -298,37 +312,40 @@ export function StakingProvider(props: IProps) {
 
     const amount = new anchor.BN(input * 1e6)
 
-    const tx = await stakingProgram.rpc.unstake(amount, {
-      accounts: {
-        pool: POOL_ID,
-        stakingVault: STAKING_VAULT,
-        user: userAccount.account,
-        owner: wallet.publicKey,
-        stakeFromAccount: ownerTokenAcc,
-        poolSigner: POOL_SIGNER,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    })
-    if (poolType === PoolType.NOLOCK) {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccountNoLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    } else {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccount2mLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
+    if (wallet && stakingProgram) {
+      const tx = await stakingProgram.rpc.unstake(amount, {
+        accounts: {
+          pool: POOL_ID,
+          stakingVault: STAKING_VAULT,
+          user: userAccount.account,
+          owner: wallet.publicKey,
+          stakeFromAccount: ownerTokenAcc,
+          poolSigner: POOL_SIGNER,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      })
+      if (poolType === PoolType.NOLOCK) {
+        stakingProgram.account.user
+          .fetch(userAccount.account)
+          .then((acc) => {
+            setStakeAccountNoLock(acc)
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      } else {
+        stakingProgram.account.user
+          .fetch(userAccount.account)
+          .then((acc) => {
+            setStakeAccount2mLock(acc)
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      }
+      return tx
     }
-    return tx
+    return undefined
   }
 
   const claim = async (poolType: PoolType) => {
@@ -347,38 +364,88 @@ export function StakingProvider(props: IProps) {
       userAccount = userAccount2mLock
     }
 
-    const tx = await stakingProgram.rpc.claim({
-      accounts: {
-        pool: POOL_ID,
-        stakingVault: STAKING_VAULT,
-        rewardVault: REWARD_VAULT,
-        user: userAccount.account,
-        owner: wallet.publicKey,
-        rewardAccount: ownerTokenAcc,
-        poolSigner: POOL_SIGNER,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    })
-    if (poolType === PoolType.NOLOCK) {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccountNoLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    } else {
-      stakingProgram.account.user
-        .fetch(userAccount.account)
-        .then((acc) => {
-          setStakeAccount2mLock(acc)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
+    if (wallet && stakingProgram) {
+      console.log('claiming')
+
+      const tx = stakingProgram.transaction.claim({
+        accounts: {
+          pool: POOL_ID,
+          stakingVault: STAKING_VAULT,
+          rewardVault: REWARD_VAULT,
+          user: userAccount.account,
+          owner: wallet.publicKey,
+          rewardAccount: ownerTokenAcc,
+          poolSigner: POOL_SIGNER,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      })
+      tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+      tx.feePayer = wallet?.publicKey
+
+      const signedTx = await providerMut?.wallet.signTransaction(tx)
+      const serializedTx = signedTx?.serialize()
+
+      if (serializedTx) {
+        const hash = await providerMut?.connection.sendRawTransaction(serializedTx)
+
+        if (poolType === PoolType.NOLOCK) {
+          stakingProgram.account.user
+            .fetch(userAccount.account)
+            .then((acc) => {
+              setStakeAccountNoLock(acc)
+            })
+            .catch((err) => {
+              console.log(err)
+            })
+        } else {
+          stakingProgram.account.user
+            .fetch(userAccount.account)
+            .then((acc) => {
+              setStakeAccount2mLock(acc)
+            })
+            .catch((err) => {
+              console.log(err)
+            })
+        }
+        return hash
+      }
+
+
+      // const tx = await stakingProgram.rpc.claim({
+      //   accounts: {
+      //     pool: POOL_ID,
+      //     stakingVault: STAKING_VAULT,
+      //     rewardVault: REWARD_VAULT,
+      //     user: userAccount.account,
+      //     owner: wallet.publicKey,
+      //     rewardAccount: ownerTokenAcc,
+      //     poolSigner: POOL_SIGNER,
+      //     tokenProgram: TOKEN_PROGRAM_ID,
+      //   },
+      // })
+
+      // if (poolType === PoolType.NOLOCK) {
+      //   stakingProgram.account.user
+      //     .fetch(userAccount.account)
+      //     .then((acc) => {
+      //       setStakeAccountNoLock(acc)
+      //     })
+      //     .catch((err) => {
+      //       console.log(err)
+      //     })
+      // } else {
+      //   stakingProgram.account.user
+      //     .fetch(userAccount.account)
+      //     .then((acc) => {
+      //       setStakeAccount2mLock(acc)
+      //     })
+      //     .catch((err) => {
+      //       console.log(err)
+      //     })
+      // }
+      return tx
     }
-    return tx
+    return undefined
   }
 
   const getPendingReward = (poolType: PoolType) => {
