@@ -234,7 +234,7 @@ export function StakingProvider(props: IProps) {
     const amount = new anchor.BN(input * 1e6)
     let tx
 
-    if (wallet && stakingProgram) {
+    if (wallet && stakingProgram && providerMut) {
       if (!exist) {
         // Stake account does not exist
         const ix = stakingProgram.instruction.createUser(userAccount.bump, {
@@ -246,7 +246,7 @@ export function StakingProvider(props: IProps) {
           },
         })
 
-        tx = await stakingProgram.rpc.stake(amount, {
+        tx = stakingProgram.transaction.stake(amount, {
           accounts: {
             pool: POOL_ID,
             stakingVault: STAKING_VAULT,
@@ -258,8 +258,9 @@ export function StakingProvider(props: IProps) {
           },
           instructions: [ix],
         })
-      } else {
-        tx = await stakingProgram.rpc.stake(amount, {
+      }
+      else {
+        tx = stakingProgram.transaction.stake(amount, {
           accounts: {
             pool: POOL_ID,
             stakingVault: STAKING_VAULT,
@@ -271,6 +272,14 @@ export function StakingProvider(props: IProps) {
           },
         })
       }
+
+      // Manually add blockhash and sign
+      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      tx.feePayer = wallet?.publicKey
+
+      const signedTx = await providerMut.wallet.signTransaction(tx)
+      const serializedTx = signedTx.serialize()
+      const hash = await providerMut.connection.sendRawTransaction(serializedTx)
 
       if (poolType === PoolType.NOLOCK) {
         stakingProgram.account.user
@@ -291,9 +300,10 @@ export function StakingProvider(props: IProps) {
             console.log(err)
           })
       }
+      return hash
     }
 
-    return tx
+    return undefined
   }
 
   const unstake = async (input: number, poolType: PoolType) => {
@@ -312,8 +322,8 @@ export function StakingProvider(props: IProps) {
 
     const amount = new anchor.BN(input * 1e6)
 
-    if (wallet && stakingProgram) {
-      const tx = await stakingProgram.rpc.unstake(amount, {
+    if (wallet && stakingProgram && providerMut) {
+      const tx = stakingProgram.transaction.unstake(amount, {
         accounts: {
           pool: POOL_ID,
           stakingVault: STAKING_VAULT,
@@ -324,6 +334,13 @@ export function StakingProvider(props: IProps) {
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       })
+      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      tx.feePayer = wallet?.publicKey
+
+      const signedTx = await providerMut.wallet.signTransaction(tx)
+      const serializedTx = signedTx.serialize()
+      const hash = await providerMut.connection.sendRawTransaction(serializedTx)
+
       if (poolType === PoolType.NOLOCK) {
         stakingProgram.account.user
           .fetch(userAccount.account)
@@ -343,7 +360,7 @@ export function StakingProvider(props: IProps) {
             console.log(err)
           })
       }
-      return tx
+      return hash
     }
     return undefined
   }
@@ -365,7 +382,6 @@ export function StakingProvider(props: IProps) {
     }
 
     if (wallet && stakingProgram) {
-      console.log('claiming')
 
       const tx = stakingProgram.transaction.claim({
         accounts: {
@@ -409,40 +425,6 @@ export function StakingProvider(props: IProps) {
         }
         return hash
       }
-
-
-      // const tx = await stakingProgram.rpc.claim({
-      //   accounts: {
-      //     pool: POOL_ID,
-      //     stakingVault: STAKING_VAULT,
-      //     rewardVault: REWARD_VAULT,
-      //     user: userAccount.account,
-      //     owner: wallet.publicKey,
-      //     rewardAccount: ownerTokenAcc,
-      //     poolSigner: POOL_SIGNER,
-      //     tokenProgram: TOKEN_PROGRAM_ID,
-      //   },
-      // })
-
-      // if (poolType === PoolType.NOLOCK) {
-      //   stakingProgram.account.user
-      //     .fetch(userAccount.account)
-      //     .then((acc) => {
-      //       setStakeAccountNoLock(acc)
-      //     })
-      //     .catch((err) => {
-      //       console.log(err)
-      //     })
-      // } else {
-      //   stakingProgram.account.user
-      //     .fetch(userAccount.account)
-      //     .then((acc) => {
-      //       setStakeAccount2mLock(acc)
-      //     })
-      //     .catch((err) => {
-      //       console.log(err)
-      //     })
-      // }
       return tx
     }
     return undefined
