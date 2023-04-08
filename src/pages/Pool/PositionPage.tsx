@@ -96,7 +96,7 @@ const BadgeText = styled.div`
 // responsive text
 // disable the warning because we don't use the end prop, we just want to filter it out
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const Label = styled(({ end, ...props }) => <TYPE.label {...props} />)<{ end?: boolean }>`
+const Label = styled(({ end, ...props }) => <TYPE.label {...props} />) <{ end?: boolean }>`
   display: flex;
   font-size: 16px;
   justify-content: ${({ end }) => (end ? 'flex-end' : 'flex-start')};
@@ -371,10 +371,10 @@ export function PositionPage({
   const ratio = useMemo(() => {
     return priceLower && pool && priceUpper
       ? getRatio(
-          inverted ? priceUpper.invert() : priceLower,
-          pool.token0Price,
-          inverted ? priceLower.invert() : priceUpper
-        )
+        inverted ? priceUpper.invert() : priceLower,
+        pool.token0Price,
+        inverted ? priceLower.invert() : priceUpper
+      )
       : undefined
   }, [inverted, pool, priceLower, priceUpper])
 
@@ -613,9 +613,11 @@ export function PositionPage({
       tx.feePayer = wallet?.publicKey
       tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
 
-      const txHash = await providerMut.send(tx)
+      const signedTx = await providerMut.wallet.signTransaction(tx)
+      const serializedTx = signedTx.serialize()
+      const hash = await providerMut.connection.sendRawTransaction(serializedTx)
 
-      setCollectMigrationHash(txHash.signature)
+      setCollectMigrationHash(hash)
     } catch (e) {
       setCollecting(false)
 

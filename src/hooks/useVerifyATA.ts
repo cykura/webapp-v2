@@ -17,7 +17,7 @@ function useVerifyATA(tokens: string[]) {
 
   useEffect(() => {
     if (wallet?.publicKey) {
-      ;(async () => {
+      ; (async () => {
         try {
           for (const [index, collateral] of tokens.entries()) {
             const ata = await Token.getAssociatedTokenAddress(
@@ -54,11 +54,15 @@ function useVerifyATA(tokens: string[]) {
 
     tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
     tx.feePayer = wallet?.publicKey
-    await wallet?.signTransaction(tx)
-    const hash = await providerMut?.send(tx)
-    setHaveAllATAs(true)
-    setReload((p) => !p)
-    return hash
+
+    const signedTx = await providerMut?.wallet.signTransaction(tx)
+    const serializedTx = signedTx?.serialize()
+
+    if (serializedTx !== undefined) {
+      const hash = await providerMut?.connection.sendRawTransaction(serializedTx)
+      setHaveAllATAs(true)
+      setReload((p) => !p)
+    }
   }, [tx, wallet?.publicKey])
 
   return {

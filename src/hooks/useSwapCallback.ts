@@ -91,7 +91,6 @@ export function useSwapCallback(
   const pool = trade?.route
   const signer = wallet?.publicKey
   // Need to calculate the allowed slippage amount to pass it in as sqrtPriceLimitX32 along with the swap txn
-  const slippagePriceLimitX32 = allowedSlippage
 
   if (!trade || !pool || !signer || !inputCurrency || !outputCurrency) {
     return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
@@ -358,18 +357,23 @@ export function useSwapCallback(
       tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, WSOL_ATA, signer, signer, []))
     }
 
+    // TODO getRecentBlockhash() is deprecated, replace with getLatestBlockHash()
     tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash
+
     tx.feePayer = signer
 
     const str = tx.serializeMessage().toString('base64')
     console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
 
-    // await wallet?.signTransaction(tx)
-    const hash = await providerMut?.send(tx)
+    const signedTx = await providerMut?.wallet.signTransaction(tx)
+    const serializedTx = signedTx?.serialize()
 
-    console.log('swap hash', hash)
-    return hash?.signature ?? '' // This should not be the case. Check types, should not get empty string here
-    // return ''
+    if (serializedTx !== undefined) {
+      const hash = await providerMut?.connection.sendRawTransaction(serializedTx)
+      return hash ?? ''
+
+    }
+    return ''
   }
   return { state: SwapCallbackState.VALID, callback, error: null }
 }
@@ -385,18 +389,18 @@ export class SolanaTickDataProvider implements TickDataProvider {
   bitmapCache: Map<
     number,
     | {
-        address: PublicKey
-        word: anchor.BN
-      }
+      address: PublicKey
+      word: anchor.BN
+    }
     | undefined
   >
 
   tickCache: Map<
     number,
     | {
-        address: PublicKey
-        liquidityNet: JSBI
-      }
+      address: PublicKey
+      liquidityNet: JSBI
+    }
     | undefined
   >
 

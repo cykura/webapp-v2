@@ -143,10 +143,10 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       +liquidityPercentage.toSignificant() >= 100
         ? new BN(positionSDK.liquidity.toString())
         : new BN(
-            liquidityPercentage
-              ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity.toString()), JSBI.BigInt(100)).toString())
-              .toSignificant()
-          )
+          liquidityPercentage
+            ?.multiply(JSBI.divide(JSBI.BigInt(positionSDK?.liquidity.toString()), JSBI.BigInt(100)).toString())
+            .toSignificant()
+        )
 
     console.log(`Removing liq ${removeLiquidityAmount.toString()}`)
 
@@ -367,10 +367,18 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
       // console.log(tx)
       const str = tx.serializeMessage().toString('base64')
       console.log(`https://explorer.solana.com/tx/inspector?message=${encodeURIComponent(str)}`)
-      const hash = await providerMut?.send(tx)
-      console.log(hash, ' -> remove position')
-      setTxnHash(hash?.signature)
-      setAttemptingTxn(false)
+
+      const signedTx = await providerMut?.wallet.signTransaction(tx)
+      const serializedTx = signedTx?.serialize()
+
+      if (serializedTx !== undefined) {
+        const hash = await providerMut?.connection.sendRawTransaction(serializedTx)
+
+        console.log(hash, ' -> remove position')
+        setTxnHash(hash)
+        setAttemptingTxn(false)
+      }
+
     } catch (err: any) {
       console.log(err)
       setAttemptingTxn(false)
@@ -394,9 +402,8 @@ function Remove({ tokenId }: { tokenId: string | undefined }) {
     history.push(`/pool/${tokenId}`)
   }, [onPercentSelectForSlider, txnHash])
 
-  const pendingText = `Removing ${liquidityValue0?.toSignificant(6)} ${
-    liquidityValue0?.currency?.symbol
-  } and ${liquidityValue1?.toSignificant(6)} ${liquidityValue1?.currency?.symbol}`
+  const pendingText = `Removing ${liquidityValue0?.toSignificant(6)} ${liquidityValue0?.currency?.symbol
+    } and ${liquidityValue1?.toSignificant(6)} ${liquidityValue1?.currency?.symbol}`
 
   function modalHeader() {
     return (
