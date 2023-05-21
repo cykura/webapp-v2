@@ -428,6 +428,7 @@ const StakeCard = (props: any) => {
               </AutoColumn>
             </RowBetween>
             <br />
+
             <InputRow>
               <ColumnCenter>
                 <TYPE.subHeader color="text2" style={{ width: '100%' }}>
@@ -441,7 +442,7 @@ const StakeCard = (props: any) => {
                   value={formattedStakeAmount ?? null}
                   onChange={(e) => setInputStake(parseFloat(e.target.value))}
                 />
-                <ResponsiveButtonPrimary onClick={() => handleStake(inputStake, poolType)}>
+                <ResponsiveButtonPrimary disabled={poolType === PoolType.TWOLOCK} onClick={() => handleStake(inputStake, poolType)}>
                   Stake
                 </ResponsiveButtonPrimary>
               </ColumnCenter>
@@ -533,10 +534,11 @@ function Staking() {
             poolType={PoolType.NOLOCK}
             stakeAccountDetails={stakeAccountNoLock}
           />
+
           <StakeCard
             poolDetails={pool2mLockDetails}
-            description={'Your funds will be locked for 2 months'}
-            title={'CYS-2M'}
+            description={'The 2 month staker is in withdraw-only mode'}
+            title={'CYS-2M (withdraw only)'}
             poolType={PoolType.TWOLOCK}
             stakeAccountDetails={stakeAccount2mLock}
           />
