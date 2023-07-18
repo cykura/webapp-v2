@@ -158,7 +158,7 @@ export default function Pool() {
                 </TYPE.largeHeader>
               </HideSmall>
               <ButtonRow>
-                <ResponsiveButtonPrimary id="join-pool-button" as={Link} to="/add/SOL">
+                <ResponsiveButtonPrimary id="join-pool-button" disabled={true}>
                   + <span>New Position</span>
                 </ResponsiveButtonPrimary>
                 <Menu
