@@ -442,7 +442,7 @@ const StakeCard = (props: any) => {
                   value={formattedStakeAmount ?? null}
                   onChange={(e) => setInputStake(parseFloat(e.target.value))}
                 />
-                <ResponsiveButtonPrimary disabled={poolType === PoolType.TWOLOCK} onClick={() => handleStake(inputStake, poolType)}>
+                <ResponsiveButtonPrimary disabled={true} onClick={() => handleStake(inputStake, poolType)}>
                   Stake
                 </ResponsiveButtonPrimary>
               </ColumnCenter>
@@ -529,8 +529,8 @@ function Staking() {
         <ResponsiveRow>
           <StakeCard
             poolDetails={poolNoLockDetails}
-            description={'You can unstake from this pool anytime'}
-            title={'CYS-NL'}
+            description={'The no-lockup staker is in withdraw-only mode'}
+            title={'CYS-NL (withdraw only)'}
             poolType={PoolType.NOLOCK}
             stakeAccountDetails={stakeAccountNoLock}
           />
